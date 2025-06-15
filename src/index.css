@@ -1,3 +1,117 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@keyframes explode {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 0.2;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+.star-explosion {
+  position: fixed;
+  bottom: 20%;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(255, 255, 255, 0.2), 0 0 30px rgba(255, 255, 255, 0.1);
+  animation: explode 0.6s ease-out forwards;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.shooting-star {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05),
+    0 0 0 4px rgba(255, 255, 255, 0.05), 0 0 10px rgba(255, 255, 255, 0.5);
+  animation: animate 6s linear infinite;
+  z-index: -1;
+  opacity: 0.3;
+  pointer-events: none;
+  will-change: transform;
+  user-select: none;
+}
+
+.shooting-star::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  height: 0.5px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), transparent);
+}
+
+.shooting-star:nth-child(1) {
+  top: -10%;
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 8s;
+}
+
+.shooting-star:nth-child(2) {
+  top: -10%;
+  left: 30%;
+  animation-delay: 3s;
+  animation-duration: 10s;
+}
+
+.shooting-star:nth-child(3) {
+  top: -10%;
+  left: 50%;
+  animation-delay: 5s;
+  animation-duration: 7s;
+}
+
+.shooting-star:nth-child(4) {
+  top: -10%;
+  left: 70%;
+  animation-delay: 7s;
+  animation-duration: 9s;
+}
+
+.shooting-star:nth-child(5) {
+  top: -10%;
+  left: 20%;
+  animation-delay: 9s;
+  animation-duration: 11s;
+}
+
+.shooting-star:nth-child(6) {
+  top: -10%;
+  left: 40%;
+  animation-delay: 11s;
+  animation-duration: 12s;
+}
+
+@keyframes animate {
+  0% {
+    transform: rotate(45deg) translateX(-500px);
+    opacity: 0;
+  }
+  2% {
+    opacity: 0.4;
+  }
+  60% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: rotate(45deg) translateX(2000px);
+    opacity: 0;
+  }
+}
