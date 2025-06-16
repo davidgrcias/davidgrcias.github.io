@@ -5,6 +5,7 @@ import userProfile from "../data/userProfile";
 import experiences from "../data/experiences";
 import skills from "../data/skills";
 import projects from "../data/projects";
+import insights from "../data/insights"; // Import insights data
 import education from "../data/education";
 
 const ChatBot = () => {
@@ -44,6 +45,9 @@ const ChatBot = () => {
       .map((exp) => `${exp.role} at ${exp.company}`)
       .join(", "),
     projects: projects.map((proj) => proj.name).join(", "),
+    insights: insights
+      .map((insight) => `${insight.title}: ${insight.description}`)
+      .join(". "), // Add insights to knowledge base
     contact: userProfile.contact,
     about: userProfile.aboutText,
   };
@@ -171,6 +175,25 @@ const ChatBot = () => {
       return `I've worked on various projects including: ${knowledge.projects}`;
     }
 
+    // Insights related queries
+    if (
+      findBestMatch(lowercaseInput, [
+        "insight",
+        "lesson",
+        "learned",
+        "takeaway",
+        "reflection",
+        "experience",
+      ])
+    ) {
+      setSuggestedReplies([
+        "What are your skills?",
+        "Tell me about your projects",
+        "How can I contact you?",
+      ]);
+      return `Some key insights and lessons learned from my experiences include: ${knowledge.insights}`;
+    }
+
     // Contact related queries
     if (
       findBestMatch(lowercaseInput, [
@@ -252,16 +275,66 @@ const ChatBot = () => {
     setInputMessage("");
     setIsTyping(true);
 
-    // Simulate typing delay
-    setTimeout(() => {
+    try {
+      // Prepare prompt for Gemini API
+      const prompt = `You are an AI assistant for David's portfolio. Your goal is to provide helpful and informative answers about David based on the provided information. Use the context below to answer the user's question. If you don't know the answer based on the context, say you can't find that information in the portfolio but can tell them about David's skills, experience, projects, education, or how to contact him.
+  
+      Context about David:
+      About: ${knowledge.about}
+      Skills: ${knowledge.skills}
+      Education: ${knowledge.education}
+      Experience: ${knowledge.experience}
+      Projects: ${knowledge.projects}
+      Insights: ${knowledge.insights}
+      Contact: Email: ${knowledge.contact.email}, WhatsApp: ${knowledge.contact.whatsapp}
+  
+      User's question: ${userMessage.content}
+      `;
+
+      // Call Gemini API (replace with your actual API call)
+      // This is a placeholder for your Gemini API integration
+      const response = await fetch("/api/gemini", {
+        // Assuming a serverless function or backend endpoint for Gemini API
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const botResponseContent = data.response; // Assuming the API returns the response in a 'response' field
+
       const botResponse = {
         type: "bot",
-        content: generateResponse(inputMessage),
+        content:
+          botResponseContent ||
+          "Sorry, I couldn't generate a response at this time.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botResponse]);
       setIsTyping(false);
-    }, 1000);
+
+      // Optionally update suggested replies based on the bot's response
+      // This would require parsing the bot's response for keywords
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      // Handle API errors
+      setMessages((prev) => [
+        ...prev,
+        {
+          type: "bot",
+          content:
+            "Sorry, I'm having trouble connecting to the assistant right now. Please try again later.",
+          timestamp: new Date(),
+        },
+      ]);
+      setIsTyping(false);
+    }
   };
 
   const handleSuggestedReply = (reply) => {
