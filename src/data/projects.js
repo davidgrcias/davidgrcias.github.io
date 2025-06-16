@@ -100,7 +100,7 @@ const projects = [
     date: "2023-12",
   },
   {
-    name: "Aplikasi Kelas",
+    name: "Aplikasi Website Kelas",
     role: "Fullstack Developer",
     description:
       "Built a classroom management web application to support online learning environments. Implemented both frontend and backend features including student data input, class schedules, and basic navigation/dashboard layout.",
@@ -139,6 +139,17 @@ const projects = [
     icon: "ImageIcon",
     tiers: ["Beginner", "Experimental"],
     date: "2022-12",
+  },
+  {
+    name: "Aplikasi Website Absen Sekolah",
+    role: "Fullstack Developer",
+    description:
+      "Developed a responsive school attendance system from scratch using native PHP and MySQL. Built full frontend and backend features including student attendance input (with camera), dynamic data display, and interactive dashboards with embedded maps.",
+    tech: ["PHP", "MySQL", "HTML", "CSS", "JavaScript"],
+    link: "https://github.com/davidgrcias/aplikasi-absen-sekolah-old",
+    icon: "Clipboard",
+    tiers: ["Intermediate", "Capstone"],
+    date: "2021-09",
   },
 ];
 
