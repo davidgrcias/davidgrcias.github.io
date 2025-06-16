@@ -39,6 +39,8 @@ import {
   ExternalLink,
   Mail,
   MapPin,
+  GitBranch,
+  Cloud,
 } from "lucide-react";
 import TikTokIcon from "../components/icons/TikTokIcon";
 import React from "react";
@@ -100,6 +102,11 @@ export const iconMap = {
   ExternalLink: ExternalLink,
   Mail: Mail,
   MapPin: MapPin,
+  GitBranch: GitBranch,
+  Database: Database,
+  Cloud: Cloud,
+  Layout: Layout,
+  Server: Server,
 };
 
 // Common icon sizes for consistency

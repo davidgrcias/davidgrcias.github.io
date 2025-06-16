@@ -79,7 +79,6 @@ const CustomCursor = () => {
       mouseX.set(e.clientX);
       mouseY.set(e.clientY);
     };
-
     const handleMouseOver = (e) => {
       if (e.target.closest('a, button, [role="button"]')) {
         setIsHovering(true);
@@ -87,21 +86,33 @@ const CustomCursor = () => {
     };
 
     const handleMouseOut = (e) => {
-      if (e.target.closest('a, button, [role="button"]')) {
-        setIsHovering(false);
-      }
+      // Remove the target check to ensure it always resets when leaving any element
+      setIsHovering(false);
     };
-
     window.addEventListener("mousemove", updatePosition);
-    document.addEventListener("mouseover", handleMouseOver);
-    document.addEventListener("mouseout", handleMouseOut);
+
+    // Listen to mouseover/mouseout on clickable elements
+    const clickableElements = document.querySelectorAll(
+      'a, button, [role="button"]'
+    );
+    clickableElements.forEach((element) => {
+      element.addEventListener("mouseenter", handleMouseOver);
+      element.addEventListener("mouseleave", handleMouseOut);
+    });
 
     // --- Cleanup ---
     return () => {
       document.head.removeChild(style);
       window.removeEventListener("mousemove", updatePosition);
-      document.removeEventListener("mouseover", handleMouseOver);
-      document.removeEventListener("mouseout", handleMouseOut);
+
+      // Clean up event listeners from clickable elements
+      const clickableElements = document.querySelectorAll(
+        'a, button, [role="button"]'
+      );
+      clickableElements.forEach((element) => {
+        element.removeEventListener("mouseenter", handleMouseOver);
+        element.removeEventListener("mouseleave", handleMouseOut);
+      });
     };
   }, [mouseX, mouseY]);
 
