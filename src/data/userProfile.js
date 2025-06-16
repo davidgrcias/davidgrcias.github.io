@@ -6,7 +6,7 @@ const userProfile = {
   headline: "Programmer & Content Creator",
   photoUrl: profileImg,
   aboutText:
-    "I’m driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity.",
+    "I’m driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity",
   contact: {
     email: "davidgarciasaragih7@gmail.com",
     location: "Jakarta, Indonesia",

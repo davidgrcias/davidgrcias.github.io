@@ -19,7 +19,7 @@ const YouTubeStats = () => {
     subscribers: "4.7K+",
     views: "876K+",
     likes: "11K+",
-    watchHours: "30K+",
+    watchHours: "50K+",
   };
   const [stats, setStats] = useState(fallbackStats);
   const [isLoading, setIsLoading] = useState(true);
@@ -38,8 +38,8 @@ const YouTubeStats = () => {
         setStats({
           subscribers: formatNumber(channelStats.subscriberCount),
           views: formatNumber(channelStats.viewCount),
-          likes: "11K+",
-          watchHours: "30K+",
+          likes: "15K+",
+          watchHours: "50K+",
         });
       } catch (error) {
         setStats(fallbackStats);

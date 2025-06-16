@@ -35,6 +35,29 @@ const PortfolioContent = () => {
   const { theme } = useContext(AppContext);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState("philosophy");
+  const [experienceSortOrder, setExperienceSortOrder] = useState("newest");
+  const [showAllExperiences, setShowAllExperiences] = useState(false);
+  const EXPERIENCES_PER_PAGE = 6;
+
+  // Save scroll position before page refresh
+  useEffect(() => {
+    const handleScroll = () => {
+      localStorage.setItem("scrollPosition", window.scrollY.toString());
+    };
+    window.addEventListener("scroll", handleScroll);
+
+    // Restore scroll position after page loads
+    const savedScrollPosition = localStorage.getItem("scrollPosition");
+    if (savedScrollPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedScrollPosition));
+      }, 100);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
     document.title = "David Garcia Saragih";
@@ -97,6 +120,47 @@ const PortfolioContent = () => {
     </button>
   );
 
+  // Format date helper
+  const formatDate = (dateStr) => {
+    if (dateStr === "present") return "Present";
+    const [year, month] = dateStr.split("-");
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    return `${months[parseInt(month) - 1]} ${year}`;
+  };
+
+  // Format date range
+  const formatDateRange = (startDate, endDate) => {
+    const start = formatDate(startDate);
+    const end = formatDate(endDate);
+    return `${start} - ${end}`;
+  };
+
+  // Sort experiences
+  const sortedExperiences = [...experiences].sort((a, b) => {
+    if (experienceSortOrder === "newest") {
+      return b.startDate.localeCompare(a.startDate);
+    }
+    return a.startDate.localeCompare(b.startDate);
+  });
+
+  const visibleExperiences = showAllExperiences
+    ? sortedExperiences
+    : sortedExperiences.slice(0, EXPERIENCES_PER_PAGE);
+  const hasMoreExperiences = sortedExperiences.length > EXPERIENCES_PER_PAGE;
+
   return (
     <div className="relative">
       <ScrollProgressBar />
@@ -158,41 +222,86 @@ const PortfolioContent = () => {
                   href={userProfile.socials.github.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-transform duration-300 hover:scale-125"
+                  className="group relative transition-transform duration-300 hover:scale-125"
                 >
-                  {renderIcon("Github", 28)}
+                  <span className="absolute inset-0 opacity-100 group-hover:opacity-0 transition-opacity">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {renderIcon("Github", 28)}
+                    </span>
+                  </span>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[#333] dark:text-white">
+                      {renderIcon("Github", 28)}
+                    </span>
+                  </span>
                 </a>
                 <a
                   href={userProfile.socials.youtube.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-transform duration-300 hover:scale-125"
+                  className="group relative transition-transform duration-300 hover:scale-125"
                 >
-                  {renderIcon("Youtube", 28)}
+                  <span className="absolute inset-0 opacity-100 group-hover:opacity-0 transition-opacity">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {renderIcon("Youtube", 28)}
+                    </span>
+                  </span>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[#FF0000]">
+                      {renderIcon("Youtube", 28)}
+                    </span>
+                  </span>
                 </a>
                 <a
                   href={userProfile.socials.tiktok.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-transform duration-300 hover:scale-125"
+                  className="group relative transition-transform duration-300 hover:scale-125"
                 >
-                  {React.createElement(iconMap.TikTok, { size: 28 })}
+                  <span className="absolute inset-0 opacity-100 group-hover:opacity-0 transition-opacity">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {React.createElement(iconMap.TikTok, { size: 28 })}
+                    </span>
+                  </span>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[#000000] dark:text-white">
+                      {React.createElement(iconMap.TikTok, { size: 28 })}
+                    </span>
+                  </span>
                 </a>
                 <a
                   href={userProfile.socials.instagram.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-500 dark:text-gray-400 hover:text-pink-500 transition-transform duration-300 hover:scale-125"
+                  className="group relative transition-transform duration-300 hover:scale-125"
                 >
-                  {renderIcon("Instagram", 28)}
+                  <span className="absolute inset-0 opacity-100 group-hover:opacity-0 transition-opacity">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {renderIcon("Instagram", 28)}
+                    </span>
+                  </span>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[#E4405F]">
+                      {renderIcon("Instagram", 28)}
+                    </span>
+                  </span>
                 </a>
                 <a
                   href={userProfile.socials.linkedin.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-gray-500 dark:text-gray-400 hover:text-blue-500 transition-transform duration-300 hover:scale-125"
+                  className="group relative transition-transform duration-300 hover:scale-125"
                 >
-                  {renderIcon("Linkedin", 28)}
+                  <span className="absolute inset-0 opacity-100 group-hover:opacity-0 transition-opacity">
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {renderIcon("Linkedin", 28)}
+                    </span>
+                  </span>
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span className="text-[#0A66C2]">
+                      {renderIcon("Linkedin", 28)}
+                    </span>
+                  </span>
                 </a>
               </motion.div>
             </section>
@@ -387,56 +496,107 @@ const PortfolioContent = () => {
             <section id="experience" className="py-20">
               <AnimatedSection>
                 <SectionTitle>Experience</SectionTitle>
-                <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+                <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
                   Professional milestones and hands-on experience across diverse
                   tech projects and leadership roles
                 </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {experiences.map((exp, index) => (
-                    <motion.div
-                      key={index}
-                      className="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-gray-700 group transition-all duration-300 hover:border-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/10 hover:-translate-y-2"
-                      viewport={{ once: true }}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="bg-cyan-500/10 dark:bg-cyan-500/5 rounded-lg p-3 text-cyan-500 dark:text-cyan-400">
-                          {renderIcon("Building", 24)}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                                {exp.role}
-                              </h3>
-                              <p className="text-cyan-600 dark:text-cyan-400 font-medium">
-                                {exp.company}
-                              </p>
-                            </div>
-                            <span className="text-sm text-slate-500 dark:text-gray-400 whitespace-nowrap">
-                              {exp.period}
-                            </span>
-                          </div>
-                          <p className="text-slate-600 dark:text-gray-400 text-sm mb-4">
-                            {exp.type}
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {exp.skills.map((skill) => (
-                              <span
-                                key={skill}
-                                className="bg-slate-200/70 dark:bg-slate-700/50 text-xs text-cyan-700 dark:text-cyan-300 py-1 px-3 rounded-full"
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+
+                {/* Sort Control */}
+                <div className="flex justify-end mb-8">
+                  <motion.button
+                    onClick={() =>
+                      setExperienceSortOrder(
+                        experienceSortOrder === "newest" ? "oldest" : "newest"
+                      )
+                    }
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all duration-300"
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {renderIcon(
+                      experienceSortOrder === "newest" ? "ArrowDown" : "ArrowUp"
+                    )}
+                    {experienceSortOrder === "newest"
+                      ? "Newest First"
+                      : "Oldest First"}
+                  </motion.button>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <AnimatePresence mode="popLayout">
+                    {visibleExperiences.map((exp, index) => (
+                      <motion.div
+                        key={`${exp.company}-${exp.role}`}
+                        className="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-gray-700 group transition-all duration-300 hover:border-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/10 hover:-translate-y-2"
+                        viewport={{ once: true }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="bg-cyan-500/10 dark:bg-cyan-500/5 rounded-lg p-3 text-cyan-500 dark:text-cyan-400">
+                            {renderIcon("Building", 24)}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                  {exp.role}
+                                </h3>
+                                <p className="text-cyan-600 dark:text-cyan-400 font-medium">
+                                  {exp.company}
+                                </p>
+                              </div>{" "}
+                              <div className="text-right">
+                                <span className="text-sm text-slate-500 dark:text-slate-400">
+                                  {formatDateRange(exp.startDate, exp.endDate)}
+                                </span>
+                                <p className="text-xs text-slate-500 dark:text-slate-400">
+                                  {exp.type}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {exp.skills.map((skill) => (
+                                <span
+                                  key={skill}
+                                  className="bg-slate-200/70 dark:bg-slate-700/50 text-xs text-cyan-700 dark:text-cyan-300 py-1 px-3 rounded-full"
+                                >
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {/* Show More/Less Button */}
+                {hasMoreExperiences && (
+                  <div className="mt-8 text-center">
+                    <motion.button
+                      onClick={() => setShowAllExperiences(!showAllExperiences)}
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors shadow-lg shadow-cyan-500/20"
+                      whileHover={{ y: -2 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      {showAllExperiences ? (
+                        <>
+                          {renderIcon("ChevronUp")}
+                          Show Less Experiences
+                        </>
+                      ) : (
+                        <>
+                          {renderIcon("ChevronDown")}
+                          Show More Experiences
+                        </>
+                      )}
+                    </motion.button>
+                  </div>
+                )}
               </AnimatedSection>
             </section>{" "}
             {/* Projects Section */}
