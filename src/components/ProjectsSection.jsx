@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import projects from "../data/projects";
+import userProfile from "../data/userProfile";
 import * as LucideIcons from "lucide-react";
 import SectionTitle from "./SectionTitle";
 
@@ -66,7 +67,6 @@ const ProjectsSection = () => {
         From beginner-friendly to real-world applications, explore my journey
         through different project tiers
       </p>
-
       {/* Filter and Sort Controls */}
       <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
         {/* Project Type Tabs */}
@@ -106,7 +106,6 @@ const ProjectsSection = () => {
           {sortOrder === "newest" ? "Newest First" : "Oldest First"}
         </motion.button>
       </div>
-
       {/* Projects Grid with Animation */}
       <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-6" layout>
         <AnimatePresence mode="popLayout">
@@ -187,8 +186,54 @@ const ProjectsSection = () => {
             </motion.div>
           ))}
         </AnimatePresence>
-      </motion.div>
-
+      </motion.div>{" "}
+      {/* Additional Projects Note - Show when all projects are displayed */}
+      {showAll && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="mt-8 text-center"
+        >
+          <p className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+            Too many to list!
+          </p>
+          <p className="text-slate-600 dark:text-gray-400 mb-4">
+            I've worked on a wide variety of projects, more than I could fit
+            here.
+          </p>{" "}
+          <p className="text-slate-600 dark:text-gray-400 mb-8">
+            👉 Check out more on{" "}
+            <a
+              href={userProfile.socials.github.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#333] dark:text-white hover:text-[#2b3137] dark:hover:text-gray-300 font-semibold transition-colors hover:underline underline-offset-4"
+            >
+              GitHub
+            </a>
+            ,{" "}
+            <a
+              href={userProfile.socials.youtube.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#FF0000] hover:text-[#FF0000]/80 font-semibold transition-colors hover:underline underline-offset-4"
+            >
+              YouTube
+            </a>
+            , or{" "}
+            <a
+              href={userProfile.socials.tiktok.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#000000] dark:text-white hover:text-[#00f2ea] dark:hover:text-[#00f2ea] font-semibold transition-colors hover:underline underline-offset-4"
+            >
+              TikTok
+            </a>{" "}
+            to see the full journey.
+          </p>
+        </motion.div>
+      )}
       {/* Show More/Less Button */}
       {hasMoreProjects && (
         <div className="mt-8 text-center">
