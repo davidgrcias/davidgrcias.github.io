@@ -529,12 +529,14 @@ const PortfolioContent = () => {
                       {userProfile.contact.location}
                     </span>
                   </div>
-                </div>
+                </div>{" "}
                 <a
-                  href={`mailto:${userProfile.contact.email}`}
+                  href={`https://wa.me/${userProfile.contact.whatsapp}?text=Hi`}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg transition-transform duration-300 hover:scale-105 inline-block shadow-lg shadow-cyan-500/20"
                 >
-                  Say Hello
+                  Say Hello on WhatsApp
                 </a>
               </AnimatedSection>
             </section>

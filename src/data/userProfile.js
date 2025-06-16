@@ -10,6 +10,7 @@ const userProfile = {
   contact: {
     email: "davidgarciasaragih7@gmail.com",
     location: "Jakarta, Indonesia",
+    whatsapp: "+6287776803957", // Added WhatsApp number with country code
   },
   socials: {
     youtube: {

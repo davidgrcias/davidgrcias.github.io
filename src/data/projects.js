@@ -8,7 +8,7 @@ const projects = [
     tech: ["HTML", "CSS", "JavaScript"],
     link: "https://ptibali.vercel.app/",
     icon: "School",
-    tiers: ["Beginner", "Real-World"],
+    tiers: ["Intermediate", "Capstone"],
   },
   {
     name: "LINE Discord Bot Integration",
@@ -38,7 +38,7 @@ const projects = [
     tech: ["HTML", "CSS", "JavaScript"],
     link: "https://github.com/davidgrcias/scream",
     icon: "Mic",
-    tiers: ["Beginner", "Capstone"],
+    tiers: ["Beginner"],
   },
 ];
 

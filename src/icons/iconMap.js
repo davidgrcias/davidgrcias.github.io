@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import TikTokIcon from "../components/icons/TikTokIcon";
 import React from "react";
+import ChatBot from "../components/ChatBot";
 
 // Centralized icon mapping object
 export const iconMap = {
