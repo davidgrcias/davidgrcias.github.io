@@ -5,7 +5,7 @@ const experiences = [
     company: "UMN Festival 2025",
     period: "Feb 2025 - Present",
     type: "Event Committee",
-    skills: ["Laravel", "React", "Tailwind CSS", "Git Collaboration"],
+    skills: ["Laravel", "React", "Tailwind CSS", "Git Workflow"],
   },
   {
     role: "Founder & Digital Strategist",
@@ -19,28 +19,28 @@ const experiences = [
     company: "UMN Visual Journalism Day",
     period: "Jun 2024 - Oct 2024",
     type: "Event Committee",
-    skills: ["TypeScript", "React", "Tailwind CSS", "Git Collaboration"],
+    skills: ["TypeScript", "React", "Tailwind CSS", "Git Workflow"],
   },
   {
     role: "Frontend Developer",
     company: "PPIF UMN 2024",
     period: "Apr 2024 - Aug 2024",
     type: "Event Committee",
-    skills: ["React", "Tailwind CSS", "Git Collaboration"],
+    skills: ["React", "Tailwind CSS", "Git Workflow"],
   },
   {
     role: "Backend Developer",
     company: "UMN Tech Festival 2024",
     period: "Sep 2023 - Mar 2024",
     type: "Event Committee",
-    skills: ["Laravel", "PHP", "MySQL", "Git Collaboration"],
+    skills: ["Laravel", "PHP", "MySQL", "Git Workflow"],
   },
   {
     role: "Web Developer",
     company: "DAAI TV",
     period: "Mar 2022 - May 2022",
     type: "Internship",
-    skills: ["HTML", "Bootstrap CSS", "PHP", "MySQL", "JavaScript"],
+    skills: ["HTML", "Bootstrap", "PHP", "MySQL", "JavaScript"],
   },
 ];
 
