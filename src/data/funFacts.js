@@ -1,34 +1,34 @@
 // src/data/funFacts.js
 const funFacts = [
   {
-    title: "Favorite Workplace",
-    text: "Cafés—especially those with good coffee and cozy vibes.",
-    icon: "Coffee",
-  },
-  {
     title: "Hidden Talent",
-    text: "Ask me about Jakarta's transport routes—I can tell you the best way to reach any destination using public transport!",
+    text: "Ask me about Jakarta's transport routes, I can tell you the best way to reach any destination using public transport!",
     icon: "MapIcon",
   },
   {
     title: "Surprising Fact",
-    text: "Despite appearing reserved, I genuinely enjoy conversations with new people.",
-    icon: "SmilePlus",
-  },
-  {
-    title: "Essential Item",
-    text: "My laptop—I can't imagine life without it.",
-    icon: "Laptop",
+    text: "Though I might seem reserved at first, I genuinely love meeting and chatting with new people.",
+    icon: "HeartHandshake",
   },
   {
     title: "Most Productive Hours",
-    text: "I'm at my best late at night.",
-    icon: "MoonStar",
+    text: "Late night hours are when my creativity and productivity peak.",
+    icon: "Hourglass",
   },
   {
     title: "Best Way to Relax",
-    text: "Relaxing feels best after a productive day—I love winding down after meaningful work.",
-    icon: "Smile",
+    text: "Nothing beats unwinding after a productive day of solving complex coding challenges.",
+    icon: "Puzzle",
+  },
+  {
+    title: "Friends Describe Me As",
+    text: "Ambitious and analytical, I love digging deeper into things and always strive to improve.",
+    icon: "User",
+  },
+  {
+    title: "Underrated Joy",
+    text: "That satisfying moment when I successfully help someone solve a problem or reach their goal.",
+    icon: "Heart",
   },
 ];
 

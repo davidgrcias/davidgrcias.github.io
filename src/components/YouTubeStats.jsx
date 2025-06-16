@@ -1,7 +1,18 @@
 // src/components/YouTubeStats.jsx
 import React, { useState, useEffect } from "react";
-import { Youtube, Star, Eye, Heart, Clock, Loader } from "lucide-react";
+import { Clock, Eye, Heart, Loader, Users, Youtube } from "lucide-react";
+import { iconMap } from "../icons/iconMap";
 import userProfile from "../data/userProfile";
+
+// Extend iconMap with newly needed icons
+Object.assign(iconMap, {
+  Clock: Clock,
+  Eye: Eye,
+  Heart: Heart,
+  Loader: Loader,
+  Users: Users,
+  Youtube: Youtube,
+});
 
 const YouTubeStats = () => {
   const fallbackStats = {
@@ -42,15 +53,47 @@ const YouTubeStats = () => {
 
   const formatNumber = (num) => new Intl.NumberFormat("en-US").format(num);
 
-  const StatItem = ({ icon, value, label }) => (
+  const statItems = [
+    {
+      icon: iconMap.Users,
+      value: stats.subscribers,
+      label: "Subscribers",
+      color: "text-purple-400",
+    },
+    {
+      icon: iconMap.Eye,
+      value: stats.views,
+      label: "Views",
+      color: "text-blue-400",
+    },
+    {
+      icon: iconMap.Heart,
+      value: stats.likes,
+      label: "Likes",
+      color: "text-pink-400",
+    },
+    {
+      icon: iconMap.Clock,
+      value: stats.watchHours,
+      label: "Watch Hours",
+      color: "text-green-400",
+    },
+  ];
+
+  const StatItem = ({ Icon, value, label, color }) => (
     <div className="flex items-center">
-      {icon}
+      <Icon className={`${color} mr-3`} size={24} />
       <div>
         <span className="font-bold text-xl text-slate-800 dark:text-white">
-          {isLoading ? <Loader size={20} className="animate-spin" /> : value}
+          {isLoading
+            ? React.createElement(iconMap.Loader, {
+                size: 20,
+                className: "animate-spin",
+              })
+            : value}
         </span>
         <br />
-        {label}
+        <span className="text-slate-600 dark:text-gray-400">{label}</span>
       </div>
     </div>
   );
@@ -74,26 +117,15 @@ const YouTubeStats = () => {
         </div>
       </div>
       <div className="grid grid-cols-2 gap-6">
-        <StatItem
-          icon={<Star className="text-yellow-400 mr-3" />}
-          value={stats.subscribers}
-          label="Subscribers"
-        />
-        <StatItem
-          icon={<Eye className="text-blue-400 mr-3" />}
-          value={stats.views}
-          label="Views"
-        />
-        <StatItem
-          icon={<Heart className="text-pink-400 mr-3" />}
-          value={stats.likes}
-          label="Likes"
-        />
-        <StatItem
-          icon={<Clock className="text-green-400 mr-3" />}
-          value={stats.watchHours}
-          label="Watch Hours"
-        />
+        {statItems.map((item, index) => (
+          <StatItem
+            key={index}
+            Icon={item.icon}
+            value={item.value}
+            label={item.label}
+            color={item.color}
+          />
+        ))}
       </div>
     </div>
   );

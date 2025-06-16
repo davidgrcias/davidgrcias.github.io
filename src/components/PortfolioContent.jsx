@@ -1,25 +1,13 @@
 import React, { useContext, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import * as LucideIcons from "lucide-react";
+import TikTokIcon from "../components/icons/TikTokIcon";
 import Header from "./Header";
 import AnimatedSection from "./AnimatedSection";
 import SectionTitle from "./SectionTitle";
 import YouTubeStats from "./YouTubeStats";
+import TikTokStats from "./TikTokStats";
 import CertificationsSection from "./CertificationsSection";
-import {
-  Rss,
-  Github,
-  Linkedin,
-  School,
-  ExternalLink,
-  BrainCircuit,
-  Gamepad2,
-  Building,
-  LineChart,
-  Mail,
-  MapPin,
-  Sun,
-  Moon,
-} from "lucide-react";
 import userProfile from "../data/userProfile";
 import insights from "../data/insights";
 import funFacts from "../data/funFacts";
@@ -30,30 +18,26 @@ import education from "../data/education";
 import { AppContext } from "../AppContext";
 import ScrollProgressBar from "./ScrollProgressBar";
 
+// Add all Lucide icons to the iconMap
 const iconMap = {
-  Lightbulb: <BrainCircuit size={24} />,
-  ThumbsDown: <Gamepad2 size={24} />,
-  Rocket: <LineChart size={24} />,
-  Forward: <ExternalLink size={24} />,
-  Coffee: <Rss size={24} />,
-  MapIcon: <Rss size={24} />,
-  SmilePlus: <Rss size={24} />,
-  Laptop: <Rss size={24} />,
-  MoonStar: <Rss size={24} />,
-  Smile: <Rss size={24} />,
-  Building: <Building size={40} />,
-  School: <School size={40} />,
-  Rss: <Rss size={40} />,
-  LineChart: <LineChart size={40} />,
-  Code: <Rss size={24} />,
-  Layers: <Rss size={24} />,
-  Bot: <Rss size={24} />,
+  ...LucideIcons,
+  TikTok: TikTokIcon,
+};
+
+// Render icon helper
+const renderIcon = (iconName, size = 24) => {
+  const IconComponent = iconMap[iconName];
+  return IconComponent ? React.createElement(IconComponent, { size }) : null;
 };
 
 const PortfolioContent = () => {
   const { theme } = useContext(AppContext);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState("philosophy");
+
+  useEffect(() => {
+    document.title = "David Garcia Saragih";
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (event) =>
@@ -175,7 +159,7 @@ const PortfolioContent = () => {
                   rel="noopener noreferrer"
                   className="text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-transform duration-300 hover:scale-125"
                 >
-                  <Github size={28} />
+                  {renderIcon("Github", 28)}
                 </a>
                 <a
                   href={userProfile.socials.youtube.url}
@@ -183,7 +167,7 @@ const PortfolioContent = () => {
                   rel="noopener noreferrer"
                   className="text-gray-500 dark:text-gray-400 hover:text-red-500 transition-transform duration-300 hover:scale-125"
                 >
-                  <Rss size={28} />
+                  {renderIcon("Youtube", 28)}
                 </a>
                 <a
                   href={userProfile.socials.tiktok.url}
@@ -191,7 +175,15 @@ const PortfolioContent = () => {
                   rel="noopener noreferrer"
                   className="text-gray-500 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white transition-transform duration-300 hover:scale-125"
                 >
-                  <Rss size={28} />
+                  {React.createElement(iconMap.TikTok, { size: 28 })}
+                </a>
+                <a
+                  href={userProfile.socials.instagram.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-500 dark:text-gray-400 hover:text-pink-500 transition-transform duration-300 hover:scale-125"
+                >
+                  {renderIcon("Instagram", 28)}
                 </a>
                 <a
                   href={userProfile.socials.linkedin.url}
@@ -199,11 +191,10 @@ const PortfolioContent = () => {
                   rel="noopener noreferrer"
                   className="text-gray-500 dark:text-gray-400 hover:text-blue-500 transition-transform duration-300 hover:scale-125"
                 >
-                  <Linkedin size={28} />
+                  {renderIcon("Linkedin", 28)}
                 </a>
               </motion.div>
             </section>
-
             {/* About Section */}
             <section id="about" className="py-20">
               <AnimatedSection>
@@ -213,15 +204,16 @@ const PortfolioContent = () => {
                 </p>
                 <div className="max-w-4xl mx-auto mt-16">
                   <div className="flex justify-center border-b border-slate-200 dark:border-gray-700 mb-8 relative">
+                    {" "}
                     <TabButton
                       id="philosophy"
                       label="My Philosophy"
-                      icon={<BrainCircuit size={18} />}
-                    />
+                      icon={renderIcon("BrainCircuit", 18)}
+                    />{" "}
                     <TabButton
                       id="funfacts"
                       label="Personal Fun Facts"
-                      icon={<Gamepad2 size={18} />}
+                      icon={renderIcon("Gamepad2", 18)}
                     />
                     <motion.div
                       className="absolute bottom-0 h-0.5 bg-cyan-500 rounded"
@@ -259,10 +251,10 @@ const PortfolioContent = () => {
                               className="bg-slate-100 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-gray-700 flex items-start gap-4 transition-all duration-300 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1"
                               variants={gridItemVariants}
                             >
+                              {" "}
                               <div className="text-cyan-500 dark:text-cyan-400 mt-1 flex-shrink-0">
-                                {iconMap[item.icon] || (
-                                  <BrainCircuit size={24} />
-                                )}
+                                {renderIcon(item.icon) ||
+                                  renderIcon("BrainCircuit", 24)}
                               </div>
                               <div>
                                 <h4 className="font-bold text-slate-800 dark:text-white mb-1">
@@ -289,8 +281,10 @@ const PortfolioContent = () => {
                               className="bg-slate-100 dark:bg-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-gray-700 flex items-start gap-4 transition-all duration-300 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 hover:-translate-y-1"
                               variants={gridItemVariants}
                             >
+                              {" "}
                               <div className="text-cyan-500 dark:text-cyan-400 mt-1 flex-shrink-0">
-                                {iconMap[item.icon] || <Gamepad2 size={24} />}
+                                {renderIcon(item.icon) ||
+                                  renderIcon("Gamepad2", 24)}
                               </div>
                               <div>
                                 <h4 className="font-bold text-slate-800 dark:text-white mb-1">
@@ -308,62 +302,44 @@ const PortfolioContent = () => {
                   </AnimatePresence>
                 </div>
               </AnimatedSection>
-            </section>
-
+            </section>{" "}
             {/* Stats Section */}
             <section id="stats" className="py-20">
               <AnimatedSection>
                 <SectionTitle>My Content Creation Journey</SectionTitle>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <YouTubeStats />
-                  <div className="space-y-8">
-                    <div className="bg-slate-100 dark:bg-slate-800/50 p-8 rounded-xl border border-slate-200 dark:border-gray-700 hover:border-cyan-500/50 transition-all duration-300 flex items-center justify-between hover:shadow-2xl hover:shadow-cyan-500/10">
-                      <div>
-                        <h3 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center">
-                          <Rss className="mr-3" /> TikTok
-                        </h3>
-                        <p className="text-slate-600 dark:text-gray-400">
-                          Shorts, tips, and fun tech content.
-                        </p>
-                      </div>
-                      <a
-                        href={userProfile.socials.tiktok.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-slate-800 hover:bg-slate-900 text-white dark:bg-white/90 dark:hover:bg-white dark:text-black font-bold py-2 px-4 rounded-lg transition-transform duration-300 hover:scale-105 flex items-center"
-                      >
-                        Visit <ExternalLink size={16} className="ml-2" />
-                      </a>
-                    </div>
-                    <div className="bg-slate-100 dark:bg-slate-800/50 p-8 rounded-xl border border-slate-200 dark:border-gray-700 hover:border-cyan-500/50 transition-all duration-300 flex items-center justify-between hover:shadow-2xl hover:shadow-cyan-500/10">
-                      <div>
-                        <h3 className="text-2xl font-bold text-slate-800 dark:text-white flex items-center">
-                          <Github className="mr-3" /> GitHub
-                        </h3>
-                        <p className="text-slate-600 dark:text-gray-400">
-                          My code, experiments, and projects.
-                        </p>
-                      </div>
-                      <a
-                        href={userProfile.socials.github.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-transform duration-300 hover:scale-105 flex items-center"
-                      >
-                        Explore <ExternalLink size={16} className="ml-2" />
-                      </a>
-                    </div>
-                  </div>
+                  <TikTokStats />
+                </div>
+                <div className="flex justify-center mt-8 gap-4">
+                  <a
+                    href={userProfile.socials.youtube.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-300 hover:scale-105 flex items-center"
+                  >
+                    {renderIcon("Youtube", 20)}
+                    <span className="ml-2">Visit YouTube Channel</span>
+                  </a>
+                  <a
+                    href={userProfile.socials.tiktok.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-slate-800 hover:bg-slate-900 text-white dark:bg-white/90 dark:hover:bg-white dark:text-black font-bold py-3 px-6 rounded-lg transition-transform duration-300 hover:scale-105 flex items-center"
+                  >
+                    {" "}
+                    {renderIcon("TikTok", 20)}
+                    <span className="ml-2">Follow on TikTok</span>
+                  </a>
                 </div>
               </AnimatedSection>
-            </section>
-
-            {/* Experience Section */}
-            <section id="experience" className="py-20">
+            </section>{" "}
+            {/* Education Section */}
+            <section id="education" className="py-20">
               <AnimatedSection>
-                <SectionTitle>Work Experience</SectionTitle>
+                <SectionTitle>Education</SectionTitle>
                 <div className="relative border-l-2 border-cyan-500/30 pl-10">
-                  {experiences.map((exp, index) => (
+                  {education.map((edu, index) => (
                     <motion.div
                       key={index}
                       className="mb-12 relative"
@@ -372,75 +348,84 @@ const PortfolioContent = () => {
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.2 }}
                     >
-                      <div className="absolute -left-[49px] top-1 w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-cyan-500"></div>
+                      <div className="absolute -left-[49px] top-1 w-6 h-6 bg-slate-200 dark:bg-slate-700 rounded-full border-4 border-cyan-500">
+                        <div className="absolute inset-0 flex items-center justify-center text-cyan-500 dark:text-cyan-400">
+                          {renderIcon("GraduationCap", 14)}
+                        </div>
+                      </div>
                       <p className="text-cyan-600 dark:text-cyan-400 text-sm mb-1">
-                        {exp.period}
+                        {edu.period}
                       </p>
                       <h3 className="text-xl font-bold text-slate-800 dark:text-white">
-                        {exp.role}{" "}
-                        <span className="text-slate-500 dark:text-gray-400 font-normal">
-                          at {exp.company}
-                        </span>
+                        {edu.institution}
                       </h3>
-                      <p className="text-slate-500 dark:text-gray-500 mb-3">
-                        {exp.type}
+                      <p className="text-slate-500 dark:text-gray-400 mb-2">
+                        {edu.degree}
                       </p>
-                      <div className="flex flex-wrap gap-2">
-                        {exp.skills.map((skill) => (
-                          <span
-                            key={skill}
-                            className="bg-slate-200 dark:bg-gray-700 text-xs text-cyan-700 dark:text-cyan-300 py-1 px-3 rounded-full"
-                          >
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
+                      {edu.grade && (
+                        <div className="inline-block bg-slate-200/50 dark:bg-slate-700/50 px-3 py-1 rounded-full">
+                          <p className="text-sm text-cyan-600 dark:text-cyan-400">
+                            GPA: {edu.grade}
+                          </p>
+                        </div>
+                      )}
                     </motion.div>
                   ))}
                 </div>
               </AnimatedSection>
             </section>
-
-            {/* Education Section */}
-            <section id="education" className="py-20">
+            {/* Experience Section */}
+            <section id="experience" className="py-20">
               <AnimatedSection>
-                <SectionTitle>Education</SectionTitle>
-                <div className="grid md:grid-cols-2 gap-8">
-                  {education.map((edu, index) => (
+                <SectionTitle>Experience</SectionTitle>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {experiences.map((exp, index) => (
                     <motion.div
                       key={index}
-                      className="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-gray-700 flex"
+                      className="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-gray-700 group transition-all duration-300 hover:border-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/10 hover:-translate-y-2"
                       viewport={{ once: true }}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5, delay: index * 0.2 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
                     >
-                      <School
-                        className="text-cyan-500 dark:text-cyan-400 mr-6 mt-1 flex-shrink-0"
-                        size={32}
-                      />
-                      <div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                          {edu.institution}
-                        </h3>
-                        <p className="text-slate-600 dark:text-gray-400">
-                          {edu.degree}
-                        </p>
-                        <p className="text-sm text-slate-500 dark:text-gray-500">
-                          {edu.period}
-                        </p>
-                        {edu.grade && (
-                          <p className="text-sm text-cyan-500 dark:text-cyan-400 mt-1">
-                            Grade: {edu.grade}
+                      <div className="flex items-start gap-4">
+                        <div className="bg-cyan-500/10 dark:bg-cyan-500/5 rounded-lg p-3 text-cyan-500 dark:text-cyan-400">
+                          {renderIcon("Building", 24)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                                {exp.role}
+                              </h3>
+                              <p className="text-cyan-600 dark:text-cyan-400 font-medium">
+                                {exp.company}
+                              </p>
+                            </div>
+                            <span className="text-sm text-slate-500 dark:text-gray-400 whitespace-nowrap">
+                              {exp.period}
+                            </span>
+                          </div>
+                          <p className="text-slate-600 dark:text-gray-400 text-sm mb-4">
+                            {exp.type}
                           </p>
-                        )}
+                          <div className="flex flex-wrap gap-2">
+                            {exp.skills.map((skill) => (
+                              <span
+                                key={skill}
+                                className="bg-slate-200/70 dark:bg-slate-700/50 text-xs text-cyan-700 dark:text-cyan-300 py-1 px-3 rounded-full"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </motion.div>
                   ))}
                 </div>
               </AnimatedSection>
-            </section>
-
+            </section>{" "}
             {/* Projects Section */}
             <section id="projects" className="py-20">
               <AnimatedSection>
@@ -456,8 +441,10 @@ const PortfolioContent = () => {
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                     >
                       <div className="p-6 flex-grow">
+                        {" "}
                         <div className="text-cyan-500 dark:text-cyan-400 mb-4">
-                          {iconMap[proj.icon] || <Building size={40} />}
+                          {renderIcon(proj.icon, 40) ||
+                            renderIcon("Building", 40)}
                         </div>
                         <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
                           {proj.name}
@@ -486,11 +473,11 @@ const PortfolioContent = () => {
                           rel="noopener noreferrer"
                           className="text-cyan-600 dark:text-cyan-400 font-semibold text-sm flex items-center group-hover:underline"
                         >
-                          View Project{" "}
-                          <ExternalLink
-                            size={14}
-                            className="ml-2 transform transition-transform group-hover:translate-x-1"
-                          />
+                          {" "}
+                          <span>View Project</span>{" "}
+                          <span className="ml-2">
+                            {renderIcon("ExternalLink", 14)}
+                          </span>
                         </a>
                       </div>
                     </motion.div>
@@ -498,7 +485,6 @@ const PortfolioContent = () => {
                 </div>
               </AnimatedSection>
             </section>
-
             {/* Skills & Certifications Section */}
             <section id="skills" className="py-20">
               <div className="grid md:grid-cols-2 gap-16">
@@ -510,9 +496,13 @@ const PortfolioContent = () => {
                     {skills.map((skill, index) => (
                       <div key={index}>
                         <div className="flex justify-between items-center mb-1">
+                          {" "}
                           <span className="font-bold text-slate-800 dark:text-white flex items-center">
-                            {iconMap[skill.icon] || <Rss size={24} />}
-                            <span className="ml-2">{skill.name}</span>
+                            {" "}
+                            <span className="mr-3">
+                              {renderIcon(skill.icon) || renderIcon("Code", 24)}
+                            </span>
+                            <span>{skill.name}</span>
                           </span>
                           <span className="text-sm text-cyan-600 dark:text-cyan-400">
                             {skill.level}%
@@ -538,7 +528,6 @@ const PortfolioContent = () => {
                 <CertificationsSection />
               </div>
             </section>
-
             {/* Contact Section */}
             <section id="contact" className="py-20 text-center">
               <AnimatedSection>
@@ -550,17 +539,19 @@ const PortfolioContent = () => {
                 </p>
                 <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8 mb-8 text-lg">
                   <div className="flex items-center">
-                    <Mail className="text-cyan-500 dark:text-cyan-400 mr-3" />
+                    {" "}
+                    <span className="mr-3">{renderIcon("Mail")}</span>
                     <a
                       href={`mailto:${userProfile.contact.email}`}
-                      className="text-slate-800 dark:text-white hover:underline"
+                      className="text-slate-800 dark:text-white hover:underline ml-1"
                     >
                       {userProfile.contact.email}
                     </a>
                   </div>
                   <div className="flex items-center">
-                    <MapPin className="text-cyan-500 dark:text-cyan-400 mr-3" />
-                    <span className="text-slate-800 dark:text-white">
+                    {" "}
+                    <span className="mr-3">{renderIcon("MapPin")}</span>
+                    <span className="text-slate-800 dark:text-white ml-1">
                       {userProfile.contact.location}
                     </span>
                   </div>

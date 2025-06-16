@@ -1,8 +1,17 @@
 // src/components/Header.jsx
 import React, { useContext, useState, useEffect } from "react";
-import { Sun, Moon, Menu, X } from "lucide-react";
+import { Moon, Sun, Menu, X } from "lucide-react";
+import { iconMap } from "../icons/iconMap";
 import { AppContext } from "../AppContext";
 import userProfile from "../data/userProfile";
+
+// Extend iconMap with newly needed icons
+Object.assign(iconMap, {
+  Moon: Moon,
+  Sun: Sun,
+  Menu: Menu,
+  X: X,
+});
 
 const navLinks = [
   { href: "#about", label: "About" },
@@ -45,7 +54,7 @@ const Header = () => {
           onClick={(e) => handleNavClick(e, "#hero")}
           className="text-xl font-bold text-slate-800 dark:text-white tracking-wider"
         >
-          David G.
+          David G.S.
         </a>
         {/* Desktop nav */}
         <div className="hidden md:flex items-center space-x-6 text-sm text-slate-600 dark:text-gray-300">
@@ -67,7 +76,9 @@ const Header = () => {
             onClick={toggleTheme}
             className="p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600"
           >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+            {theme === "dark"
+              ? React.createElement(iconMap.Sun, { size: 18 })
+              : React.createElement(iconMap.Moon, { size: 18 })}
           </button>
           {/* Hire Me button (desktop only) */}
           <a
@@ -82,7 +93,7 @@ const Header = () => {
             onClick={() => setMobileOpen(true)}
             aria-label="Open menu"
           >
-            <Menu size={22} />
+            {React.createElement(iconMap.Menu, { size: 22 })}
           </button>
         </div>
       </nav>
@@ -98,7 +109,7 @@ const Header = () => {
           onClick={() => setMobileOpen(false)}
           aria-label="Close menu"
         >
-          <X size={32} />
+          {React.createElement(iconMap.X, { size: 32 })}
         </button>
         <nav className="flex flex-1 flex-col items-center justify-center w-full h-full gap-8 text-3xl font-bold text-white">
           {navLinks.map((link) => (
