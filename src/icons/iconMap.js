@@ -41,6 +41,9 @@ import {
   MapPin,
   GitBranch,
   Cloud,
+  CodeIcon,
+  BrainCircuitIcon,
+  Handshake,
 } from "lucide-react";
 import TikTokIcon from "../components/icons/TikTokIcon";
 import React from "react";
@@ -107,6 +110,9 @@ export const iconMap = {
   Cloud: Cloud,
   Layout: Layout,
   Server: Server,
+  CodeIcon: CodeIcon,
+  BrainCircuitIcon: BrainCircuitIcon,
+  Handshake: Handshake,
 };
 
 // Common icon sizes for consistency

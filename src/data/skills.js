@@ -1,7 +1,7 @@
 // src/data/skills.js
 const skills = [
   {
-    name: "HTML, CSS, Bootstrap, Tailwind & jQuery",
+    name: "HTML, CSS, Bootstrap & Tailwind",
     level: 100,
     icon: "Code",
   },
