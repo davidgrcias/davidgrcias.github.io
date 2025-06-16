@@ -2,7 +2,13 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Award } from "lucide-react";
+import { iconMap } from "../icons/iconMap";
 import certifications from "../data/certifications";
+
+// Extend iconMap with Award icon
+Object.assign(iconMap, {
+  Award: Award,
+});
 
 const CertificationsSection = () => {
   const [openCert, setOpenCert] = useState(null);
@@ -23,10 +29,11 @@ const CertificationsSection = () => {
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Award
-                className="text-cyan-500 dark:text-cyan-400 mr-4 flex-shrink-0"
-                size={24}
-              />
+              {React.createElement(iconMap.Award, {
+                className:
+                  "text-cyan-500 dark:text-cyan-400 mr-4 flex-shrink-0",
+                size: 24,
+              })}
               <div>
                 <p className="font-bold text-slate-800 dark:text-white">
                   {cert.name}
