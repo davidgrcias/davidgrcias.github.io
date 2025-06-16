@@ -44,6 +44,7 @@ import {
   CodeIcon,
   BrainCircuitIcon,
   Handshake,
+  FlaskConical,
 } from "lucide-react";
 import TikTokIcon from "../components/icons/TikTokIcon";
 import React from "react";
@@ -114,6 +115,7 @@ export const iconMap = {
   CodeIcon: CodeIcon,
   BrainCircuitIcon: BrainCircuitIcon,
   Handshake: Handshake,
+  FlaskConical: FlaskConical,
 };
 
 // Common icon sizes for consistency

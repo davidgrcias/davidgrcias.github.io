@@ -7,6 +7,9 @@ import SectionTitle from "./SectionTitle";
 const ProjectsSection = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [showAll, setShowAll] = useState(false);
+  const PROJECTS_PER_PAGE = 6; // 3 rows × 2 columns
 
   const tabs = [
     { id: "All", label: "All Projects", icon: "Layout" },
@@ -15,17 +18,39 @@ const ProjectsSection = () => {
     { id: "Advanced", label: "Advanced", icon: "Cpu" },
     { id: "Real-World", label: "Real-World", icon: "Briefcase" },
     { id: "Capstone", label: "Capstone", icon: "Trophy" },
+    { id: "Experimental", label: "Experimental", icon: "FlaskConical" },
   ];
 
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   useEffect(() => {
-    if (activeTab === "All") {
-      setFilteredProjects(projects);
-    } else {
-      setFilteredProjects(
-        projects.filter((project) => project.tiers.includes(activeTab))
-      );
-    }
-  }, [activeTab]);
+    let filtered =
+      activeTab === "All"
+        ? [...projects]
+        : projects.filter((project) => project.tiers.includes(activeTab));
+
+    // Sort projects
+    filtered.sort((a, b) => {
+      if (sortOrder === "newest") {
+        return new Date(b.date) - new Date(a.date);
+      } else {
+        return new Date(a.date) - new Date(b.date);
+      }
+    });
+
+    setFilteredProjects(filtered);
+  }, [activeTab, sortOrder]);
+
+  const visibleProjects = showAll
+    ? filteredProjects
+    : filteredProjects.slice(0, PROJECTS_PER_PAGE);
+  const hasMoreProjects = filteredProjects.length > PROJECTS_PER_PAGE;
 
   const renderIcon = (iconName, className = "") => {
     const IconComponent = LucideIcons[iconName];
@@ -42,34 +67,50 @@ const ProjectsSection = () => {
         through different project tiers
       </p>
 
-      {/* Innovative Tab Design */}
-      <div className="flex flex-wrap gap-2 mb-8 justify-center">
-        {tabs.map((tab) => (
-          <motion.button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`
-              flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
-              transition-all duration-300 transform hover:scale-105
-              ${
-                activeTab === tab.id
-                  ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/30"
-                  : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700"
-              }
-            `}
-            whileHover={{ y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            {renderIcon(tab.icon)}
-            {tab.label}
-          </motion.button>
-        ))}
+      {/* Filter and Sort Controls */}
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
+        {/* Project Type Tabs */}
+        <div className="flex flex-wrap gap-2 justify-center flex-1">
+          {tabs.map((tab) => (
+            <motion.button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium
+                transition-all duration-300 transform hover:scale-105
+                ${
+                  activeTab === tab.id
+                    ? "bg-cyan-500 text-white shadow-lg shadow-cyan-500/30"
+                    : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700"
+                }
+              `}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {renderIcon(tab.icon)}
+              {tab.label}
+            </motion.button>
+          ))}
+        </div>
+
+        {/* Sort Button */}
+        <motion.button
+          onClick={() =>
+            setSortOrder(sortOrder === "newest" ? "oldest" : "newest")
+          }
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-700 transition-all duration-300"
+          whileHover={{ y: -2 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {renderIcon(sortOrder === "newest" ? "ArrowDown" : "ArrowUp")}
+          {sortOrder === "newest" ? "Newest First" : "Oldest First"}
+        </motion.button>
       </div>
 
       {/* Projects Grid with Animation */}
       <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-6" layout>
         <AnimatePresence mode="popLayout">
-          {filteredProjects.map((project) => (
+          {visibleProjects.map((project) => (
             <motion.div
               key={project.name}
               layout
@@ -79,6 +120,16 @@ const ProjectsSection = () => {
               transition={{ duration: 0.3 }}
               className="group relative bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
             >
+              {/* Project Date */}
+              <div className="absolute top-6 right-16 text-sm text-slate-500 dark:text-slate-400">
+                {formatDate(project.date)}
+              </div>
+
+              {/* Project Icon */}
+              <div className="absolute top-6 right-6">
+                {renderIcon(project.icon, "w-6 h-6 text-cyan-500")}
+              </div>
+
               {/* Project Tiers Tags */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {project.tiers.map((tier) => (
@@ -93,6 +144,8 @@ const ProjectsSection = () => {
                         ? "bg-indigo-100/80 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
                         : tier === "Real-World"
                         ? "bg-teal-100/80 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                        : tier === "Experimental"
+                        ? "bg-amber-100/80 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
                         : "bg-violet-100/80 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
                     }`}
                   >
@@ -101,12 +154,7 @@ const ProjectsSection = () => {
                 ))}
               </div>
 
-              {/* Project Icon */}
-              <div className="absolute top-6 right-6">
-                {renderIcon(project.icon, "w-6 h-6 text-cyan-500")}
-              </div>
-
-              {/* Project Content */}
+              {/* Rest of Project Content */}
               <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
                 {project.name}
               </h3>
@@ -117,7 +165,6 @@ const ProjectsSection = () => {
                 {project.description}
               </p>
 
-              {/* Tech Stack */}
               <div className="flex flex-wrap gap-2 mb-4">
                 {project.tech.map((tech) => (
                   <span
@@ -129,7 +176,6 @@ const ProjectsSection = () => {
                 ))}
               </div>
 
-              {/* Project Link */}
               <a
                 href={project.link}
                 target="_blank"
@@ -142,6 +188,30 @@ const ProjectsSection = () => {
           ))}
         </AnimatePresence>
       </motion.div>
+
+      {/* Show More/Less Button */}
+      {hasMoreProjects && (
+        <div className="mt-8 text-center">
+          <motion.button
+            onClick={() => setShowAll(!showAll)}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors shadow-lg shadow-cyan-500/20"
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            {showAll ? (
+              <>
+                {renderIcon("ChevronUp")}
+                Show Less Projects
+              </>
+            ) : (
+              <>
+                {renderIcon("ChevronDown")}
+                Show More Projects
+              </>
+            )}
+          </motion.button>
+        </div>
+      )}
     </div>
   );
 };
