@@ -8,6 +8,7 @@ import SectionTitle from "./SectionTitle";
 import YouTubeStats from "./YouTubeStats";
 import TikTokStats from "./TikTokStats";
 import CertificationsSection from "./CertificationsSection";
+import ProjectsSection from "./ProjectsSection";
 import userProfile from "../data/userProfile";
 import insights from "../data/insights";
 import funFacts from "../data/funFacts";
@@ -97,7 +98,7 @@ const PortfolioContent = () => {
   );
 
   return (
-    <>
+    <div className="relative">
       <ScrollProgressBar />
       <div
         className={` ${
@@ -307,6 +308,10 @@ const PortfolioContent = () => {
             <section id="stats" className="py-20">
               <AnimatedSection>
                 <SectionTitle>My Content Creation Journey</SectionTitle>
+                <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+                  Engaging with audiences through tech education and sharing
+                  knowledge across multiple platforms
+                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <YouTubeStats />
                   <TikTokStats />
@@ -338,6 +343,10 @@ const PortfolioContent = () => {
             <section id="education" className="py-20">
               <AnimatedSection>
                 <SectionTitle>Education</SectionTitle>
+                <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+                  Academic journey and formal education that shaped my technical
+                  foundation and professional growth
+                </p>
                 <div className="relative border-l-2 border-cyan-500/30 pl-10">
                   {education.map((edu, index) => (
                     <motion.div
@@ -378,6 +387,10 @@ const PortfolioContent = () => {
             <section id="experience" className="py-20">
               <AnimatedSection>
                 <SectionTitle>Experience</SectionTitle>
+                <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+                  Professional milestones and hands-on experience across diverse
+                  tech projects and leadership roles
+                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {experiences.map((exp, index) => (
                     <motion.div
@@ -429,60 +442,7 @@ const PortfolioContent = () => {
             {/* Projects Section */}
             <section id="projects" className="py-20">
               <AnimatedSection>
-                <SectionTitle>Featured Projects</SectionTitle>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {projects.map((proj, index) => (
-                    <motion.div
-                      key={index}
-                      className="bg-slate-100 dark:bg-slate-800/50 rounded-xl overflow-hidden border border-slate-200 dark:border-gray-700 group transition-all duration-300 hover:border-cyan-500/50 hover:shadow-2xl hover:shadow-cyan-500/10 hover:-translate-y-2 flex flex-col"
-                      viewport={{ once: true }}
-                      initial={{ opacity: 0, y: 50 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                    >
-                      <div className="p-6 flex-grow">
-                        {" "}
-                        <div className="text-cyan-500 dark:text-cyan-400 mb-4">
-                          {renderIcon(proj.icon, 40) ||
-                            renderIcon("Building", 40)}
-                        </div>
-                        <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
-                          {proj.name}
-                        </h3>
-                        <p className="text-sm font-semibold text-cyan-600 dark:text-cyan-400 mb-3">
-                          {proj.role}
-                        </p>
-                        <p className="text-sm text-slate-600 dark:text-gray-400 mb-4 flex-grow">
-                          {proj.description}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mb-6">
-                          {proj.tech.map((t) => (
-                            <span
-                              key={t}
-                              className="bg-slate-200 dark:bg-gray-700 text-xs text-cyan-700 dark:text-cyan-300 py-1 px-3 rounded-full"
-                            >
-                              {t}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="p-6 bg-slate-200/50 dark:bg-slate-900/50">
-                        <a
-                          href={proj.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-cyan-600 dark:text-cyan-400 font-semibold text-sm flex items-center group-hover:underline"
-                        >
-                          {" "}
-                          <span>View Project</span>{" "}
-                          <span className="ml-2">
-                            {renderIcon("ExternalLink", 14)}
-                          </span>
-                        </a>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                <ProjectsSection />
               </AnimatedSection>
             </section>
             {/* Skills & Certifications Section */}
@@ -492,6 +452,10 @@ const PortfolioContent = () => {
                   <h2 className="text-3xl font-bold text-slate-800 dark:text-gray-100 mb-8 text-center">
                     Core Competencies
                   </h2>
+                  <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">
+                    Technical expertise and professional skills developed
+                    through practical experience and continuous learning
+                  </p>
                   <div className="space-y-6">
                     {skills.map((skill, index) => (
                       <div key={index}>
@@ -525,7 +489,17 @@ const PortfolioContent = () => {
                     ))}
                   </div>
                 </AnimatedSection>
-                <CertificationsSection />
+
+                <AnimatedSection>
+                  <h2 className="text-3xl font-bold text-slate-800 dark:text-gray-100 mb-8 text-center">
+                    Licenses & Certifications
+                  </h2>
+                  <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">
+                    Professional certifications and achievements validating
+                    expertise in various technical domains
+                  </p>
+                  <CertificationsSection />
+                </AnimatedSection>
               </div>
             </section>
             {/* Contact Section */}
@@ -575,7 +549,7 @@ const PortfolioContent = () => {
           </footer>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

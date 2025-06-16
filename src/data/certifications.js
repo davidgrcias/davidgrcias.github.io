@@ -1,6 +1,18 @@
 // src/data/certifications.js
 const certifications = [
   {
+    name: "HCIA-AI V3.5 Course",
+    provider: "Huawei ICT Academy",
+    date: "May 2025",
+    icon: "BrainCircuitIcon", // Lucide icon name for PHP
+  },
+  {
+    name: "Python Intermediate Course",
+    provider: "Sololearn",
+    date: "June 2025",
+    icon: "CodeIcon", // Lucide icon name for PHP
+  },
+  {
     name: "PHP Course",
     provider: "Progate",
     date: "Jan 2022",
