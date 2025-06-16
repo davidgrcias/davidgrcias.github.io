@@ -4,6 +4,7 @@ import CustomCursor from "./components/CustomCursor";
 import SplashScreen from "./components/SplashScreen";
 import PortfolioContent from "./components/PortfolioContent";
 import ShootingStars from "./components/ShootingStars";
+import ChatBot from "./components/ChatBot";
 import { AppContext } from "./AppContext";
 
 // --- MAIN APP COMPONENT ---
@@ -30,6 +31,7 @@ export default function App() {
           <ShootingStars />
           <CustomCursor />
           <PortfolioContent />
+          <ChatBot />
         </>
       )}
     </AppContext.Provider>
