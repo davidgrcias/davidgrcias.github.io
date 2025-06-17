@@ -1,12 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageSquare, Send, X, Bot, Loader } from "lucide-react";
+import { generateAIResponse } from "../api/gemini";
 import userProfile from "../data/userProfile";
 import experiences from "../data/experiences";
 import skills from "../data/skills";
 import projects from "../data/projects";
-import insights from "../data/insights"; // Import insights data
+import insights from "../data/insights";
 import education from "../data/education";
+import certifications from "../data/certifications";
+import funFacts from "../data/funFacts";
+import personalInfo from "../data/personalInfo";
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -35,21 +39,64 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Knowledge base for the chatbot
-  const knowledge = {
-    skills: skills.map((skill) => skill.name).join(", "),
-    education: education
-      .map((edu) => `${edu.degree} from ${edu.institution}`)
-      .join(", "),
-    experience: experiences
-      .map((exp) => `${exp.role} at ${exp.company}`)
-      .join(", "),
-    projects: projects.map((proj) => proj.name).join(", "),
+  // Create knowledge base
+  const personalityInsights = {
+    funFacts: funFacts.map((fact) => `${fact.title}: ${fact.text}`).join("\n"),
     insights: insights
-      .map((insight) => `${insight.title}: ${insight.description}`)
-      .join(". "), // Add insights to knowledge base
-    contact: userProfile.contact,
-    about: userProfile.aboutText,
+      .map((insight) => `${insight.title}: ${insight.text}`)
+      .join("\n"),
+  };
+
+  // Enhanced knowledge base with personal information
+  const knowledge = {
+    personal: {
+      name: userProfile.name,
+      headline: userProfile.headline,
+      about: userProfile.aboutText,
+      location: userProfile.contact.location,
+      basic: personalInfo.basic,
+      interests: personalInfo.interests,
+      personality: {
+        ...personalityInsights,
+        traits: personalInfo.personality.traits,
+        workStyle: personalInfo.personality.workStyle,
+        strengths: personalInfo.personality.strengths,
+      },
+      goals: personalInfo.goals,
+      faq: personalInfo.faq,
+    },
+    contact: {
+      email: userProfile.contact.email,
+      whatsapp: userProfile.contact.whatsapp,
+      location: userProfile.contact.location,
+      socials: Object.entries(userProfile.socials)
+        .map(([platform, data]) => `${platform}: ${data.url}`)
+        .join("\n"),
+    },
+    personality: personalityInsights,
+    professional: {
+      skills: skills
+        .map((skill) => `${skill.name} (Proficiency: ${skill.level}%)`)
+        .join("\n"),
+      certifications: certifications
+        .map((cert) => `${cert.name} from ${cert.provider} (${cert.date})`)
+        .join("\n"),
+      education: education
+        .map(
+          (edu) =>
+            `${edu.degree} at ${edu.institution} (${edu.period})` +
+            (edu.grade ? ` - GPA: ${edu.grade}` : "")
+        )
+        .join("\n"),
+      experience: experiences
+        .map(
+          (exp) =>
+            `${exp.role} at ${exp.company} (${exp.type}) - ${
+              exp.startDate
+            } to ${exp.endDate}\nSkills used: ${exp.skills.join(", ")}`
+        )
+        .join("\n\n"),
+    },
   };
 
   const findBestMatch = (input, keywords) => {
@@ -96,169 +143,206 @@ const ChatBot = () => {
     return matrix[b.length][a.length];
   };
 
-  const generateResponse = (input) => {
+  const generateResponse = async (input) => {
+    try {
+      // Create a more concise prompt      // Create a focused context based on the query type
+      let relevantContext = "";
+      if (findBestMatch(input.toLowerCase(), ["personality", "hobbies"])) {
+        relevantContext = `Interests: ${knowledge.personal.interests
+          .slice(0, 3)
+          .join(", ")}`;
+      } else if (findBestMatch(input.toLowerCase(), ["contact", "reach"])) {
+        relevantContext = `Contact: Email - ${knowledge.contact.email}, Location - ${knowledge.contact.location}`;
+      } else if (findBestMatch(input.toLowerCase(), ["skills", "tech"])) {
+        relevantContext = `Top Skills: ${knowledge.professional.skills
+          .split("\n")
+          .slice(0, 3)
+          .join(", ")}`;
+      }
+
+      const contextPrompt = `You are David Garcia Saragih's AI assistant. Answer: "${input}"
+Basic: ${knowledge.personal.basic.fullName}, ${knowledge.personal.basic.currentLocation}
+${relevantContext}
+
+Be friendly, concise, and use emojis sparingly. Reference relevant experiences when appropriate.`;
+
+      // Get AI response with optimized context
+      const aiResponse = await generateAIResponse(contextPrompt);
+      updateSuggestedReplies(input.toLowerCase());
+      return aiResponse;
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      return handleFallbackResponse(input.toLowerCase());
+    }
+  };
+
+  const handleFallbackResponse = (input) => {
+    // Enhanced creative fallback responses
     const lowercaseInput = input.toLowerCase();
 
-    // Skills related queries
+    // Personality and behavior queries
     if (
       findBestMatch(lowercaseInput, [
-        "skill",
-        "can",
-        "able",
-        "capable",
-        "do",
-        "tech",
-        "technology",
+        "personality",
+        "behavior",
+        "like",
+        "person",
+        "character",
       ])
     ) {
-      setSuggestedReplies([
-        "Tell me about your projects",
-        "What's your work experience?",
-        "What technologies do you use?",
-      ]);
-      return `I specialize in: ${knowledge.skills}`;
+      const randomFacts = funFacts.map((fact) => fact.text);
+      const randomInsights = insights.map((insight) => insight.text);
+      const response = [
+        "Let me share something interesting about David! 😊",
+        randomFacts[Math.floor(Math.random() * randomFacts.length)],
+        "And you know what's really cool about him?",
+        randomInsights[Math.floor(Math.random() * randomInsights.length)],
+        "\nWould you like to know more about his professional journey or his creative side? 🚀",
+      ].join("\n\n");
+      updateSuggestedReplies("personality");
+      return response;
     }
 
-    // Education related queries
+    // Skills and expertise queries
+    if (
+      findBestMatch(lowercaseInput, ["skills", "can do", "expertise", "tech"])
+    ) {
+      const topSkills = skills.filter((skill) => skill.level >= 90);
+      const recentProject = experiences[0];
+      const response = [
+        "🚀 David is quite the tech enthusiast! Here's what he's fantastic at:",
+        topSkills
+          .map((skill) => `✨ ${skill.name} (${skill.level}% proficiency)`)
+          .join("\n"),
+        `\nRight now, he's putting these skills to work as ${
+          recentProject.role
+        } at ${
+          recentProject.company
+        }, where he's using ${recentProject.skills.join(", ")}!`,
+        "\nWhat aspect of his technical expertise would you like to know more about? 💡",
+      ].join("\n");
+      updateSuggestedReplies("skills");
+      return response;
+    }
+
+    // Education and learning journey
     if (
       findBestMatch(lowercaseInput, [
         "education",
         "study",
-        "school",
-        "university",
-        "degree",
         "learn",
+        "certification",
       ])
     ) {
-      setSuggestedReplies([
-        "What are your skills?",
-        "Tell me about your experience",
-        "What projects have you worked on?",
-      ]);
-      return `My educational background includes: ${knowledge.education}`;
+      const currentEducation = education[0];
+      const recentCerts = certifications.slice(0, 3);
+      const response = [
+        "📚 David's learning journey is pretty inspiring!",
+        `Currently pursuing ${currentEducation.degree} at ${currentEducation.institution} with an impressive GPA of ${currentEducation.grade}! 🎓`,
+        "\nRecent achievements include:",
+        recentCerts
+          .map((cert) => `🏆 ${cert.name} from ${cert.provider}`)
+          .join("\n"),
+        "\nWhat would you like to know about his educational journey or latest certifications? 🤔",
+      ].join("\n");
+      updateSuggestedReplies("education");
+      return response;
     }
 
-    // Experience related queries
+    // Experience and projects
+    if (findBestMatch(lowercaseInput, ["experience", "work", "project"])) {
+      const currentRole = experiences[0];
+      const entrepreneurialRole = experiences.find(
+        (exp) => exp.type === "Entrepreneurship"
+      );
+      const response = [
+        "💼 David's career journey is quite diverse!",
+        `Currently, he's rocking it as ${currentRole.role} at ${
+          currentRole.company
+        }, mastering ${currentRole.skills.join(", ")}!`,
+        entrepreneurialRole
+          ? `\n🚀 He's also an entrepreneur, running ${entrepreneurialRole.company} since ${entrepreneurialRole.startDate}!`
+          : "",
+        "\nWould you like to hear about his other projects or his entrepreneurial journey? 💡",
+      ].join("\n");
+      updateSuggestedReplies("experience");
+      return response;
+    }
+
+    // Contact and social presence
     if (
-      findBestMatch(lowercaseInput, [
-        "experience",
-        "work",
-        "job",
-        "company",
-        "career",
-        "profession",
-      ])
+      findBestMatch(lowercaseInput, ["contact", "reach", "email", "social"])
     ) {
-      setSuggestedReplies([
-        "What projects did you work on?",
-        "What are your skills?",
-        "Tell me about your education",
-      ]);
-      return `My professional experience includes: ${knowledge.experience}`;
+      const response = [
+        "📱 Ready to connect with David? Here's how:",
+        `📧 Email: ${userProfile.contact.email}`,
+        `💬 WhatsApp: ${userProfile.contact.whatsapp}`,
+        `🌐 LinkedIn: ${userProfile.socials.linkedin.url}`,
+        "\nAnd if you're interested in his content:",
+        `🎥 YouTube: @${userProfile.socials.youtube.handle}`,
+        `📱 TikTok: @${userProfile.socials.tiktok.handle}`,
+        "\nWhat's your preferred way to connect? 😊",
+      ].join("\n");
+      updateSuggestedReplies("contact");
+      return response;
     }
 
-    // Project related queries
-    if (
-      findBestMatch(lowercaseInput, [
-        "project",
-        "portfolio",
-        "built",
-        "create",
-        "develop",
-      ])
-    ) {
-      setSuggestedReplies([
-        "What technologies do you use?",
-        "Tell me about your experience",
-        "How can I contact you?",
-      ]);
-      return `I've worked on various projects including: ${knowledge.projects}`;
-    }
+    const welcomeResponse = [
+      "Hey there! 👋 I'm David's AI assistant, and I'd love to tell you all about him!",
+      "\nI can share:",
+      "🎯 His amazing tech skills and projects",
+      "🎓 Educational journey and achievements",
+      "💼 Professional experiences",
+      "🎮 Fun facts and personal insights",
+      "📱 How to connect with him",
+      "\nWhat would you like to know? 😊",
+    ].join("\n");
 
-    // Insights related queries
-    if (
-      findBestMatch(lowercaseInput, [
-        "insight",
-        "lesson",
-        "learned",
-        "takeaway",
-        "reflection",
-        "experience",
-      ])
-    ) {
-      setSuggestedReplies([
-        "What are your skills?",
-        "Tell me about your projects",
-        "How can I contact you?",
-      ]);
-      return `Some key insights and lessons learned from my experiences include: ${knowledge.insights}`;
-    }
+    updateSuggestedReplies("welcome");
+    return welcomeResponse;
+  };
 
-    // Contact related queries
-    if (
-      findBestMatch(lowercaseInput, [
-        "contact",
-        "reach",
-        "email",
-        "message",
-        "call",
-        "phone",
-        "whatsapp",
-      ])
-    ) {
-      setSuggestedReplies([
-        "Tell me about your projects",
-        "What are your skills?",
-        "Looking to collaborate?",
-      ]);
-      return `You can reach me at ${knowledge.contact.email} or via WhatsApp at ${knowledge.contact.whatsapp}`;
-    }
+  // Update suggested replies with more personal options
+  const updateSuggestedReplies = (context) => {
+    const repliesMap = {
+      welcome: [
+        "Tell me about David's personality",
+        "What are his goals?",
+        "How old is David?",
+      ],
+      personality: [
+        "What are his hobbies?",
+        "Tell me about his work style",
+        "What motivates him?",
+      ],
+      skills: [
+        "What's he currently learning?",
+        "His favorite technologies?",
+        "Recent projects?",
+      ],
+      education: [
+        "Why did he choose IT?",
+        "Future learning goals?",
+        "Certifications?",
+      ],
+      experience: [
+        "His biggest achievement?",
+        "Career goals?",
+        "Side projects?",
+      ],
+      personal: [
+        "What are his interests?",
+        "His work preferences?",
+        "Future aspirations?",
+      ],
+      contact: [
+        "Check his content",
+        "Professional background",
+        "Current projects",
+      ],
+    };
 
-    // About/Introduction queries
-    if (
-      findBestMatch(lowercaseInput, [
-        "about",
-        "who",
-        "introduction",
-        "tell",
-        "background",
-      ])
-    ) {
-      setSuggestedReplies([
-        "What are your skills?",
-        "Tell me about your projects",
-        "How can I contact you?",
-      ]);
-      return knowledge.about;
-    }
-
-    // Greetings
-    if (
-      findBestMatch(lowercaseInput, [
-        "hello",
-        "hi",
-        "hey",
-        "greetings",
-        "morning",
-        "afternoon",
-        "evening",
-      ])
-    ) {
-      setSuggestedReplies([
-        "What can you do?",
-        "Tell me about yourself",
-        "Show me your projects",
-      ]);
-      return "Hello! I'm David's portfolio assistant. Feel free to ask me about his skills, experience, projects, or how to get in touch!";
-    }
-
-    // Default response with suggestions
-    setSuggestedReplies([
-      "What are David's skills?",
-      "Show me some projects",
-      "How can I contact David?",
-    ]);
-    return "I can tell you about David's skills, experience, projects, education, or how to contact him. What would you like to know?";
+    setSuggestedReplies(repliesMap[context] || repliesMap.welcome);
   };
 
   const handleSubmit = async (e) => {
@@ -276,68 +360,31 @@ const ChatBot = () => {
     setIsTyping(true);
 
     try {
-      // Prepare prompt for Gemini API
-      const prompt = `You are an AI assistant for David's portfolio. Your goal is to provide helpful and informative answers about David based on the provided information. Use the context below to answer the user's question. If you don't know the answer based on the context, say you can't find that information in the portfolio but can tell them about David's skills, experience, projects, education, or how to contact him.
-  
-      Context about David:
-      About: ${knowledge.about}
-      Skills: ${knowledge.skills}
-      Education: ${knowledge.education}
-      Experience: ${knowledge.experience}
-      Projects: ${knowledge.projects}
-      Insights: ${knowledge.insights}
-      Contact: Email: ${knowledge.contact.email}, WhatsApp: ${knowledge.contact.whatsapp}
-  
-      User's question: ${userMessage.content}
-      `;
+      // Get response from chatbot
+      const response = await generateResponse(inputMessage.trim());
 
-      // Call Gemini API (replace with your actual API call)
-      // This is a placeholder for your Gemini API integration
-      const response = await fetch("/api/gemini", {
-        // Assuming a serverless function or backend endpoint for Gemini API
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const botResponseContent = data.response; // Assuming the API returns the response in a 'response' field
-
-      const botResponse = {
+      // Add bot message
+      const botMessage = {
         type: "bot",
-        content:
-          botResponseContent ||
-          "Sorry, I couldn't generate a response at this time.",
+        content: response,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, botResponse]);
-      setIsTyping(false);
-
-      // Optionally update suggested replies based on the bot's response
-      // This would require parsing the bot's response for keywords
+      setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      console.error("Error calling Gemini API:", error);
-      // Handle API errors
-      setMessages((prev) => [
-        ...prev,
-        {
-          type: "bot",
-          content:
-            "Sorry, I'm having trouble connecting to the assistant right now. Please try again later.",
-          timestamp: new Date(),
-        },
-      ]);
+      // Add error message if something goes wrong
+      const errorMessage = {
+        type: "bot",
+        content:
+          "Sorry, I'm having trouble responding right now. Please try again.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
     }
   };
 
-  const handleSuggestedReply = (reply) => {
+  const handleSuggestedReply = async (reply) => {
     const userMessage = {
       type: "user",
       content: reply,
@@ -346,15 +393,25 @@ const ChatBot = () => {
     setMessages((prev) => [...prev, userMessage]);
     setIsTyping(true);
 
-    setTimeout(() => {
-      const botResponse = {
+    try {
+      const response = await generateResponse(reply);
+      const botMessage = {
         type: "bot",
-        content: generateResponse(reply),
+        content: response,
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, botResponse]);
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      const errorMessage = {
+        type: "bot",
+        content:
+          "Sorry, I'm having trouble responding right now. Please try again.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
-    }, 1000);
+    }
   };
 
   const pulseAnimation = {

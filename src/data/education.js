@@ -1,7 +1,7 @@
 // src/data/education.js
 const education = [
   {
-    degree: "Bachelor's degree, Informatics",
+    degree: "Undergraduate Student, Informatics",
     institution: "Universitas Multimedia Nusantara",
     period: "2023 - 2027",
     grade: "3.87",
