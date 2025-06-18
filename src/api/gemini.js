@@ -1,74 +1,28 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Get the API key from environment variables
+// Access API key from environment variables
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 if (!API_KEY) {
-  console.error("Gemini API key is not set!");
+  throw new Error("VITE_GEMINI_API_KEY is not set in environment variables");
 }
 
-// Initialize the model with correct name format
+// Initialize the Gemini API with the correct model name
 const genAI = new GoogleGenerativeAI(API_KEY);
-const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 export const generateAIResponse = async (prompt) => {
-  if (!API_KEY) {
-    throw new Error("VITE_GEMINI_API_KEY environment variable is not set.");
-  }
-
   try {
-    const result = await model.generateContent({
-      contents: [
-        {
-          parts: [
-            {
-              text: prompt,
-            },
-          ],
-        },
-      ],
+    // Using a newer model to bypass potential SDK endpoint issues
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash-latest",
     });
 
+    // Call the model with the content in text format
+    const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
-
-    if (!text) {
-      throw new Error("Empty response from Gemini");
-    }
-
-    return text;
+    return response.text();
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-
-    // Try with simplified prompt if the main one fails
-    try {
-      const simplifiedResult = await model.generateContent({
-        contents: [
-          {
-            parts: [
-              {
-                text: "You are David's portfolio assistant. " + prompt,
-              },
-            ],
-          },
-        ],
-      });
-
-      const retryResponse = await simplifiedResult.response;
-      const text = retryResponse.text();
-
-      if (!text) {
-        throw new Error("Empty response from retry");
-      }
-
-      return text;
-    } catch (retryError) {
-      console.error("Retry failed:", retryError);
-      return handleFallbackResponse();
-    }
+    return "I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment.";
   }
 };
-
-function handleFallbackResponse() {
-  return "I'm having trouble connecting to AI services right now. Let me help you with what I know locally instead.";
-}
