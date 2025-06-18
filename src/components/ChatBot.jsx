@@ -1,6 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Send, X, Bot, Loader } from "lucide-react";
+import {
+  MessageSquare,
+  Send,
+  X,
+  Bot,
+  Loader,
+  Maximize2,
+  Minimize2,
+} from "lucide-react";
 import { generateAIResponse } from "../api/gemini";
 import userProfile from "../data/userProfile";
 import experiences from "../data/experiences";
@@ -14,6 +22,7 @@ import personalInfo from "../data/personalInfo";
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [messages, setMessages] = useState([
     {
       type: "bot",
@@ -24,9 +33,11 @@ const ChatBot = () => {
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [suggestedReplies, setSuggestedReplies] = useState([
-    "How can I contact David?",
-    "Have a project in mind?",
-    "Enjoying David's work?",
+    "What's David's age and background?",
+    "Show me his technical skills",
+    "Tell me about his YouTube journey",
+    "What projects is he working on?",
+    "How can I contact him?",
   ]);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
@@ -34,10 +45,13 @@ const ChatBot = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
 
   // Create knowledge base
   const personalityInsights = {
@@ -144,8 +158,198 @@ const ChatBot = () => {
   };
   const generateResponse = async (input) => {
     try {
+      const inputLower = input.toLowerCase().trim();
+
+      // Get the last bot message to understand context
+      const lastBotMessage = messages
+        .filter((m) => m.type === "bot")
+        .slice(-1)[0];
+      const lastBotContent = lastBotMessage
+        ? lastBotMessage.content.toLowerCase()
+        : "";
+
+      // Enhanced conversational response detection
+      const isConversationalResponse = (input, lastBotMessage) => {
+        const conversationalKeywords = [
+          "yes",
+          "yeah",
+          "yep",
+          "yup",
+          "right",
+          "correct",
+          "exactly",
+          "true",
+          "definitely",
+          "absolutely",
+          "sure",
+          "of course",
+          "indeed",
+          "totally",
+          "no",
+          "nope",
+          "not really",
+          "disagree",
+          "wrong",
+          "false",
+          "incorrect",
+          "thanks",
+          "thank you",
+          "appreciate",
+          "helpful",
+          "great",
+          "awesome",
+          "cool",
+          "nice",
+          "good job",
+          "amazing",
+          "wow",
+          "impressive",
+        ];
+
+        const inputWords = input.toLowerCase().trim().split(" ");
+        const isShortResponse = inputWords.length <= 3;
+        const containsConversationalWord = conversationalKeywords.some(
+          (keyword) =>
+            inputWords.includes(keyword) ||
+            input.toLowerCase().includes(keyword)
+        );
+
+        // Check if the last bot message was asking a question or making a statement
+        const botAskedQuestion =
+          lastBotMessage &&
+          (lastBotMessage.content.includes("?") ||
+            lastBotMessage.content.includes("right?") ||
+            lastBotMessage.content.includes("isn't he?") ||
+            lastBotMessage.content.includes("isn't it?") ||
+            lastBotMessage.content.includes("don't you think?") ||
+            lastBotMessage.content.includes("wouldn't you say?"));
+
+        return (
+          isShortResponse && containsConversationalWord && botAskedQuestion
+        );
+      };
+
+      // Handle conversational responses and feedback
+      if (isConversationalResponse(inputLower, lastBotMessage)) {
+        // Handle affirmative responses
+        if (
+          findBestMatch(inputLower, [
+            "yes",
+            "yeah",
+            "yep",
+            "yup",
+            "right",
+            "correct",
+            "exactly",
+            "true",
+            "definitely",
+            "absolutely",
+            "sure",
+            "of course",
+            "indeed",
+            "totally",
+          ])
+        ) {
+          const affirmativeResponses = [
+            "I'm so glad you agree! 😊 David really is exceptional. What else would you like to explore about his journey?",
+            "Absolutely! 🎉 His achievements at just 19 are truly remarkable. Any specific area you'd like to dive deeper into?",
+            "Exactly! � It's amazing what he's accomplished. What other aspects of his profile interest you?",
+            "Right?! 🚀 His combination of technical skills and entrepreneurship is impressive. Want to know more about any particular area?",
+            "That's what I think too! ✨ There's so much more to discover about David. What would you like to explore next?",
+          ];
+          const response =
+            affirmativeResponses[
+              Math.floor(Math.random() * affirmativeResponses.length)
+            ];
+          updateSuggestedReplies("affirmative");
+          return response;
+        }
+
+        // Handle negative responses
+        if (
+          findBestMatch(inputLower, [
+            "no",
+            "nope",
+            "not really",
+            "disagree",
+            "wrong",
+            "false",
+            "incorrect",
+          ])
+        ) {
+          const clarifyResponses = [
+            "I understand! 🤔 What specific aspect would you like to know more about instead?",
+            "No worries at all! 😊 Is there something particular about David that interests you more?",
+            "Fair enough! 💭 What would you like me to focus on regarding David's background?",
+            "Got it! 🎯 What other information about David would be helpful for you?",
+          ];
+          const response =
+            clarifyResponses[
+              Math.floor(Math.random() * clarifyResponses.length)
+            ];
+          updateSuggestedReplies("clarify");
+          return response;
+        }
+
+        // Handle appreciation responses
+        if (
+          findBestMatch(inputLower, [
+            "thanks",
+            "thank you",
+            "appreciate",
+            "helpful",
+            "great",
+            "awesome",
+            "cool",
+            "nice",
+            "good job",
+            "amazing",
+            "wow",
+            "impressive",
+          ])
+        ) {
+          const thankResponses = [
+            "You're very welcome! � I love sharing David's story. What else would you like to discover?",
+            "Thank you! 🌟 It's my pleasure to help you learn about David. Any other questions?",
+            "I'm so glad you found it helpful! 🎉 Feel free to ask me anything else about David's journey.",
+            "Awesome! 💙 David's story is truly inspiring. What other aspects would you like to explore?",
+          ];
+          const response =
+            thankResponses[Math.floor(Math.random() * thankResponses.length)];
+          updateSuggestedReplies("thanks");
+          return response;
+        }
+      }
+
+      // Handle greetings (only if not a conversational response)
+      if (
+        findBestMatch(inputLower, [
+          "hi",
+          "hello",
+          "hey",
+          "good morning",
+          "good afternoon",
+          "good evening",
+          "greetings",
+        ]) &&
+        !isConversationalResponse(inputLower, lastBotMessage)
+      ) {
+        const greetingResponses = [
+          "Hello! � I'm here to tell you all about David Garcia Saragih. What would you like to know?",
+          "Hey there! 😊 Ready to learn about David's amazing journey? What interests you most?",
+          "Hi! � I'm David's AI assistant. Ask me anything about his skills, experience, or projects!",
+          "Greetings! 🎉 I know everything about David. What aspect of his profile would you like to explore?",
+        ];
+        const response =
+          greetingResponses[
+            Math.floor(Math.random() * greetingResponses.length)
+          ];
+        updateSuggestedReplies("greeting");
+        return response;
+      }
+
       // Check if user is asking for CV
-      if (findBestMatch(input.toLowerCase(), ["cv", "resume", "curriculum"])) {
+      if (findBestMatch(inputLower, ["cv", "resume", "curriculum"])) {
         const cvResponse = [
           "📄 Here's David's comprehensive CV!",
           "",
@@ -268,25 +472,85 @@ ${funFacts.map((fact) => `• ${fact.title}: ${fact.text}`).join("\n")}
 • UI/UX implementation and design-to-code conversion
 • Mobile-first development approach
 `;
-
       const contextPrompt = `You are David Garcia Saragih's AI assistant. Using the comprehensive information below, answer this question: "${input}"
 
 ${comprehensiveContext}
 
-Instructions:
-- Answer based ONLY on the provided information
+CONVERSATION CONTEXT:
+Recent messages in this conversation:
+${messages
+  .slice(-3)
+  .map((m) => `${m.type}: ${m.content}`)
+  .join("\n")}
+
+IMPORTANT INSTRUCTIONS:
+- Answer based ONLY on the provided information about David
 - Be friendly, conversational, and enthusiastic about David's achievements
 - Use specific details and numbers from the context
+- If the user gives a simple response like "yes", "right", "cool", "thanks" - treat it as conversational feedback, not a question
+- For affirmative responses (yes/right/correct), acknowledge their agreement and offer to share more interesting facts
+- For appreciation (thanks/cool/awesome), acknowledge gratefully and suggest related topics
 - If asked about technical skills, mention specific proficiency levels
 - If asked about experience, reference specific companies and roles
 - If asked about personality, use the insights and fun facts
-- Keep responses engaging but not too long
+- Keep responses engaging but not too long (2-4 sentences max unless specifically asked for details)
 - Use emojis sparingly for personality
-- Always sound knowledgeable about all aspects of David's profile`;
+- Always sound knowledgeable about all aspects of David's profile
+- Adapt your response style based on the conversation flow
+- If the user seems interested in a topic, offer to dive deeper into related areas
 
-      // Get AI response with FULL comprehensive context
+RESPONSE STYLE:
+- Conversational and natural
+- Enthusiastic but not overwhelming
+- Context-aware of previous messages
+- Encourage further exploration with relevant follow-up suggestions`; // Get AI response with FULL comprehensive context and conversation awareness
       const aiResponse = await generateAIResponse(contextPrompt);
-      updateSuggestedReplies(input.toLowerCase());
+
+      // Detect response type for better suggested replies
+      let responseContext = "welcome";
+      if (
+        inputLower.includes("youtube") ||
+        inputLower.includes("content") ||
+        inputLower.includes("subscriber")
+      ) {
+        responseContext = "youtube";
+      } else if (
+        inputLower.includes("project") ||
+        inputLower.includes("working")
+      ) {
+        responseContext = "projects";
+      } else if (
+        inputLower.includes("skill") ||
+        inputLower.includes("technical") ||
+        inputLower.includes("programming")
+      ) {
+        responseContext = "skills";
+      } else if (
+        inputLower.includes("business") ||
+        inputLower.includes("entrepreneur")
+      ) {
+        responseContext = "business";
+      } else if (
+        inputLower.includes("education") ||
+        inputLower.includes("university") ||
+        inputLower.includes("gpa")
+      ) {
+        responseContext = "education";
+      } else if (
+        inputLower.includes("contact") ||
+        inputLower.includes("email") ||
+        inputLower.includes("connect")
+      ) {
+        responseContext = "contact";
+      } else if (
+        inputLower.includes("age") ||
+        inputLower.includes("background") ||
+        inputLower.includes("personal")
+      ) {
+        responseContext = "personal";
+      }
+
+      updateSuggestedReplies(responseContext);
       return aiResponse;
     } catch (error) {
       console.error("Error getting AI response:", error);
@@ -493,45 +757,120 @@ Instructions:
 
     updateSuggestedReplies("welcome");
     return welcomeResponse;
-  };
-  // Update suggested replies with more comprehensive options
+  }; // Update suggested replies with more comprehensive options
   const updateSuggestedReplies = (context) => {
     const repliesMap = {
-      welcome: ["How old is David?", "What are his goals?", "Download his CV"],
+      welcome: [
+        "What's David's age and background?",
+        "Show me his technical skills",
+        "Tell me about his YouTube journey",
+        "What projects is he working on?",
+        "How can I contact him?",
+      ],
+      greeting: [
+        "Tell me about his achievements",
+        "What makes him unique?",
+        "Show me his technical expertise",
+        "His content creation journey",
+        "What's his educational background?",
+      ],
+      affirmative: [
+        "Tell me about his business ventures",
+        "What programming languages does he know?",
+        "Show me his social media stats",
+        "What certifications does he have?",
+        "How did he achieve all this at 19?",
+      ],
+      clarify: [
+        "His technical skills breakdown",
+        "Educational achievements and GPA",
+        "Content creation statistics",
+        "Professional work experience",
+        "Personal interests and hobbies",
+      ],
+      thanks: [
+        "What's his biggest achievement?",
+        "Tell me about his learning approach",
+        "Show me his future goals",
+        "How can I connect with him?",
+        "What inspired his career path?",
+      ],
       personal: [
-        "What are his achievements?",
-        "Tell me about his skills",
-        "His educational background",
+        "What are his biggest achievements?",
+        "Tell me about his entrepreneurship",
+        "Show me his educational background",
+        "What are his future goals?",
+        "How did he start content creation?",
       ],
       skills: [
         "What's he currently learning?",
-        "His work experience",
-        "Recent projects?",
+        "Show me his work experience",
+        "Tell me about his certifications",
+        "What tools does he master?",
+        "How proficient is he in React?",
       ],
       education: [
-        "His professional experience",
-        "Content creation journey",
-        "Technical certifications?",
+        "What's his GPA and achievements?",
+        "Tell me about his work experience",
+        "Show me his content creation stats",
+        "What certifications does he have?",
+        "How does he balance everything?",
       ],
       goals: [
-        "His biggest achievements?",
-        "Current projects?",
-        "How to contact him?",
+        "What are his biggest achievements?",
+        "Tell me about his current projects",
+        "How can I work with him?",
+        "Show me his business ventures",
+        "What's his content creation like?",
       ],
       experience: [
-        "His entrepreneurial journey",
-        "Technical skills",
-        "Educational background",
+        "Tell me about his business ventures",
+        "What are his technical strengths?",
+        "Show me his educational journey",
+        "How many followers does he have?",
+        "What programming languages does he know?",
       ],
       contact: [
-        "Check his YouTube content",
-        "His business ventures",
-        "Download his CV",
+        "Check out his YouTube channel",
+        "Tell me about his business",
+        "Download his complete CV",
+        "What are his social media stats?",
+        "Show me his latest projects",
       ],
       cv: [
-        "What are his main skills?",
-        "Tell me about his experience",
-        "How to contact David?",
+        "What are his main technical skills?",
+        "Tell me about his work experience",
+        "How can I connect with David?",
+        "Show me his content creation journey",
+        "What are his educational achievements?",
+      ],
+      content: [
+        "How many YouTube subscribers?",
+        "Tell me about his TikTok success",
+        "What type of content does he create?",
+        "When did he start creating content?",
+        "Show me his technical skills",
+      ],
+      business: [
+        "What business does he run?",
+        "Tell me about his technical roles",
+        "How does he balance everything?",
+        "Show me his educational background",
+        "What are his future business plans?",
+      ],
+      youtube: [
+        "How many total views does he have?",
+        "What type of content does he create?",
+        "When did he start his channel?",
+        "Show me his other social platforms",
+        "Tell me about his technical skills",
+      ],
+      projects: [
+        "What's his role in UMN Festival?",
+        "Tell me about his business",
+        "Show me his technical expertise",
+        "What are his current goals?",
+        "How can I collaborate with him?",
       ],
     };
 
@@ -649,22 +988,40 @@ Instructions:
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="fixed bottom-6 right-6 w-96 h-[600px] bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden z-50 border border-slate-200 dark:border-slate-700 flex flex-col"
+            className={`fixed ${
+              isFullscreen
+                ? "inset-4 w-auto h-auto"
+                : "bottom-6 right-6 w-96 h-[600px]"
+            } bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden z-50 border border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300`}
           >
+            {" "}
             {/* Header */}
             <div className="p-6 bg-cyan-500 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Bot size={24} />
                 <h3 className="font-semibold">David's Portfolio Assistant</h3>
               </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="p-1 hover:bg-white/20 rounded-full transition-colors"
-              >
-                <X size={20} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={toggleFullscreen}
+                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                  title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                >
+                  {isFullscreen ? (
+                    <Minimize2 size={20} />
+                  ) : (
+                    <Maximize2 size={20} />
+                  )}
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                  title="Close chat"
+                >
+                  <X size={20} />
+                </button>
+              </div>
             </div>
-
             {/* Messages */}
             <div
               ref={chatContainerRef}
@@ -704,7 +1061,6 @@ Instructions:
               )}
               <div ref={messagesEndRef} />
             </div>
-
             {/* Quick Replies */}
             <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-700">
               <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
@@ -721,7 +1077,6 @@ Instructions:
                 ))}
               </div>
             </div>
-
             {/* Input */}
             <form
               onSubmit={handleSubmit}
