@@ -2,101 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Prevent horizontal overflow on mobile */
-html,
-body {
-  overflow-x: hidden;
-  max-width: 100vw;
-}
-
-/* Ensure all elements respect viewport boundaries */
-* {
-  box-sizing: border-box;
-}
-
-/* Performance optimizations for mobile */
-* {
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-/* Enable text selection for inputs and content areas */
-input,
-textarea,
-[contenteditable],
-.selectable {
-  -webkit-user-select: text;
-  -khtml-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
-}
-
-/* Reduced motion class */
-.reduced-motion * {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-  scroll-behavior: auto !important;
-}
-
-/* Mobile-specific optimizations */
-@media (max-width: 768px) {
-  * {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
+@keyframes explode {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
   }
-
-  /* Reduce blur effects on mobile */
-  .backdrop-blur {
-    backdrop-filter: none !important;
+  50% {
+    transform: scale(1.5);
+    opacity: 0.2;
   }
-
-  /* Reduce shadow complexity */
-  .shadow-lg,
-  .shadow-xl,
-  .shadow-2xl {
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+  100% {
+    transform: scale(0);
+    opacity: 0;
   }
 }
 
-/* Media queries for performance optimization */
-@media (max-width: 768px) {
-  /* Only disable shooting stars for mobile if the component allows it */
-  /* Component already handles mobile detection with return null */
+.star-explosion {
+  position: fixed;
+  bottom: 20%;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3),
+    0 0 20px rgba(255, 255, 255, 0.2), 0 0 30px rgba(255, 255, 255, 0.1);
+  animation: explode 0.6s ease-out forwards;
+  pointer-events: none;
+  z-index: -1;
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
-  .shooting-star {
-    opacity: 0.25;
-    animation-duration: 8s; /* Slower on tablet */
-  }
-}
-
-/* Shooting Stars Animation */
 .shooting-star {
   position: fixed;
   width: 2px;
   height: 2px;
   background: #fff;
   border-radius: 50%;
-  /* Simplified box-shadow for better performance */
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2),
+    0 0 0 4px rgba(255, 255, 255, 0.15), 0 0 20px 8px #fff, 0 0 40px 16px #0ff;
   animation: animate 6s linear infinite;
-  z-index: 1; /* Changed from -1 to 1 to ensure visibility */
-  opacity: 0.6; /* Increased opacity for better visibility */
+  z-index: 10;
+  opacity: 0.7;
   pointer-events: none;
-  /* Performance optimizations */
   will-change: transform;
   user-select: none;
-  backface-visibility: hidden;
-  transform: translateZ(0); /* Force hardware acceleration */
 }
 
 .shooting-star::before {
@@ -109,42 +57,42 @@ textarea,
   background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), transparent);
 }
 
-.shooting-star-1 {
+.shooting-star:nth-child(1) {
   top: -10%;
   left: 10%;
   animation-delay: 0s;
   animation-duration: 8s;
 }
 
-.shooting-star-2 {
+.shooting-star:nth-child(2) {
   top: -10%;
   left: 30%;
   animation-delay: 3s;
   animation-duration: 10s;
 }
 
-.shooting-star-3 {
+.shooting-star:nth-child(3) {
   top: -10%;
   left: 50%;
   animation-delay: 5s;
   animation-duration: 7s;
 }
 
-.shooting-star-4 {
+.shooting-star:nth-child(4) {
   top: -10%;
   left: 70%;
   animation-delay: 7s;
   animation-duration: 9s;
 }
 
-.shooting-star-5 {
+.shooting-star:nth-child(5) {
   top: -10%;
   left: 20%;
   animation-delay: 9s;
   animation-duration: 11s;
 }
 
-.shooting-star-6 {
+.shooting-star:nth-child(6) {
   top: -10%;
   left: 40%;
   animation-delay: 11s;
@@ -153,7 +101,7 @@ textarea,
 
 @keyframes animate {
   0% {
-    transform: rotate(45deg) translateX(-500px) translateZ(0);
+    transform: rotate(45deg) translateX(-500px);
     opacity: 0;
   }
   2% {
@@ -163,7 +111,7 @@ textarea,
     opacity: 0.4;
   }
   100% {
-    transform: rotate(45deg) translateX(2000px) translateZ(0);
+    transform: rotate(45deg) translateX(2000px);
     opacity: 0;
   }
 }

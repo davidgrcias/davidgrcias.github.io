@@ -18,6 +18,7 @@ import skills from "../data/skills";
 import education from "../data/education";
 import { AppContext } from "../AppContext";
 import ScrollProgressBar from "./ScrollProgressBar";
+import ShootingStars from "./ShootingStars";
 
 // Add all Lucide icons to the iconMap
 const iconMap = {
@@ -163,6 +164,7 @@ const PortfolioContent = () => {
 
   return (
     <div className="relative">
+      <ShootingStars />
       <ScrollProgressBar />
       <div
         className={` ${
