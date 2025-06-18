@@ -1,16 +1,12 @@
 // src/components/CustomCursor.jsx
 import React, { useState, useEffect } from "react";
-import { motion, useMotionValue } from "framer-motion";
-import { useDeviceDetection } from "../hooks/useDeviceDetection";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 
-// Constants - Optimized for performance
+// Constants
 const CURSOR_SIZE = 24;
 const SPRING_CONFIG = { damping: 30, stiffness: 500 };
 
 const CustomCursor = () => {
-  // Device detection for performance optimization
-  const { isMobile, isTablet, isDesktop } = useDeviceDetection();
-
   // State to track if hovering over interactive elements
   const [isHovering, setIsHovering] = useState(false);
 
@@ -19,9 +15,6 @@ const CustomCursor = () => {
   const mouseY = useMotionValue(-100);
 
   useEffect(() => {
-    // Don't set up cursor on mobile
-    if (isMobile) return;
-
     // Hide the default system cursor
     // A style tag is injected into the head to achieve this
     const style = document.createElement("style");
@@ -33,18 +26,10 @@ const CustomCursor = () => {
     document.head.appendChild(style);
 
     // --- Event Listeners ---
-    // Throttle mousemove for better performance
-    let animationFrameId;
     const updatePosition = (e) => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-      animationFrameId = requestAnimationFrame(() => {
-        mouseX.set(e.clientX);
-        mouseY.set(e.clientY);
-      });
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
     };
-
     const handleMouseOver = (e) => {
       if (e.target.closest('a, button, [role="button"]')) {
         setIsHovering(true);
@@ -52,10 +37,8 @@ const CustomCursor = () => {
     };
 
     const handleMouseOut = (e) => {
-      // Remove the target check to ensure it always resets when leaving any element
       setIsHovering(false);
     };
-
     window.addEventListener("mousemove", updatePosition);
 
     // Listen to mouseover/mouseout on clickable elements
@@ -69,15 +52,8 @@ const CustomCursor = () => {
 
     // --- Cleanup ---
     return () => {
-      if (style && style.parentNode) {
-        document.head.removeChild(style);
-      }
+      document.head.removeChild(style);
       window.removeEventListener("mousemove", updatePosition);
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-      }
-
-      // Clean up event listeners from clickable elements
       const clickableElements = document.querySelectorAll(
         'a, button, [role="button"]'
       );
@@ -86,12 +62,7 @@ const CustomCursor = () => {
         element.removeEventListener("mouseleave", handleMouseOut);
       });
     };
-  }, [mouseX, mouseY, isMobile]);
-
-  // Don't render cursor on mobile devices (MOVED AFTER ALL HOOKS)
-  if (isMobile) {
-    return null;
-  }
+  }, [mouseX, mouseY]);
 
   // Variants for the main cursor animation
   const cursorVariants = {
@@ -123,7 +94,7 @@ const CustomCursor = () => {
 
   return (
     <>
-      {/* Main Cursor Element */}
+      {/* Main Cursor Element Only, no trail */}
       <motion.div
         className="hidden lg:flex items-center justify-center pointer-events-none fixed top-0 left-0 z-[999] rounded-full"
         style={{
@@ -133,7 +104,7 @@ const CustomCursor = () => {
           translateY: "-50%",
           width: CURSOR_SIZE,
           height: CURSOR_SIZE,
-          mixBlendMode: "difference", // This blend mode creates cool color inversion effects
+          mixBlendMode: "difference",
         }}
         variants={cursorVariants}
         animate={isHovering ? "hovering" : "default"}

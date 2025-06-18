@@ -1,31 +1,40 @@
-import React from "react";
-import { useDeviceDetection } from "../hooks/useDeviceDetection";
+import React, { useState, useEffect } from "react";
 
 const ShootingStars = () => {
-  const { isMobile, isTablet } = useDeviceDetection();
+  const [explosions, setExplosions] = useState([]);
 
-  // Disable shooting stars on mobile for better performance
-  if (isMobile) {
-    return null;
-  }
+  // Create explosion effect
+  const createExplosion = () => {
+    const id = Math.random();
+    const leftPosition = Math.random() * 80 + 10; // Random position between 10% and 90%
 
-  // Set number of shooting stars based on device
-  const numberOfStars = isTablet ? 3 : 6;
+    setExplosions((prev) => [...prev, { id, left: `${leftPosition}%` }]);
+
+    // Remove explosion after animation
+    setTimeout(() => {
+      setExplosions((prev) => prev.filter((exp) => exp.id !== id));
+    }, 600);
+  };
+
+  // Create new explosion every few seconds
+  useEffect(() => {
+    const interval = setInterval(createExplosion, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className="fixed inset-0 overflow-hidden pointer-events-none z-10">
-      {/* Always render at least basic stars for testing */}
-      <div className="shooting-star shooting-star-1"></div>
-      <div className="shooting-star shooting-star-2"></div>
-      <div className="shooting-star shooting-star-3"></div>
-      {numberOfStars >= 4 && (
-        <div className="shooting-star shooting-star-4"></div>
-      )}
-      {numberOfStars >= 5 && (
-        <div className="shooting-star shooting-star-5"></div>
-      )}
-      {numberOfStars >= 6 && (
-        <div className="shooting-star shooting-star-6"></div>
-      )}
+    <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+      <div className="shooting-star"></div>
+      <div className="shooting-star"></div>
+      <div className="shooting-star"></div>
+      <div className="shooting-star"></div>
+      <div className="shooting-star"></div>
+      <div className="shooting-star"></div>
+
+      {/* Explosions */}
+      {explosions.map(({ id, left }) => (
+        <div key={id} className="star-explosion" style={{ left }} />
+      ))}
     </div>
   );
 };

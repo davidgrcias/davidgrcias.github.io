@@ -31,6 +31,11 @@ const Header = () => {
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+
+  const handleMobileMenuToggle = () => {
+    setMobileOpen(!mobileOpen);
+    setShowLanguageMenu(false); // close language menu when opening mobile menu
+  };
   const handleNavClick = (e, targetId) => {
     e.preventDefault();
     const targetElement = document.querySelector(targetId);
@@ -38,11 +43,12 @@ const Header = () => {
       targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     setMobileOpen(false); // close mobile menu on nav click
-  };
-  // Prevent body scroll when mobile menu is open
+    setShowLanguageMenu(false); // also close language menu
+  }; // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (mobileOpen) {
       document.body.style.overflow = "hidden";
+      setShowLanguageMenu(false); // close language menu when mobile menu opens
     } else {
       document.body.style.overflow = "";
     }
@@ -50,8 +56,7 @@ const Header = () => {
       document.body.style.overflow = "";
     };
   }, [mobileOpen]);
-
-  // Close language menu when clicking outside
+  // Close language menu when clicking outside or when mobile menu is open
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (showLanguageMenu && !event.target.closest(".language-selector")) {
@@ -88,8 +93,7 @@ const Header = () => {
         </div>{" "}
         {/* Right side controls */}
         <div className="flex items-center gap-2 md:gap-4">
-          {" "}
-          {/* Language Selector */}
+          {/* Language Selector - Always beside theme toggle */}
           <div className="relative language-selector">
             <button
               onClick={() => setShowLanguageMenu(!showLanguageMenu)}
@@ -151,7 +155,7 @@ const Header = () => {
             {theme === "dark"
               ? React.createElement(iconMap.Sun, { size: 18 })
               : React.createElement(iconMap.Moon, { size: 18 })}
-          </button>{" "}
+          </button>
           {/* Hire Me button (desktop only) */}
           <a
             href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI'd%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
@@ -162,7 +166,7 @@ const Header = () => {
           {/* Hamburger (mobile only) */}
           <button
             className="md:hidden p-2 ml-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none"
-            onClick={() => setMobileOpen(true)}
+            onClick={handleMobileMenuToggle}
             aria-label="Open menu"
           >
             {React.createElement(iconMap.Menu, { size: 22 })}
@@ -176,6 +180,7 @@ const Header = () => {
         } ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         style={{ transitionProperty: "transform, background-color" }}
       >
+        {" "}
         <button
           className="absolute top-6 right-6 p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600"
           onClick={() => setMobileOpen(false)}
@@ -191,10 +196,35 @@ const Header = () => {
               onClick={(e) => handleNavClick(e, link.href)}
               className="hover:text-cyan-400 transition-colors duration-200 w-full text-center py-2"
             >
-              {" "}
               {link.label}
             </a>
           ))}
+          {/* Language Selection in Mobile - REMOVED FROM HERE */}
+          {/* <div className="mt-6 w-full px-8">
+            <p className="text-lg font-semibold mb-4 text-center text-cyan-400">
+              Pilih Bahasa
+            </p>
+            <div className="flex gap-4 justify-center">
+              {languages.map((lang) => (
+                <button
+                  key={lang.code}
+                  onClick={() => {
+                    translatePage(lang.code);
+                    setMobileOpen(false);
+                  }}
+                  disabled={isTranslating}
+                  className={`p-4 rounded-lg text-center transition-colors disabled:opacity-50 min-w-[120px] ${
+                    currentLanguage === lang.code
+                      ? "bg-cyan-500 text-white"
+                      : "bg-slate-700 text-gray-300 hover:bg-slate-600"
+                  }`}
+                >
+                  <div className="text-3xl mb-2">{lang.flag}</div>
+                  <div className="text-sm font-medium">{lang.name}</div>
+                </button>
+              ))}
+            </div>
+          </div> */}
 
           <a
             href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI'd%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
