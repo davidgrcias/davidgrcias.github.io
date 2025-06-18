@@ -4,97 +4,110 @@ const personalInfo = {
   basic: {
     fullName: "David Garcia Saragih",
     birthDate: "2005-09-13", // Format: YYYY-MM-DD
-    age: 19, // Update this automatically based on birthDate
-    birthPlace: "Jakarta",
+    // Age is calculated based on the birthDate. As of June 2025, David is 19.
+    age: 19,
+    birthPlace: "Jakarta, Indonesia",
     nationality: "Indonesian",
-    languages: ["Indonesian (Native)", "English (Limited Proficiency)"],
+    languages: [
+      "Indonesian (Native)",
+      "English (Professional Working Proficiency)",
+    ],
     currentLocation: "Jakarta, Indonesia",
     religion: "Christian",
+    philosophy:
+      "Every setback is a setup for the next level. I see challenges not as obstacles, but as stepping stones for growth and innovation.",
   },
 
   interests: {
     hobbies: [
-      "Coding and Programming",
-      "Content Creation",
-      "Learning New Technologies",
-      "Problem Solving",
-      "Public Transportation Exploration",
+      "Developing innovative web applications",
+      "Creating engaging tech content for YouTube and TikTok",
+      "Exploring the latest advancements in AI and web technologies",
+      "Solving complex logical puzzles and coding challenges",
+      "Navigating urban landscapes via public transportation",
     ],
     favoriteTopics: [
-      "Web Development",
-      "Technology Innovation",
-      "AI and Machine Learning",
-      "Digital Content Creation",
+      "Full-Stack Web Development",
+      "Technological Innovation & Startups",
+      "Artificial Intelligence and its practical applications",
+      "Digital Storytelling and Content Strategy",
+      "Open-Source Contribution",
     ],
     programming: {
       favoriteLanguages: ["JavaScript", "TypeScript", "PHP", "Python"],
-      favoriteTech: ["React", "Laravel", "Tailwind CSS"],
-      currentlyLearning: ["AI Development", "Machine Learning"],
+      favoriteTech: [
+        "React (Next.js)",
+        "Laravel",
+        "Tailwind CSS",
+        "Vite",
+        "Node.js",
+      ],
+      currentlyLearning: [
+        "Generative AI (Gemini API)",
+        "Machine Learning Frameworks",
+        "Advanced CI/CD pipelines",
+      ],
     },
   },
 
   personality: {
     traits: [
-      "Analytical thinker",
-      "Problem solver",
-      "Continuous learner",
-      "Detail-oriented",
-      "Ambitious",
-      "Creative",
+      "Deeply analytical and a natural problem-solver",
+      "A lifelong learner with a passion for technology",
+      "Meticulous and detail-oriented in every project",
+      "Highly ambitious and driven to exceed expectations",
+      "A creative thinker who connects technology with user needs",
     ],
     workStyle: [
-      "Most productive during late night hours",
-      "Enjoys collaborative projects",
-      "Self-motivated",
-      "Deadline-driven",
+      "Thrives in late-night hours where focus is at its peak",
+      "A strong believer in synergy and collaborative success",
+      "Proactive and self-motivated, requiring minimal supervision",
+      "Excels under pressure and is strictly deadline-driven",
     ],
     strengths: [
-      "Quick learning ability",
-      "Strong technical skills",
-      "Effective communication",
-      "Project management",
-      "Creative problem solving",
+      "Rapidly masters new technologies and frameworks",
+      "Possesses a strong foundation in modern web development",
+      "Articulates complex technical ideas with clarity",
+      "Manages project timelines and deliverables effectively",
+      "Bridges the gap between technical implementation and creative vision",
     ],
   },
 
   goals: {
     shortTerm: [
-      "Excel in current university studies",
-      "Expand portfolio with innovative projects",
-      "Grow YouTube and TikTok presence",
+      "Achieve academic excellence by maintaining a GPA above 3.9",
+      "Develop and launch a full-stack AI-powered web application for my portfolio",
+      "Double my YouTube and TikTok audience by creating high-value tech content",
     ],
     longTerm: [
-      "Become a leading full-stack developer",
-      "Build impactful tech solutions",
-      "Inspire others through content creation",
-      "Contribute to open-source communities",
+      "Evolve into a principal full-stack engineer or tech lead",
+      "Found or co-found a tech startup that solves a real-world problem",
+      "Become a prominent voice in the tech community, inspiring the next generation",
+      "Make significant contributions to major open-source projects",
     ],
   },
 
   faq: {
     "What inspired you to start programming?":
-      "My journey in programming began with curiosity about how websites work. What started as a hobby has grown into a passion for building and creating through code.",
+      "My fascination began with a simple question: 'How does the internet work?'. This curiosity led me down a rabbit hole of HTML, CSS, and JavaScript, and I was instantly hooked. The ability to create something functional and beautiful from pure logic felt like a superpower. It has since evolved from a hobby into a core passion for building digital experiences.",
 
     "How do you balance content creation and programming?":
-      "I manage my time effectively, usually coding during late nights when I'm most productive, and creating content during more flexible hours. The two activities actually complement each other well!",
+      "I treat them as two sides of the same coin. Programming is where I build and innovate, often during the quiet late-night hours. Content creation is where I share my learnings and solidify my understanding. I schedule my weeks meticulously, dedicating blocks of time for deep work on coding and other blocks for scripting, shooting, and editing. They fuel each other—my projects provide content, and the feedback from my audience inspires new project ideas.",
 
     "What's your biggest achievement so far?":
-      "Maintaining a high GPA of 3.87 while actively participating in multiple web development projects and growing my content creation platforms has been a significant achievement.",
+      "My proudest achievement is successfully architecting and developing this very portfolio, including the AI chatbot you're interacting with. It represents the culmination of my skills in front-end (React, Vite, Tailwind CSS), back-end (integrating the Gemini API), and my dedication to creating a seamless user experience. Balancing this complex project while maintaining a 3.87 GPA and growing my online presence has been a challenging yet incredibly rewarding experience.",
 
     "Where do you see yourself in 5 years?":
-      "I aim to be a recognized full-stack developer, contributing to meaningful projects while inspiring others through my content creation platforms.",
+      "In five years, I aim to be a senior full-stack developer at a forward-thinking tech company, leading projects that push the boundaries of web technology. I also envision my content creation platforms becoming a go-to resource for aspiring developers. Ultimately, I want to be at the intersection of innovation, education, and community-building.",
 
     "How do you stay updated with technology?":
-      "I actively follow tech trends, participate in online communities, take certifications, and practice through hands-on projects. My content creation also motivates me to stay current.",
+      "I have a multi-pronged approach. I'm an avid reader of tech blogs like TechCrunch and Smashing Magazine, a constant lurker on platforms like GitHub and Stack Overflow, and an active participant in developer communities on Discord and Twitter. I also dedicate time each week to hands-on learning, whether it's taking a new certification, experimenting with a new framework, or contributing to an open-source project. Teaching concepts on my channel is also a great way to ensure I understand them deeply.",
 
     "What's your approach to problem-solving?":
-      "I break down complex problems into smaller, manageable parts, research thoroughly, and always look for the most efficient and elegant solutions.",
-
-    "How do you handle challenges?":
-      "I see challenges as opportunities for growth. My motto is that every setback is simply a setup for the next level.",
+      "I follow a systematic process. First, I ensure I fully understand the problem by breaking it down into the smallest possible components. Then, I research potential solutions, weighing the pros and cons of each. I'm a big fan of sketching out logic flows and architectures before writing a single line of code. I believe in finding the root cause rather than just treating symptoms, which leads to more robust and scalable solutions.",
 
     "What makes you unique as a developer?":
-      "My combination of technical skills, content creation experience, and deep understanding of user needs allows me to approach problems from multiple perspectives.",
+      "I believe my unique edge comes from my dual identity as a developer and a content creator. I don't just build things; I understand how to communicate their value and how they fit into the user's world. This allows me to think about projects holistically—from the technical architecture and code quality to the user interface and overall narrative. I bring both a programmer's logic and a storyteller's creativity to the table.",
   },
 };
 
