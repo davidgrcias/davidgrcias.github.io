@@ -142,31 +142,149 @@ const ChatBot = () => {
 
     return matrix[b.length][a.length];
   };
-
   const generateResponse = async (input) => {
     try {
-      // Create a more concise prompt      // Create a focused context based on the query type
-      let relevantContext = "";
-      if (findBestMatch(input.toLowerCase(), ["personality", "hobbies"])) {
-        relevantContext = `Interests: ${knowledge.personal.interests
-          .slice(0, 3)
-          .join(", ")}`;
-      } else if (findBestMatch(input.toLowerCase(), ["contact", "reach"])) {
-        relevantContext = `Contact: Email - ${knowledge.contact.email}, Location - ${knowledge.contact.location}`;
-      } else if (findBestMatch(input.toLowerCase(), ["skills", "tech"])) {
-        relevantContext = `Top Skills: ${knowledge.professional.skills
-          .split("\n")
-          .slice(0, 3)
-          .join(", ")}`;
+      // Check if user is asking for CV
+      if (findBestMatch(input.toLowerCase(), ["cv", "resume", "curriculum"])) {
+        const cvResponse = [
+          "📄 Here's David's comprehensive CV!",
+          "",
+          "You can download his full CV (PDF format) here:",
+          `🔗 ${window.location.origin}/CV-DavidGarciaSaragih.pdf`,
+          "",
+          "The CV includes:",
+          "• Complete professional experience",
+          "• Technical skills and certifications",
+          "• Educational background",
+          "• Notable achievements and projects",
+          "",
+          "Would you like me to tell you about any specific aspect of his background? 😊",
+        ].join("\n");
+        updateSuggestedReplies("cv");
+        return cvResponse;
       }
 
-      const contextPrompt = `You are David Garcia Saragih's AI assistant. Answer: "${input}"
-Basic: ${knowledge.personal.basic.fullName}, ${knowledge.personal.basic.currentLocation}
-${relevantContext}
+      // Create COMPREHENSIVE context using ALL data sources
+      const comprehensiveContext = `
+COMPLETE PROFILE OF DAVID GARCIA SARAGIH:
 
-Be friendly, concise, and use emojis sparingly. Reference relevant experiences when appropriate.`;
+=== BASIC INFORMATION ===
+Name: ${userProfile.name}
+Headline: ${userProfile.headline}
+Age: 19 years old (born September 13, 2005)
+Location: ${userProfile.contact.location}
+Religion: Christian
+Email: ${userProfile.contact.email}
+WhatsApp: ${userProfile.contact.whatsapp}
+Portfolio: davidgrcias.github.io
 
-      // Get AI response with optimized context
+About: ${userProfile.aboutText}
+
+=== TECHNICAL SKILLS ===
+${skills
+  .map((skill) => `• ${skill.name}: ${skill.level}% proficiency`)
+  .join("\n")}
+
+=== PROFESSIONAL EXPERIENCE ===
+${experiences
+  .map(
+    (exp) =>
+      `• ${exp.role} at ${exp.company} (${exp.type}) - ${exp.startDate} to ${
+        exp.endDate
+      }
+    Skills used: ${exp.skills.join(", ")}`
+  )
+  .join("\n\n")}
+
+=== EDUCATION ===
+${education
+  .map(
+    (edu) =>
+      `• ${edu.degree} at ${edu.institution} (${edu.period})${
+        edu.grade ? ` - GPA: ${edu.grade}` : ""
+      }`
+  )
+  .join("\n")}
+
+=== CERTIFICATIONS ===
+${certifications
+  .map((cert) => `• ${cert.name} from ${cert.provider} (${cert.date})`)
+  .join("\n")}
+
+=== PERSONALITY INSIGHTS ===
+${insights.map((insight) => `• ${insight.title}: ${insight.text}`).join("\n")}
+
+=== FUN FACTS ===
+${funFacts.map((fact) => `• ${fact.title}: ${fact.text}`).join("\n")}
+
+=== SOCIAL MEDIA PRESENCE ===
+• YouTube: ${userProfile.socials.youtube.url} (${
+        userProfile.socials.youtube.handle
+      })
+• TikTok: ${userProfile.socials.tiktok.url} (${
+        userProfile.socials.tiktok.handle
+      })
+• GitHub: ${userProfile.socials.github.url} (${
+        userProfile.socials.github.handle
+      })
+• LinkedIn: ${userProfile.socials.linkedin.url} (${
+        userProfile.socials.linkedin.handle
+      })
+• Instagram: ${userProfile.socials.instagram.url} (${
+        userProfile.socials.instagram.handle
+      })
+
+=== CONTENT CREATION ACHIEVEMENTS ===
+• 7.7K+ YouTube subscribers with 1.8M+ total views
+• 17.2K+ TikTok followers
+• Creates tech content teaching programming in practical ways
+• Started content creation in March 2021
+
+=== ENTREPRENEURSHIP ===
+• Founder of Rental Mobil City Park (June 2024 - Present)
+• Built frontend platform and digital presence for the business
+• Digital strategist and web developer for the company
+
+=== CURRENT PROJECTS & ROLES ===
+• Informatics student at Universitas Multimedia Nusantara (GPA: 3.87)
+• Coordinator of Web Development for UMN Festival 2025
+• Content Creator on YouTube and TikTok
+• Entrepreneur running Rental Mobil City Park
+
+=== WORK STYLE & PERSONALITY ===
+• Most productive during late night hours
+• Fueled by ambition, not afraid to fail
+• Endlessly curious about how things work
+• Loves meeting and chatting with new people (despite seeming reserved)
+• Ambitious and analytical, always striving to improve
+• Expert in Jakarta's public transport routes
+• Philosophy: "Every setback is a setup for the next level"
+
+=== TECHNICAL EXPERTISE DETAILS ===
+• Frontend: HTML5, CSS3, Tailwind CSS, JavaScript, TypeScript, React.js
+• Backend: PHP, Laravel, MySQL, Python, REST API development
+• DevOps: Git, GitHub, Firebase, Vercel, cPanel Hosting
+• SEO and optimization tools
+• UI/UX implementation and design-to-code conversion
+• Mobile-first development approach
+`;
+
+      const contextPrompt = `You are David Garcia Saragih's AI assistant. Using the comprehensive information below, answer this question: "${input}"
+
+${comprehensiveContext}
+
+Instructions:
+- Answer based ONLY on the provided information
+- Be friendly, conversational, and enthusiastic about David's achievements
+- Use specific details and numbers from the context
+- If asked about technical skills, mention specific proficiency levels
+- If asked about experience, reference specific companies and roles
+- If asked about personality, use the insights and fun facts
+- Keep responses engaging but not too long
+- Use emojis sparingly for personality
+- Always sound knowledgeable about all aspects of David's profile`;
+
+      // Get AI response with FULL comprehensive context
       const aiResponse = await generateAIResponse(contextPrompt);
       updateSuggestedReplies(input.toLowerCase());
       return aiResponse;
@@ -175,170 +293,245 @@ Be friendly, concise, and use emojis sparingly. Reference relevant experiences w
       return handleFallbackResponse(input.toLowerCase());
     }
   };
-
   const handleFallbackResponse = (input) => {
-    // Enhanced creative fallback responses
+    // Enhanced creative fallback responses using updated personalInfo
     const lowercaseInput = input.toLowerCase();
 
-    // Personality and behavior queries
-    if (
-      findBestMatch(lowercaseInput, [
-        "personality",
-        "behavior",
-        "like",
-        "person",
-        "character",
-      ])
-    ) {
-      const randomFacts = funFacts.map((fact) => fact.text);
-      const randomInsights = insights.map((insight) => insight.text);
+    // CV/Resume requests
+    if (findBestMatch(lowercaseInput, ["cv", "resume", "curriculum"])) {
       const response = [
-        "Let me share something interesting about David! 😊",
-        randomFacts[Math.floor(Math.random() * randomFacts.length)],
-        "And you know what's really cool about him?",
-        randomInsights[Math.floor(Math.random() * randomInsights.length)],
-        "\nWould you like to know more about his professional journey or his creative side? 🚀",
-      ].join("\n\n");
-      updateSuggestedReplies("personality");
+        "📄 You can download David's comprehensive CV here:",
+        `🔗 ${window.location.origin}/CV-DavidGarciaSaragih.pdf`,
+        "",
+        "His CV includes complete details about:",
+        "• Professional experience (6+ roles)",
+        "• Technical skills across full-stack development",
+        "• Educational background (GPA: 3.87)",
+        "• Notable achievements and certifications",
+        "",
+        "What specific aspect would you like to know more about? 😊",
+      ].join("\n");
+      updateSuggestedReplies("cv");
       return response;
     }
 
-    // Skills and expertise queries
-    if (
-      findBestMatch(lowercaseInput, ["skills", "can do", "expertise", "tech"])
-    ) {
-      const topSkills = skills.filter((skill) => skill.level >= 90);
-      const recentProject = experiences[0];
+    // Age/Personal info queries
+    if (findBestMatch(lowercaseInput, ["age", "old", "born", "birth"])) {
       const response = [
-        "🚀 David is quite the tech enthusiast! Here's what he's fantastic at:",
-        topSkills
-          .map((skill) => `✨ ${skill.name} (${skill.level}% proficiency)`)
-          .join("\n"),
-        `\nRight now, he's putting these skills to work as ${
-          recentProject.role
-        } at ${
-          recentProject.company
-        }, where he's using ${recentProject.skills.join(", ")}!`,
-        "\nWhat aspect of his technical expertise would you like to know more about? 💡",
+        `David is currently ${personalInfo.basic.age} years old! 🎂`,
+        `Born on September 13, 2005, in ${personalInfo.basic.birthPlace}.`,
+        "",
+        "Despite his young age, he's already achieved remarkable things:",
+        `• Maintaining a ${personalInfo.educationalBackground[0].gpa} GPA in Informatics`,
+        `• Building a YouTube audience of 7.7K+ subscribers`,
+        `• Running his own business (Rental Mobil City Park)`,
+        `• Leading web development for major university events`,
+        "",
+        "Pretty impressive for a 19-year-old, right? 🚀",
+      ].join("\n");
+      updateSuggestedReplies("personal");
+      return response;
+    }
+
+    // Religion queries
+    if (
+      findBestMatch(lowercaseInput, [
+        "religion",
+        "faith",
+        "belief",
+        "christian",
+      ])
+    ) {
+      const response = [
+        `David is a ${personalInfo.basic.religion}. ✝️`,
+        "",
+        "His faith influences his approach to life and work, particularly his philosophy:",
+        `"${personalInfo.basic.philosophy}"`,
+        "",
+        "This positive mindset shows in how he handles challenges in both his studies and business ventures.",
+        "",
+        "Would you like to know more about his goals or achievements? 😊",
+      ].join("\n");
+      updateSuggestedReplies("personal");
+      return response;
+    }
+
+    // Goals and aspirations
+    if (
+      findBestMatch(lowercaseInput, [
+        "goals",
+        "future",
+        "aspirations",
+        "plans",
+        "ambitions",
+      ])
+    ) {
+      const response = [
+        "🎯 David has some exciting goals ahead!",
+        "",
+        "**Short-term goals:**",
+        personalInfo.goals.shortTerm.map((goal) => `• ${goal}`).join("\n"),
+        "",
+        "**Long-term vision:**",
+        personalInfo.goals.longTerm.map((goal) => `• ${goal}`).join("\n"),
+        "",
+        "His ultimate aim is to be at the intersection of innovation, education, and community-building! 🚀",
+        "",
+        "What aspect of his journey interests you most?",
+      ].join("\n");
+      updateSuggestedReplies("goals");
+      return response;
+    }
+
+    // Technical skills
+    if (
+      findBestMatch(lowercaseInput, [
+        "skills",
+        "technical",
+        "programming",
+        "tech",
+        "expertise",
+      ])
+    ) {
+      const response = [
+        "💻 David's technical skills are quite impressive!",
+        "",
+        "**Frontend:** " + personalInfo.technicalSkills.frontend.join(", "),
+        "**Backend:** " + personalInfo.technicalSkills.backend.join(", "),
+        "**DevOps:** " + personalInfo.technicalSkills.devops.join(", "),
+        "",
+        "**Currently mastering:** " +
+          personalInfo.interests.programming.currentlyLearning.join(", "),
+        "",
+        `He's particularly strong in full-stack development and has real-world experience through his ${personalInfo.professionalExperience.length} different roles!`,
+        "",
+        "Want to know about specific projects or his learning approach? 🤔",
       ].join("\n");
       updateSuggestedReplies("skills");
       return response;
     }
 
-    // Education and learning journey
+    // Education queries
     if (
       findBestMatch(lowercaseInput, [
         "education",
         "study",
-        "learn",
-        "certification",
+        "university",
+        "school",
+        "gpa",
       ])
     ) {
-      const currentEducation = education[0];
-      const recentCerts = certifications.slice(0, 3);
+      const current = personalInfo.educationalBackground[0];
+      const previous = personalInfo.educationalBackground[1];
       const response = [
-        "📚 David's learning journey is pretty inspiring!",
-        `Currently pursuing ${currentEducation.degree} at ${currentEducation.institution} with an impressive GPA of ${currentEducation.grade}! 🎓`,
-        "\nRecent achievements include:",
-        recentCerts
-          .map((cert) => `🏆 ${cert.name} from ${cert.provider}`)
-          .join("\n"),
-        "\nWhat would you like to know about his educational journey or latest certifications? 🤔",
+        "🎓 David's educational journey is quite impressive!",
+        "",
+        `**Currently:** ${current.level} at ${current.institution}`,
+        `📊 GPA: ${current.gpa} (${current.period})`,
+        "",
+        `**Previously:** ${previous.level} at ${previous.institution}`,
+        `🏆 Achievement: ${previous.achievement}`,
+        "",
+        "He's balancing academics with content creation and entrepreneurship - talk about time management skills! ⏰",
+        "",
+        "Curious about his projects or achievements? �",
       ].join("\n");
       updateSuggestedReplies("education");
       return response;
     }
 
-    // Experience and projects
-    if (findBestMatch(lowercaseInput, ["experience", "work", "project"])) {
-      const currentRole = experiences[0];
-      const entrepreneurialRole = experiences.find(
-        (exp) => exp.type === "Entrepreneurship"
-      );
-      const response = [
-        "💼 David's career journey is quite diverse!",
-        `Currently, he's rocking it as ${currentRole.role} at ${
-          currentRole.company
-        }, mastering ${currentRole.skills.join(", ")}!`,
-        entrepreneurialRole
-          ? `\n🚀 He's also an entrepreneur, running ${entrepreneurialRole.company} since ${entrepreneurialRole.startDate}!`
-          : "",
-        "\nWould you like to hear about his other projects or his entrepreneurial journey? 💡",
-      ].join("\n");
-      updateSuggestedReplies("experience");
-      return response;
-    }
-
-    // Contact and social presence
+    // Contact information
     if (
-      findBestMatch(lowercaseInput, ["contact", "reach", "email", "social"])
+      findBestMatch(lowercaseInput, [
+        "contact",
+        "reach",
+        "email",
+        "phone",
+        "connect",
+      ])
     ) {
+      const contact = personalInfo.basic.contactInfo;
+      const social = personalInfo.socialMediaPresence;
       const response = [
-        "📱 Ready to connect with David? Here's how:",
-        `📧 Email: ${userProfile.contact.email}`,
-        `💬 WhatsApp: ${userProfile.contact.whatsapp}`,
-        `🌐 LinkedIn: ${userProfile.socials.linkedin.url}`,
-        "\nAnd if you're interested in his content:",
-        `🎥 YouTube: @${userProfile.socials.youtube.handle}`,
-        `📱 TikTok: @${userProfile.socials.tiktok.handle}`,
-        "\nWhat's your preferred way to connect? 😊",
+        "📱 Here's how you can connect with David:",
+        "",
+        `📧 Email: ${contact.email}`,
+        `� Phone: ${contact.phone}`,
+        `🌐 Portfolio: ${contact.portfolio}`,
+        "",
+        "**Social Media:**",
+        `• GitHub: ${social.github}`,
+        `• Instagram: ${social.instagram}`,
+        `• YouTube: ${social.youtube}`,
+        `• TikTok: ${social.tiktok}`,
+        "",
+        "He's most active on YouTube and TikTok where he shares tech content! 🎥",
+        "",
+        "What's your preferred way to connect? 😊",
       ].join("\n");
       updateSuggestedReplies("contact");
       return response;
     }
 
+    // Default welcome response
     const welcomeResponse = [
-      "Hey there! 👋 I'm David's AI assistant, and I'd love to tell you all about him!",
-      "\nI can share:",
-      "🎯 His amazing tech skills and projects",
-      "🎓 Educational journey and achievements",
-      "💼 Professional experiences",
-      "🎮 Fun facts and personal insights",
-      "📱 How to connect with him",
-      "\nWhat would you like to know? 😊",
+      "👋 Hey there! I'm David's AI assistant!",
+      "",
+      "I know everything about David Garcia Saragih - from his technical skills to his entrepreneurial journey. Here's what I can tell you about:",
+      "",
+      "🎯 **Personal Info:** Age, background, goals, philosophy",
+      "💻 **Technical Skills:** Full-stack development expertise",
+      "🎓 **Education:** Current studies and achievements",
+      "💼 **Experience:** 6+ professional roles and projects",
+      "🚀 **Entrepreneurship:** His business ventures",
+      "🎥 **Content Creation:** YouTube/TikTok success",
+      "📱 **Contact Info:** How to connect with him",
+      "📄 **CV Download:** Get his complete resume",
+      "",
+      "What would you like to know about David? 😊",
     ].join("\n");
 
     updateSuggestedReplies("welcome");
     return welcomeResponse;
   };
-
-  // Update suggested replies with more personal options
+  // Update suggested replies with more comprehensive options
   const updateSuggestedReplies = (context) => {
     const repliesMap = {
-      welcome: [
-        "Tell me about David's personality",
-        "What are his goals?",
-        "How old is David?",
-      ],
-      personality: [
-        "What are his hobbies?",
-        "Tell me about his work style",
-        "What motivates him?",
+      welcome: ["How old is David?", "What are his goals?", "Download his CV"],
+      personal: [
+        "What are his achievements?",
+        "Tell me about his skills",
+        "His educational background",
       ],
       skills: [
         "What's he currently learning?",
-        "His favorite technologies?",
+        "His work experience",
         "Recent projects?",
       ],
       education: [
-        "Why did he choose IT?",
-        "Future learning goals?",
-        "Certifications?",
+        "His professional experience",
+        "Content creation journey",
+        "Technical certifications?",
+      ],
+      goals: [
+        "His biggest achievements?",
+        "Current projects?",
+        "How to contact him?",
       ],
       experience: [
-        "His biggest achievement?",
-        "Career goals?",
-        "Side projects?",
-      ],
-      personal: [
-        "What are his interests?",
-        "His work preferences?",
-        "Future aspirations?",
+        "His entrepreneurial journey",
+        "Technical skills",
+        "Educational background",
       ],
       contact: [
-        "Check his content",
-        "Professional background",
-        "Current projects",
+        "Check his YouTube content",
+        "His business ventures",
+        "Download his CV",
+      ],
+      cv: [
+        "What are his main skills?",
+        "Tell me about his experience",
+        "How to contact David?",
       ],
     };
 
