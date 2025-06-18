@@ -5,7 +5,6 @@ import SplashScreen from "./components/SplashScreen";
 import PortfolioContent from "./components/PortfolioContent";
 import ShootingStars from "./components/ShootingStars";
 import ChatBot from "./components/ChatBot";
-import PerformanceWrapper from "./components/PerformanceWrapper";
 import { AppContext } from "./AppContext";
 import { TranslationProvider } from "./contexts/TranslationContext";
 
@@ -31,12 +30,8 @@ export default function App() {
           <SplashScreen onLoadingComplete={() => setIsLoading(false)} />
         ) : (
           <>
-            <PerformanceWrapper enableAnimations={false}>
-              <ShootingStars />
-            </PerformanceWrapper>
-            <PerformanceWrapper enableAnimations={false}>
-              <CustomCursor />
-            </PerformanceWrapper>
+            <ShootingStars />
+            <CustomCursor />
             <PortfolioContent />
             <ChatBot />
           </>

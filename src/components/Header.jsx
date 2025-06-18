@@ -191,35 +191,10 @@ const Header = () => {
               onClick={(e) => handleNavClick(e, link.href)}
               className="hover:text-cyan-400 transition-colors duration-200 w-full text-center py-2"
             >
+              {" "}
               {link.label}
             </a>
           ))}
-          {/* Language Selection in Mobile */}
-          <div className="mt-6 w-full px-8">
-            <p className="text-lg font-semibold mb-4 text-center text-cyan-400">
-              Pilih Bahasa
-            </p>
-            <div className="flex gap-4 justify-center">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => {
-                    translatePage(lang.code);
-                    setMobileOpen(false);
-                  }}
-                  disabled={isTranslating}
-                  className={`p-4 rounded-lg text-center transition-colors disabled:opacity-50 min-w-[120px] ${
-                    currentLanguage === lang.code
-                      ? "bg-cyan-500 text-white"
-                      : "bg-slate-700 text-gray-300 hover:bg-slate-600"
-                  }`}
-                >
-                  <div className="text-3xl mb-2">{lang.flag}</div>
-                  <div className="text-sm font-medium">{lang.name}</div>
-                </button>
-              ))}
-            </div>
-          </div>
 
           <a
             href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI'd%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}

@@ -1,7 +1,10 @@
 // src/components/SplashScreen.jsx
 import React from "react";
+import { useDeviceDetection } from "../hooks/useDeviceDetection";
 
-const SplashScreen = () => {
+const SplashScreen = ({ onLoadingComplete }) => {
+  const { isMobile } = useDeviceDetection();
+
   return (
     <div
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-[#0f172a]"
@@ -11,10 +14,10 @@ const SplashScreen = () => {
       }}
     >
       <svg
-        className="pl"
+        className={`pl ${isMobile ? "pl-mobile" : ""}`}
         viewBox="0 0 200 200"
-        width="120"
-        height="120"
+        width={isMobile ? "80" : "120"}
+        height={isMobile ? "80" : "120"}
         xmlns="http://www.w3.org/2000/svg"
         aria-label="Loading"
       >
@@ -96,6 +99,20 @@ const SplashScreen = () => {
           57%, 71%, 85%, 99%, to {
             animation-timing-function: ease-out;
             stroke-dashoffset: -163;
+          }        }
+        @media (max-width: 640px) {
+          .pl {
+            width: 4em;
+            height: 4em;
+          }
+          .pl__ring, .pl__ball {
+            animation-duration: 1s;
+          }
+          .pl-mobile .pl__ring {
+            stroke-width: 20;
+          }
+          .pl-mobile .pl__ball {
+            stroke-width: 6;
           }
         }
       `}</style>
