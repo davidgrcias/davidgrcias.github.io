@@ -6,6 +6,7 @@ import PortfolioContent from "./components/PortfolioContent";
 import ShootingStars from "./components/ShootingStars";
 import ChatBot from "./components/ChatBot";
 import { AppContext } from "./AppContext";
+import { TranslationProvider } from "./contexts/TranslationContext";
 
 // --- MAIN APP COMPONENT ---
 export default function App() {
@@ -24,16 +25,18 @@ export default function App() {
   const contextValue = { theme, setTheme };
   return (
     <AppContext.Provider value={contextValue}>
-      {isLoading ? (
-        <SplashScreen onLoadingComplete={() => setIsLoading(false)} />
-      ) : (
-        <>
-          <ShootingStars />
-          <CustomCursor />
-          <PortfolioContent />
-          <ChatBot />
-        </>
-      )}
+      <TranslationProvider>
+        {isLoading ? (
+          <SplashScreen onLoadingComplete={() => setIsLoading(false)} />
+        ) : (
+          <>
+            <ShootingStars />
+            <CustomCursor />
+            <PortfolioContent />
+            <ChatBot />
+          </>
+        )}
+      </TranslationProvider>
     </AppContext.Provider>
   );
 }
