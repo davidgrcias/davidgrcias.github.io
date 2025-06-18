@@ -1,10 +1,12 @@
 // src/components/CustomCursor.jsx
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
+import { useDeviceDetection } from "../hooks/useDeviceDetection";
 
-// Constants
+// Constants - Optimized for performance
 const CURSOR_SIZE = 24;
-const NUM_TRAIL_DOTS = 25;
+const NUM_TRAIL_DOTS_DESKTOP = 25;
+const NUM_TRAIL_DOTS_TABLET = 10;
 const SPRING_CONFIG = { damping: 30, stiffness: 500 };
 const TRAIL_SPRING_CONFIG = { damping: 20, stiffness: 200 };
 
@@ -16,8 +18,8 @@ const createSpring = (motionValue, index) => {
   });
 };
 
-// Helper component for each dot in the trail
-const TrailDot = ({ x, y, opacity, size }) => {
+// Helper component for each dot in the trail - Optimized
+const TrailDot = React.memo(({ x, y, opacity, size, isTablet }) => {
   return (
     <motion.div
       className="pointer-events-none fixed top-0 left-0 z-[990] rounded-full bg-white/30"
@@ -27,22 +29,21 @@ const TrailDot = ({ x, y, opacity, size }) => {
         width: size,
         height: size,
         opacity: opacity,
-        // Using a filter for a softer, more "smokey" look
-        filter: "blur(3px)",
-        backdropFilter: "blur(2px)",
-        // We need to move the dot's origin to its center for proper positioning
+        // Reduced filters for better performance on tablets/mobile
+        filter: isTablet ? "blur(1px)" : "blur(3px)",
+        backdropFilter: isTablet ? "none" : "blur(2px)",
         translateX: "-50%",
         translateY: "-50%",
       }}
     />
   );
-};
+});
 
-const useTrailSprings = (mouseX, mouseY) => {
+const useTrailSprings = (mouseX, mouseY, numDots) => {
   const springXs = [];
   const springYs = [];
 
-  for (let i = 0; i < NUM_TRAIL_DOTS; i++) {
+  for (let i = 0; i < numDots; i++) {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     springXs.push(createSpring(mouseX, i));
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -53,6 +54,14 @@ const useTrailSprings = (mouseX, mouseY) => {
 };
 
 const CustomCursor = () => {
+  // Device detection for performance optimization
+  const { isMobile, isTablet, isDesktop } = useDeviceDetection();
+
+  // Don't render cursor on mobile devices
+  if (isMobile) {
+    return null;
+  }
+
   // State to track if hovering over interactive elements
   const [isHovering, setIsHovering] = useState(false);
 
@@ -60,10 +69,17 @@ const CustomCursor = () => {
   const mouseX = useMotionValue(-100);
   const mouseY = useMotionValue(-100);
 
-  // Create a chain of springs for the trail effect using useMemo
-  const [trailX, trailY] = useTrailSprings(mouseX, mouseY);
+  // Determine number of trail dots based on device
+  const numTrailDots = isTablet
+    ? NUM_TRAIL_DOTS_TABLET
+    : NUM_TRAIL_DOTS_DESKTOP;
 
+  // Create a chain of springs for the trail effect using useMemo
+  const [trailX, trailY] = useTrailSprings(mouseX, mouseY, numTrailDots);
   useEffect(() => {
+    // Don't set up cursor on mobile
+    if (isMobile) return;
+
     // Hide the default system cursor
     // A style tag is injected into the head to achieve this
     const style = document.createElement("style");
@@ -75,9 +91,16 @@ const CustomCursor = () => {
     document.head.appendChild(style);
 
     // --- Event Listeners ---
+    // Throttle mousemove for better performance
+    let animationFrameId;
     const updatePosition = (e) => {
-      mouseX.set(e.clientX);
-      mouseY.set(e.clientY);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+      animationFrameId = requestAnimationFrame(() => {
+        mouseX.set(e.clientX);
+        mouseY.set(e.clientY);
+      });
     };
     const handleMouseOver = (e) => {
       if (e.target.closest('a, button, [role="button"]')) {
@@ -98,12 +121,15 @@ const CustomCursor = () => {
     clickableElements.forEach((element) => {
       element.addEventListener("mouseenter", handleMouseOver);
       element.addEventListener("mouseleave", handleMouseOut);
-    });
-
-    // --- Cleanup ---
+    }); // --- Cleanup ---
     return () => {
-      document.head.removeChild(style);
+      if (style && style.parentNode) {
+        document.head.removeChild(style);
+      }
       window.removeEventListener("mousemove", updatePosition);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
 
       // Clean up event listeners from clickable elements
       const clickableElements = document.querySelectorAll(
@@ -114,7 +140,7 @@ const CustomCursor = () => {
         element.removeEventListener("mouseleave", handleMouseOut);
       });
     };
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, isMobile]);
 
   // Variants for the main cursor animation
   const cursorVariants = {
@@ -146,14 +172,22 @@ const CustomCursor = () => {
 
   return (
     <>
+      {" "}
       {/* Render the trail dots */}{" "}
       {trailX.map((x, i) => {
         // More gradual fade out for subtler effect
-        const opacity = 0.15 - (i / NUM_TRAIL_DOTS) * 0.14; // More subtle opacity
+        const opacity = 0.15 - (i / numTrailDots) * 0.14; // More subtle opacity
         // Smaller dots that decrease more gradually
-        const size = CURSOR_SIZE * 0.5 * (1 - (i / NUM_TRAIL_DOTS) * 0.5); // Smaller trail dots
+        const size = CURSOR_SIZE * 0.5 * (1 - (i / numTrailDots) * 0.5); // Smaller trail dots
         return (
-          <TrailDot key={i} x={x} y={trailY[i]} opacity={opacity} size={size} />
+          <TrailDot
+            key={i}
+            x={x}
+            y={trailY[i]}
+            opacity={opacity}
+            size={size}
+            isTablet={isTablet}
+          />
         );
       })}
       {/* Main Cursor Element */}

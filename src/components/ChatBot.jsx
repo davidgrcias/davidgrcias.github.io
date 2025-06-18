@@ -10,6 +10,7 @@ import {
   Minimize2,
 } from "lucide-react";
 import { generateAIResponse } from "../api/gemini";
+import { usePerformanceMode } from "../hooks/usePerformanceMode";
 import userProfile from "../data/userProfile";
 import experiences from "../data/experiences";
 import skills from "../data/skills";
@@ -21,6 +22,81 @@ import funFacts from "../data/funFacts";
 import personalInfo from "../data/personalInfo";
 
 const ChatBot = () => {
+  const { shouldReduceAnimations, performanceMode } = usePerformanceMode();
+
+  // Performance-optimized animation variants
+  const getAnimationVariants = () => {
+    if (shouldReduceAnimations) {
+      return {
+        // No animations for reduced motion/mobile
+        button: {
+          initial: { scale: 1 },
+          animate: { scale: 1 },
+          transition: { duration: 0 },
+          whileHover: { scale: 1 },
+          whileTap: { scale: 1 },
+        },
+        window: {
+          initial: { opacity: 1, y: 0 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: 0 },
+          transition: { duration: 0.1 },
+        },
+        message: {
+          initial: { opacity: 1, x: 0 },
+          animate: { opacity: 1, x: 0 },
+          transition: { duration: 0 },
+        },
+      };
+    } else if (performanceMode === "medium") {
+      return {
+        // Reduced animations for tablets
+        button: {
+          initial: { scale: 1 },
+          animate: { scale: [1, 1.05, 1] },
+          transition: { duration: 2, repeat: Infinity },
+          whileHover: { scale: 1.05 },
+          whileTap: { scale: 0.95 },
+        },
+        window: {
+          initial: { opacity: 0, y: 50 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: 50 },
+          transition: { duration: 0.2 },
+        },
+        message: {
+          initial: { opacity: 0, x: -20 },
+          animate: { opacity: 1, x: 0 },
+          transition: { duration: 0.2 },
+        },
+      };
+    } else {
+      return {
+        // Full animations for desktop
+        button: {
+          initial: { scale: 1 },
+          animate: { scale: [1, 1.1, 1] },
+          transition: { duration: 2, repeat: Infinity },
+          whileHover: { scale: 1.1 },
+          whileTap: { scale: 0.9 },
+        },
+        window: {
+          initial: { opacity: 0, y: 100 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: 100 },
+          transition: { duration: 0.3 },
+        },
+        message: {
+          initial: { opacity: 0, x: -30 },
+          animate: { opacity: 1, x: 0 },
+          transition: { duration: 0.3 },
+        },
+      };
+    }
+  };
+
+  const animations = getAnimationVariants();
+
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [messages, setMessages] = useState([
@@ -42,8 +118,13 @@ const ChatBot = () => {
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
 
+  // Performance-optimized scroll function
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (shouldReduceAnimations) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   };
   useEffect(() => {
     scrollToBottom();
@@ -945,54 +1026,28 @@ RESPONSE STYLE:
       setIsTyping(false);
     }
   };
-
-  const pulseAnimation = {
-    initial: { scale: 1, boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)" },
-    animate: {
-      scale: [1, 1.05, 1],
-      boxShadow: [
-        "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-        "0 8px 12px -1px rgba(0, 0, 0, 0.2)",
-        "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-      ],
-    },
-    transition: {
-      duration: 2,
-      ease: "easeInOut",
-      repeat: Infinity,
-      repeatType: "reverse",
-    },
-  };
-
   return (
     <>
-      {/* Floating button */}
+      {/* Floating button */}{" "}
       <motion.button
         onClick={() => setIsOpen(true)}
         className={`fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 text-white shadow-lg hover:bg-cyan-600 transition-colors duration-300 flex items-center justify-center z-40 ${
           isOpen ? "hidden" : ""
         }`}
-        initial={pulseAnimation.initial}
-        animate={pulseAnimation.animate}
-        transition={pulseAnimation.transition}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        {...animations.button}
       >
         <Bot size={24} />
       </motion.button>
-
       {/* Chat window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
             className={`fixed ${
               isFullscreen
                 ? "inset-4 w-auto h-auto"
                 : "bottom-6 right-6 w-96 h-[600px]"
             } bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden z-50 border border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300`}
+            {...animations.window}
           >
             {" "}
             {/* Header */}
@@ -1036,6 +1091,7 @@ RESPONSE STYLE:
                   className={`flex ${
                     message.type === "user" ? "justify-end" : "justify-start"
                   } mb-4`}
+                  {...animations.message}
                 >
                   <div
                     className={`max-w-[80%] p-3 rounded-2xl ${
