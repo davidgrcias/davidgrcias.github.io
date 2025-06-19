@@ -83,7 +83,7 @@ const AppContent = () => {
   const [showCVModal, setShowCVModal] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 3000);
+    const timer = setTimeout(() => setIsLoading(false), 1800);
     return () => clearTimeout(timer);
   }, []);
 

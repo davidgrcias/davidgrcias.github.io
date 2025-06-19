@@ -60,7 +60,7 @@ const SplashScreen = () => {
           height: 6.25em;
         }
         .pl__ring, .pl__ball {
-          animation: ring 2s ease-out infinite;
+          animation: ring 1.2s ease-out infinite;
         }
         .pl__ball {
           animation-name: ball;
