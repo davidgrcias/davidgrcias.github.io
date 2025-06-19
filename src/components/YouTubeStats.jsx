@@ -2,7 +2,8 @@
 import React, { useState, useEffect } from "react";
 import { Clock, Eye, Heart, Loader, Users, Youtube } from "lucide-react";
 import { iconMap } from "../icons/iconMap";
-import userProfile from "../data/userProfile";
+import { getUserProfile } from "../data/userProfile";
+import { useTranslation } from "../contexts/TranslationContext";
 
 // Extend iconMap with newly needed icons
 Object.assign(iconMap, {
@@ -15,6 +16,8 @@ Object.assign(iconMap, {
 });
 
 const YouTubeStats = () => {
+  const { currentLanguage } = useTranslation();
+  const userProfile = getUserProfile(currentLanguage);
   const fallbackStats = {
     subscribers: "4.7K+",
     views: "876K+",

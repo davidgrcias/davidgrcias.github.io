@@ -1,5 +1,7 @@
 // src/data/education.js
-const education = [
+import { translateObject } from "../contexts/TranslationContext";
+
+const educationData = [
   {
     degree: "Undergraduate Student, Informatics",
     institution: "Universitas Multimedia Nusantara",
@@ -13,4 +15,10 @@ const education = [
   },
 ];
 
-export default education;
+// Function to get translated education based on current language
+export const getEducation = (language = "en") => {
+  return translateObject(educationData, language);
+};
+
+// Default export for backward compatibility
+export default educationData;

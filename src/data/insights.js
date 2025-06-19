@@ -1,5 +1,7 @@
 // src/data/insights.js
-const insights = [
+import { translateObject } from "../contexts/TranslationContext";
+
+const insightsData = [
   {
     title: "Motivation",
     text: "Fueled by ambition, not afraid to fail, because every setback is simply a setup for the next level.",
@@ -22,4 +24,10 @@ const insights = [
   },
 ];
 
-export default insights;
+// Function to get translated insights based on current language
+export const getInsights = (language = "en") => {
+  return translateObject(insightsData, language);
+};
+
+// Default export for backward compatibility
+export default insightsData;

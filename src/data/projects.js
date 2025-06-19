@@ -1,5 +1,7 @@
 // src/data/projects.js
-const projects = [
+import { translateObject } from "../contexts/TranslationContext";
+
+const projectsBase = [
   {
     name: "Ark Care Ministry Website",
     role: "Backend Developer & Project Coordinator",
@@ -153,4 +155,12 @@ const projects = [
   },
 ];
 
-export default projects;
+// Function to get translated projects based on current language
+export const getProjects = (currentLanguage = "en") => {
+  if (currentLanguage === "en") {
+    return projectsBase;
+  }
+  return translateObject(projectsBase, currentLanguage);
+};
+
+export default projectsBase;

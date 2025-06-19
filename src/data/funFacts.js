@@ -1,5 +1,7 @@
 // src/data/funFacts.js
-const funFacts = [
+import { translateObject } from "../contexts/TranslationContext";
+
+const funFactsBase = [
   {
     title: "Hidden Talent",
     text: "Ask me about Jakarta's transport routes, I can tell you the best way to reach any destination using public transport!",
@@ -32,4 +34,12 @@ const funFacts = [
   },
 ];
 
-export default funFacts;
+// Function to get translated fun facts based on current language
+export const getFunFacts = (currentLanguage = "en") => {
+  if (currentLanguage === "en") {
+    return funFactsBase;
+  }
+  return translateObject(funFactsBase, currentLanguage);
+};
+
+export default funFactsBase;
