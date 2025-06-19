@@ -971,7 +971,7 @@ RESPONSE STYLE:
         onClick={() => setIsOpen(true)}
         className={`fixed bottom-6 right-6 w-14 h-14 rounded-full bg-cyan-500 text-white shadow-lg hover:bg-cyan-600 transition-colors duration-300 flex items-center justify-center z-40 ${
           isOpen ? "hidden" : ""
-        }`}
+        } md:bottom-6 md:right-6 md:w-14 md:h-14 bottom-4 right-4 w-12 h-12 sm:bottom-4 sm:right-4 sm:w-12 sm:h-12`}
         initial={pulseAnimation.initial}
         animate={pulseAnimation.animate}
         transition={pulseAnimation.transition}
@@ -988,13 +988,14 @@ RESPONSE STYLE:
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className={`fixed ${
-              isFullscreen
-                ? "inset-4 w-auto h-auto"
-                : "bottom-6 right-6 w-96 h-[600px]"
-            } bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden z-50 border border-slate-200 dark:border-slate-700 flex flex-col transition-all duration-300`}
+            className={`fixed z-50 transition-all duration-300
+        ${
+          isFullscreen
+            ? "inset-4 w-auto h-auto"
+            : "bottom-2 left-16 right-2 w-auto max-w-full h-[70vh] sm:bottom-6 sm:right-6 sm:left-auto sm:w-96 sm:h-[600px]"
+        }
+        bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col`}
           >
-            {" "}
             {/* Header */}
             <div className="p-6 bg-cyan-500 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
