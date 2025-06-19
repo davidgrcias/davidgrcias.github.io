@@ -1,7 +1,8 @@
 // src/data/userProfile.js
 import profileImg from "../assets/profildiri.jpg";
+import { translateObject } from "../contexts/TranslationContext";
 
-const userProfile = {
+const userProfileBase = {
   name: "David Garcia Saragih",
   headline: "Programmer & Content Creator",
   photoUrl: profileImg,
@@ -33,4 +34,12 @@ const userProfile = {
   },
 };
 
-export default userProfile;
+// Function to get translated user profile based on current language
+export const getUserProfile = (currentLanguage = "en") => {
+  if (currentLanguage === "en") {
+    return userProfileBase;
+  }
+  return translateObject(userProfileBase, currentLanguage);
+};
+
+export default userProfileBase;

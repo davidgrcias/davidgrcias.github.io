@@ -10,34 +10,50 @@ import {
   Minimize2,
 } from "lucide-react";
 import { generateAIResponse } from "../api/gemini";
-import userProfile from "../data/userProfile";
-import experiences from "../data/experiences";
-import skills from "../data/skills";
-import projects from "../data/projects";
-import insights from "../data/insights";
-import education from "../data/education";
-import certifications from "../data/certifications";
-import funFacts from "../data/funFacts";
+import { getUserProfile } from "../data/userProfile";
+import { getExperiences } from "../data/experiences";
+import { getSkills } from "../data/skills";
+import { getProjects } from "../data/projects";
+import { getInsights } from "../data/insights";
+import { getEducation } from "../data/education";
+import { getCertifications } from "../data/certifications";
+import { getFunFacts } from "../data/funFacts";
 import personalInfo from "../data/personalInfo";
+import { useTranslation } from "../contexts/TranslationContext";
 
 const ChatBot = () => {
+  const { currentLanguage, translateText } = useTranslation();
+
+  // Get translated data based on current language
+  const userProfile = getUserProfile(currentLanguage);
+  const experiences = getExperiences(currentLanguage);
+  const skills = getSkills(currentLanguage);
+  const projects = getProjects(currentLanguage);
+  const insights = getInsights(currentLanguage);
+  const education = getEducation(currentLanguage);
+  const certifications = getCertifications(currentLanguage);
+  const funFacts = getFunFacts(currentLanguage);
+
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [messages, setMessages] = useState([
     {
       type: "bot",
-      content: "👋 Hi! I'm David's assistant. How can I help you?",
+      content: translateText(
+        "👋 Hi! I'm David's assistant. How can I help you?",
+        currentLanguage
+      ),
       timestamp: new Date(),
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [suggestedReplies, setSuggestedReplies] = useState([
-    "What's David's age and background?",
-    "Show me his technical skills",
-    "Tell me about his YouTube journey",
-    "What projects is he working on?",
-    "How can I contact him?",
+    translateText("What's David's age and background?", currentLanguage),
+    translateText("Show me his technical skills", currentLanguage),
+    translateText("Tell me about his YouTube journey", currentLanguage),
+    translateText("What projects is he working on?", currentLanguage),
+    translateText("How can I contact him?", currentLanguage),
   ]);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);

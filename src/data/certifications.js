@@ -1,5 +1,7 @@
 // src/data/certifications.js
-const certifications = [
+import { translateObject } from "../contexts/TranslationContext";
+
+const certificationsData = [
   {
     name: "HCIA-AI V3.5 Course",
     provider: "Huawei ICT Academy",
@@ -50,4 +52,10 @@ const certifications = [
   },
 ];
 
-export default certifications;
+// Function to get translated certifications based on current language
+export const getCertifications = (language = "en") => {
+  return translateObject(certificationsData, language);
+};
+
+// Default export for backward compatibility
+export default certificationsData;

@@ -1,5 +1,7 @@
 // src/data/experiences.js
-const experiences = [
+import { translateObject } from "../contexts/TranslationContext";
+
+const experiencesBase = [
   {
     role: "Coordinator of Web Development",
     company: "UMN Festival 2025",
@@ -50,4 +52,12 @@ const experiences = [
   },
 ];
 
-export default experiences;
+// Function to get translated experiences based on current language
+export const getExperiences = (currentLanguage = "en") => {
+  if (currentLanguage === "en") {
+    return experiencesBase;
+  }
+  return translateObject(experiencesBase, currentLanguage);
+};
+
+export default experiencesBase;

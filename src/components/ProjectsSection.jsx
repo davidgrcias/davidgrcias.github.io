@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import projects from "../data/projects";
-import userProfile from "../data/userProfile";
+import { getProjects } from "../data/projects";
+import { getUserProfile } from "../data/userProfile";
 import * as LucideIcons from "lucide-react";
 import SectionTitle from "./SectionTitle";
+import { useTranslation } from "../contexts/TranslationContext";
 
 const ProjectsSection = () => {
+  const { currentLanguage, translateText } = useTranslation();
+  const projects = getProjects(currentLanguage);
+  const userProfile = getUserProfile(currentLanguage);
+
   const [activeTab, setActiveTab] = useState("All");
   const [filteredProjects, setFilteredProjects] = useState(projects);
   const [sortOrder, setSortOrder] = useState("newest");
@@ -13,21 +18,50 @@ const ProjectsSection = () => {
   const PROJECTS_PER_PAGE = 6; // 3 rows × 2 columns
 
   const tabs = [
-    { id: "All", label: "All Projects", icon: "Layout" },
-    { id: "Beginner", label: "Beginner", icon: "GraduationCap" },
-    { id: "Intermediate", label: "Intermediate", icon: "Code2" },
-    { id: "Advanced", label: "Advanced", icon: "Cpu" },
-    { id: "Real-World", label: "Real-World", icon: "Briefcase" },
-    { id: "Capstone", label: "Capstone", icon: "Trophy" },
-    { id: "Experimental", label: "Experimental", icon: "FlaskConical" },
+    {
+      id: "All",
+      label: translateText("All Projects", currentLanguage),
+      icon: "Layout",
+    },
+    {
+      id: "Beginner",
+      label: translateText("Beginner", currentLanguage),
+      icon: "GraduationCap",
+    },
+    {
+      id: "Intermediate",
+      label: translateText("Intermediate", currentLanguage),
+      icon: "Code2",
+    },
+    {
+      id: "Advanced",
+      label: translateText("Advanced", currentLanguage),
+      icon: "Cpu",
+    },
+    {
+      id: "Real-World",
+      label: translateText("Real-World", currentLanguage),
+      icon: "Briefcase",
+    },
+    {
+      id: "Capstone",
+      label: translateText("Capstone", currentLanguage),
+      icon: "Trophy",
+    },
+    {
+      id: "Experimental",
+      label: translateText("Experimental", currentLanguage),
+      icon: "FlaskConical",
+    },
   ];
 
   const formatDate = (dateStr) => {
+    if (!dateStr) return "";
     const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      month: "long",
-      year: "numeric",
-    });
+    const monthName = date.toLocaleString("en-US", { month: "long" });
+    const year = date.getFullYear();
+    const translatedMonth = translateText(monthName, currentLanguage);
+    return `${translatedMonth} ${year}`;
   };
 
   useEffect(() => {
@@ -59,13 +93,14 @@ const ProjectsSection = () => {
       <IconComponent className={className} size={20} />
     ) : null;
   };
-
   return (
     <div className="w-full">
-      <SectionTitle>Projects</SectionTitle>
+      <SectionTitle>{translateText("Projects", currentLanguage)}</SectionTitle>
       <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-        From beginner-friendly to real-world applications, explore my journey
-        through different project tiers
+        {translateText(
+          "From beginner-friendly to real-world applications, explore my journey through different project tiers",
+          currentLanguage
+        )}
       </p>
       {/* Filter and Sort Controls */}
       <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
@@ -103,7 +138,10 @@ const ProjectsSection = () => {
           whileTap={{ scale: 0.95 }}
         >
           {renderIcon(sortOrder === "newest" ? "ArrowDown" : "ArrowUp")}
-          {sortOrder === "newest" ? "Newest First" : "Oldest First"}
+          {translateText(
+            sortOrder === "newest" ? "Newest First" : "Oldest First",
+            currentLanguage
+          )}
         </motion.button>
       </div>
       {/* Projects Grid with Animation */}
@@ -123,12 +161,10 @@ const ProjectsSection = () => {
               <div className="absolute top-6 right-16 text-sm text-slate-500 dark:text-slate-400">
                 {formatDate(project.date)}
               </div>
-
               {/* Project Icon */}
               <div className="absolute top-6 right-6">
                 {renderIcon(project.icon, "w-6 h-6 text-cyan-500")}
               </div>
-
               {/* Project Tiers Tags */}
               <div className="flex flex-wrap gap-2 mb-3">
                 {project.tiers.map((tier) => (
@@ -152,7 +188,6 @@ const ProjectsSection = () => {
                   </span>
                 ))}
               </div>
-
               {/* Rest of Project Content */}
               <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
                 {project.name}
@@ -163,7 +198,6 @@ const ProjectsSection = () => {
               <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">
                 {project.description}
               </p>
-
               <div className="flex flex-wrap gap-2 mb-4">
                 {project.tech.map((tech) => (
                   <span
@@ -173,15 +207,15 @@ const ProjectsSection = () => {
                     {tech}
                   </span>
                 ))}
-              </div>
-
+              </div>{" "}
               <a
                 href={project.link}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 text-sm font-medium text-cyan-500 hover:text-cyan-600 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors"
               >
-                View Project {renderIcon("ArrowUpRight")}
+                {translateText("View Project", currentLanguage)}{" "}
+                {renderIcon("ArrowUpRight")}
               </a>
             </motion.div>
           ))}
@@ -195,15 +229,18 @@ const ProjectsSection = () => {
           transition={{ duration: 0.5 }}
           className="mt-8 text-center"
         >
+          {" "}
           <p className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
-            Too many to list!
+            {translateText("Too many to list!", currentLanguage)}
           </p>
           <p className="text-slate-600 dark:text-gray-400 mb-4">
-            I've worked on a wide variety of projects, more than I could fit
-            here.
-          </p>{" "}
+            {translateText(
+              "I've worked on a wide variety of projects, more than I could fit here.",
+              currentLanguage
+            )}
+          </p>
           <p className="text-slate-600 dark:text-gray-400 mb-8">
-            👉 Check out more on{" "}
+            👉 {translateText("Check out more on", currentLanguage)}{" "}
             <a
               href={userProfile.socials.github.url}
               target="_blank"
@@ -221,7 +258,7 @@ const ProjectsSection = () => {
             >
               YouTube
             </a>
-            , or{" "}
+            {translateText(", or", currentLanguage)}{" "}
             <a
               href={userProfile.socials.tiktok.url}
               target="_blank"
@@ -230,7 +267,7 @@ const ProjectsSection = () => {
             >
               TikTok
             </a>{" "}
-            to see the full journey.
+            {translateText("to see the full journey.", currentLanguage)}
           </p>
         </motion.div>
       )}
@@ -243,15 +280,16 @@ const ProjectsSection = () => {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.95 }}
           >
+            {" "}
             {showAll ? (
               <>
                 {renderIcon("ChevronUp")}
-                Show Less Projects
+                {translateText("Show Less Projects", currentLanguage)}
               </>
             ) : (
               <>
                 {renderIcon("ChevronDown")}
-                Show More Projects
+                {translateText("Show More Projects", currentLanguage)}
               </>
             )}
           </motion.button>

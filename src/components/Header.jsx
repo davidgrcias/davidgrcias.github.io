@@ -1,10 +1,10 @@
 // src/components/Header.jsx
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import { Moon, Sun, Menu, X, Languages } from "lucide-react";
 import { iconMap } from "../icons/iconMap";
 import { AppContext } from "../AppContext";
 import { useTranslation } from "../contexts/TranslationContext";
-import userProfile from "../data/userProfile";
+import { getUserProfile } from "../data/userProfile";
 
 // Extend iconMap with newly needed icons
 Object.assign(iconMap, {
@@ -15,23 +15,42 @@ Object.assign(iconMap, {
   Languages: Languages,
 });
 
-const navLinks = [
-  { href: "#about", label: "About" },
-  { href: "#experience", label: "Experience" },
-  { href: "#projects", label: "Projects" },
-  { href: "#skills", label: "Skills" },
-  { href: "#contact", label: "Contact" },
-];
-
 const Header = () => {
-  const { theme, setTheme } = useContext(AppContext);
-  const { currentLanguage, languages, isTranslating, translatePage } =
-    useTranslation();
+  const { theme, setTheme, showCVModal, setShowCVModal } =
+    useContext(AppContext);
+  const {
+    currentLanguage,
+    languages,
+    isTranslating,
+    translatePage,
+    translateText,
+  } = useTranslation();
+  const userProfile = getUserProfile(currentLanguage);
+
+  const navLinks = [
+    { href: "#about", label: translateText("About", currentLanguage) },
+    {
+      href: "#experience",
+      label: translateText("Experience", currentLanguage),
+    },
+    { href: "#projects", label: translateText("Projects", currentLanguage) },
+    { href: "#skills", label: translateText("Skills", currentLanguage) },
+    { href: "#contact", label: translateText("Contact", currentLanguage) },
+  ];
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLanguageMenu, setShowLanguageMenu] = useState(false);
 
+  const handleLanguageChange = async (langCode) => {
+    setShowLanguageMenu(false);
+    await translatePage(langCode);
+  };
+
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
+  const handleCVClick = () => {
+    setShowCVModal(true);
+  };
   const handleMobileMenuToggle = () => {
     setMobileOpen(!mobileOpen);
     setShowLanguageMenu(false); // close language menu when opening mobile menu
@@ -79,7 +98,7 @@ const Header = () => {
           David G.S.
         </a>
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center space-x-6 text-sm text-slate-600 dark:text-gray-300">
+        <div className="hidden lg:flex items-center space-x-6 text-sm text-slate-600 dark:text-gray-300">
           {navLinks.map((link) => (
             <a
               key={link.href}
@@ -90,41 +109,39 @@ const Header = () => {
               {link.label}
             </a>
           ))}
-        </div>{" "}
+        </div>
         {/* Right side controls */}
-        <div className="flex items-center gap-2 md:gap-4">
-          {/* Language Selector - Always beside theme toggle */}
+        <div className="flex items-center gap-2 lg:gap-4">
+          {/* Language Selector */}
           <div className="relative language-selector">
             <button
-              onClick={() => setShowLanguageMenu(!showLanguageMenu)}
+              onClick={() =>
+                !isTranslating && setShowLanguageMenu(!showLanguageMenu)
+              }
               disabled={isTranslating}
-              className="p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors disabled:opacity-50"
-              title="Change Language"
+              className="relative p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 focus:outline-none"
+              title={translateText("Change Language", currentLanguage)}
             >
-              {isTranslating ? (
-                <div className="animate-spin">
-                  {React.createElement(iconMap.Languages, { size: 18 })}
-                </div>
-              ) : (
-                React.createElement(iconMap.Languages, { size: 18 })
-              )}
+              <div className={isTranslating ? "spinner-animate" : ""}>
+                {React.createElement(iconMap.Languages, {
+                  size: 18,
+                  className: isTranslating ? "opacity-70" : "",
+                })}
+              </div>
             </button>
             {/* Language Dropdown */}
-            {showLanguageMenu && (
-              <div className="absolute top-full right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-[60] max-h-72 overflow-y-auto">
+            {showLanguageMenu && !isTranslating && (
+              <div className="absolute top-full right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 z-[60]">
                 <div className="p-2">
                   <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 px-3 py-2 border-b border-slate-100 dark:border-slate-700">
-                    {isTranslating ? "Translating..." : "Select Language"}
+                    {translateText("Select Language", currentLanguage)}
                   </div>
                   {languages.map((lang) => (
                     <button
                       key={lang.code}
-                      onClick={() => {
-                        translatePage(lang.code);
-                        setShowLanguageMenu(false);
-                      }}
+                      onClick={() => handleLanguageChange(lang.code)}
                       disabled={isTranslating}
-                      className={`w-full px-3 py-3 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-md m-1 disabled:opacity-50 disabled:cursor-not-allowed ${
+                      className={`w-full px-3 py-3 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-md m-1 disabled:opacity-50 ${
                         currentLanguage === lang.code
                           ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400"
                           : "text-slate-700 dark:text-slate-300"
@@ -147,6 +164,7 @@ const Header = () => {
               </div>
             )}
           </div>
+
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
@@ -156,26 +174,45 @@ const Header = () => {
               ? React.createElement(iconMap.Sun, { size: 18 })
               : React.createElement(iconMap.Moon, { size: 18 })}
           </button>
-          {/* Hire Me button (desktop only) */}
-          <a
-            href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI'd%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
-            className="hidden md:block bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-transform duration-300 hover:scale-105 text-sm"
-          >
-            Hire Me
-          </a>
-          {/* Hamburger (mobile only) */}
+
+          {/* Download CV Button */}
           <button
-            className="md:hidden p-2 ml-1 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none"
-            onClick={handleMobileMenuToggle}
-            aria-label="Open menu"
+            onClick={handleCVClick}
+            className="p-2 rounded-full bg-cyan-500 text-white hover:bg-cyan-600 shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 active:scale-95 inline-flex items-center justify-center no-translate"
+            title={translateText("Preview CV", currentLanguage)}
+            style={{ lineHeight: 0 }}
+            data-no-translate
           >
-            {React.createElement(iconMap.Menu, { size: 22 })}
+            <span
+              className="font-bold text-xs tracking-widest no-translate"
+              data-no-translate
+            >
+              CV
+            </span>
+          </button>
+
+          {/* Hire Me Button (Desktop only) */}
+          <a
+            href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI\'d%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
+            className="hidden lg:block bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-transform duration-300 hover:scale-105 text-sm"
+          >
+            {translateText("Hire Me", currentLanguage)}
+          </a>
+
+          {/* Hamburger (Mobile only) */}
+          <button
+            className="lg:hidden p-2 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none"
+            onClick={handleMobileMenuToggle}
+          >
+            {mobileOpen
+              ? React.createElement(iconMap.X, { size: 20 })
+              : React.createElement(iconMap.Menu, { size: 20 })}
           </button>
         </div>
       </nav>
       {/* Mobile full-screen nav overlay */}
       <div
-        className={`fixed inset-0 z-[999] bg-slate-900/95 dark:bg-[#0f172a]/98 flex min-h-screen w-screen md:hidden transition-transform duration-500 ${
+        className={`fixed inset-0 z-[999] bg-slate-900/95 dark:bg-[#0f172a]/98 flex min-h-screen w-screen lg:hidden transition-transform duration-500 ${
           mobileOpen ? "translate-x-0" : "translate-x-full"
         } ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         style={{ transitionProperty: "transform, background-color" }}
@@ -230,10 +267,11 @@ const Header = () => {
             href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI'd%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
             className="mt-10 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 px-12 rounded-xl transition-transform duration-300 hover:scale-105 text-2xl shadow-lg w-fit mx-auto"
           >
-            Hire Me
+            {translateText("Hire Me", currentLanguage)}
           </a>
         </nav>
       </div>
+      {/* CV Preview Modal - REMOVED */}
     </header>
   );
 };

@@ -9,14 +9,16 @@ import YouTubeStats from "./YouTubeStats";
 import TikTokStats from "./TikTokStats";
 import CertificationsSection from "./CertificationsSection";
 import ProjectsSection from "./ProjectsSection";
-import userProfile from "../data/userProfile";
-import insights from "../data/insights";
-import funFacts from "../data/funFacts";
-import experiences from "../data/experiences";
-import projects from "../data/projects";
-import skills from "../data/skills";
-import education from "../data/education";
+import GradientBackground from "./GradientBackground"; // Import the new component
+import { getUserProfile } from "../data/userProfile";
+import { getInsights } from "../data/insights";
+import { getFunFacts } from "../data/funFacts";
+import { getExperiences } from "../data/experiences";
+import { getProjects } from "../data/projects";
+import { getSkills } from "../data/skills";
+import { getEducation } from "../data/education";
 import { AppContext } from "../AppContext";
+import { useTranslation } from "../contexts/TranslationContext";
 import ScrollProgressBar from "./ScrollProgressBar";
 import ShootingStars from "./ShootingStars";
 
@@ -34,11 +36,19 @@ const renderIcon = (iconName, size = 24) => {
 
 const PortfolioContent = () => {
   const { theme } = useContext(AppContext);
+  const { currentLanguage, translateText } = useTranslation();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState("philosophy");
   const [experienceSortOrder, setExperienceSortOrder] = useState("newest");
   const [showAllExperiences, setShowAllExperiences] = useState(false);
-  const EXPERIENCES_PER_PAGE = 6;
+  const EXPERIENCES_PER_PAGE = 6; // Get translated data based on current language
+  const userProfile = getUserProfile(currentLanguage);
+  const insights = getInsights(currentLanguage);
+  const funFacts = getFunFacts(currentLanguage);
+  const experiences = getExperiences(currentLanguage);
+  const projects = getProjects(currentLanguage);
+  const skills = getSkills(currentLanguage);
+  const education = getEducation(currentLanguage);
 
   // Save scroll position before page refresh
   useEffect(() => {
@@ -70,11 +80,6 @@ const PortfolioContent = () => {
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
-
-  const backgroundGradient =
-    theme === "dark"
-      ? `radial-gradient(600px at ${mousePosition.x}px ${mousePosition.y}px, rgba(22, 163, 175, 0.2), transparent 80%)`
-      : `radial-gradient(600px at ${mousePosition.x}px ${mousePosition.y}px, rgba(22, 163, 175, 0.1), transparent 80%)`;
 
   const gridContainerVariants = {
     hidden: { opacity: 0 },
@@ -120,10 +125,9 @@ const PortfolioContent = () => {
       {icon} {label}
     </button>
   );
-
   // Format date helper
   const formatDate = (dateStr) => {
-    if (dateStr === "present") return "Present";
+    if (dateStr === "present") return translateText("Present", currentLanguage);
     const [year, month] = dateStr.split("-");
     const months = [
       "January",
@@ -139,7 +143,11 @@ const PortfolioContent = () => {
       "November",
       "December",
     ];
-    return `${months[parseInt(month) - 1]} ${year}`;
+    const translatedMonth = translateText(
+      months[parseInt(month) - 1],
+      currentLanguage
+    );
+    return `${translatedMonth} ${year}`;
   };
 
   // Format date range
@@ -173,11 +181,9 @@ const PortfolioContent = () => {
             : "bg-slate-50 text-slate-700"
         } font-sans leading-relaxed selection:bg-cyan-400/20 transition-colors duration-500 overflow-x-hidden`}
       >
-        <motion.div
-          className="pointer-events-none fixed inset-0 z-0"
-          style={{ background: backgroundGradient }}
-          transition={{ type: "tween", ease: "backOut", duration: 0.5 }}
-        />
+        {/* Use the new GradientBackground component */}
+        <GradientBackground mousePosition={mousePosition} theme={theme} />
+
         <div className="relative z-10">
           <Header />
           <main className="container mx-auto px-6 pt-24">
@@ -310,7 +316,9 @@ const PortfolioContent = () => {
             {/* About Section */}
             <section id="about" className="py-20">
               <AnimatedSection>
-                <SectionTitle>About Me</SectionTitle>
+                <SectionTitle>
+                  {translateText("About Me", currentLanguage)}
+                </SectionTitle>
                 <p className="max-w-3xl mx-auto text-center text-lg text-slate-600 dark:text-gray-400 leading-relaxed">
                   {userProfile.aboutText}
                 </p>
@@ -319,12 +327,15 @@ const PortfolioContent = () => {
                     {" "}
                     <TabButton
                       id="philosophy"
-                      label="My Philosophy"
+                      label={translateText("My Philosophy", currentLanguage)}
                       icon={renderIcon("BrainCircuit", 18)}
-                    />{" "}
+                    />
                     <TabButton
                       id="funfacts"
-                      label="Personal Fun Facts"
+                      label={translateText(
+                        "Personal Fun Facts",
+                        currentLanguage
+                      )}
                       icon={renderIcon("Gamepad2", 18)}
                     />
                     <motion.div
@@ -418,16 +429,25 @@ const PortfolioContent = () => {
             {/* Stats Section */}
             <section id="stats" className="py-20">
               <AnimatedSection>
-                <SectionTitle>My Content Creation Journey</SectionTitle>
+                {" "}
+                <SectionTitle>
+                  {translateText(
+                    "My Content Creation Journey",
+                    currentLanguage
+                  )}
+                </SectionTitle>
                 <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-                  Engaging with audiences through tech education and sharing
-                  knowledge across multiple platforms
+                  {translateText(
+                    "Engaging with audiences through tech education and sharing knowledge across multiple platforms",
+                    currentLanguage
+                  )}
                 </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <YouTubeStats />
                   <TikTokStats />
                 </div>
                 <div className="flex justify-center mt-8 gap-4">
+                  {" "}
                   <a
                     href={userProfile.socials.youtube.url}
                     target="_blank"
@@ -435,7 +455,9 @@ const PortfolioContent = () => {
                     className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-transform duration-300 hover:scale-105 flex items-center"
                   >
                     {renderIcon("Youtube", 20)}
-                    <span className="ml-2">Visit YouTube Channel</span>
+                    <span className="ml-2">
+                      {translateText("Visit YouTube Channel", currentLanguage)}
+                    </span>
                   </a>
                   <a
                     href={userProfile.socials.tiktok.url}
@@ -443,9 +465,10 @@ const PortfolioContent = () => {
                     rel="noopener noreferrer"
                     className="bg-slate-800 hover:bg-slate-900 text-white dark:bg-white/90 dark:hover:bg-white dark:text-black font-bold py-3 px-6 rounded-lg transition-transform duration-300 hover:scale-105 flex items-center"
                   >
-                    {" "}
                     {renderIcon("TikTok", 20)}
-                    <span className="ml-2">Follow on TikTok</span>
+                    <span className="ml-2">
+                      {translateText("Follow on TikTok", currentLanguage)}
+                    </span>
                   </a>
                 </div>
               </AnimatedSection>
@@ -453,10 +476,15 @@ const PortfolioContent = () => {
             {/* Education Section */}
             <section id="education" className="py-20">
               <AnimatedSection>
-                <SectionTitle>Education</SectionTitle>
+                {" "}
+                <SectionTitle>
+                  {translateText("Education", currentLanguage)}
+                </SectionTitle>
                 <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
-                  Academic journey and formal education that shaped my technical
-                  foundation and professional growth
+                  {translateText(
+                    "Academic journey and formal education that shaped my technical foundation and professional growth",
+                    currentLanguage
+                  )}
                 </p>
                 <div className="relative border-l-2 border-cyan-500/30 pl-10">
                   {education.map((edu, index) => (
@@ -485,7 +513,7 @@ const PortfolioContent = () => {
                       {edu.grade && (
                         <div className="inline-block bg-slate-200/50 dark:bg-slate-700/50 px-3 py-1 rounded-full">
                           <p className="text-sm text-cyan-600 dark:text-cyan-400">
-                            GPA: {edu.grade}
+                            {translateText("GPA", currentLanguage)}: {edu.grade}
                           </p>
                         </div>
                       )}
@@ -497,12 +525,16 @@ const PortfolioContent = () => {
             {/* Experience Section */}
             <section id="experience" className="py-20">
               <AnimatedSection>
-                <SectionTitle>Experience</SectionTitle>
+                {" "}
+                <SectionTitle>
+                  {translateText("Experience", currentLanguage)}
+                </SectionTitle>
                 <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
-                  Professional milestones and hands-on experience across diverse
-                  tech projects and leadership roles
+                  {translateText(
+                    "Professional milestones and hands-on experience across diverse tech projects and leadership roles",
+                    currentLanguage
+                  )}
                 </p>
-
                 {/* Sort Control */}
                 <div className="flex justify-end mb-8">
                   <motion.button
@@ -515,15 +547,18 @@ const PortfolioContent = () => {
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.95 }}
                   >
+                    {" "}
                     {renderIcon(
                       experienceSortOrder === "newest" ? "ArrowDown" : "ArrowUp"
                     )}
-                    {experienceSortOrder === "newest"
-                      ? "Newest First"
-                      : "Oldest First"}
+                    {translateText(
+                      experienceSortOrder === "newest"
+                        ? "Newest First"
+                        : "Oldest First",
+                      currentLanguage
+                    )}
                   </motion.button>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <AnimatePresence mode="popLayout">
                     {visibleExperiences.map((exp, index) => (
@@ -575,7 +610,6 @@ const PortfolioContent = () => {
                     ))}
                   </AnimatePresence>
                 </div>
-
                 {/* Show More/Less Button */}
                 {hasMoreExperiences && (
                   <div className="mt-8 text-center">
@@ -585,15 +619,22 @@ const PortfolioContent = () => {
                       whileHover={{ y: -2 }}
                       whileTap={{ scale: 0.95 }}
                     >
+                      {" "}
                       {showAllExperiences ? (
                         <>
                           {renderIcon("ChevronUp")}
-                          Show Less Experiences
+                          {translateText(
+                            "Show Less Experiences",
+                            currentLanguage
+                          )}
                         </>
                       ) : (
                         <>
                           {renderIcon("ChevronDown")}
-                          Show More Experiences
+                          {translateText(
+                            "Show More Experiences",
+                            currentLanguage
+                          )}
                         </>
                       )}
                     </motion.button>
@@ -611,12 +652,15 @@ const PortfolioContent = () => {
             <section id="skills" className="py-20">
               <div className="grid md:grid-cols-2 gap-16">
                 <AnimatedSection>
+                  {" "}
                   <h2 className="text-3xl font-bold text-slate-800 dark:text-gray-100 mb-8 text-center">
-                    Core Competencies
+                    {translateText("Core Competencies", currentLanguage)}
                   </h2>
                   <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">
-                    Technical expertise and professional skills developed
-                    through practical experience and continuous learning
+                    {translateText(
+                      "Technical expertise and professional skills developed through practical experience and continuous learning",
+                      currentLanguage
+                    )}
                   </p>
                   <div className="space-y-6">
                     {skills.map((skill, index) => (
@@ -653,12 +697,18 @@ const PortfolioContent = () => {
                 </AnimatedSection>
 
                 <AnimatedSection>
+                  {" "}
                   <h2 className="text-3xl font-bold text-slate-800 dark:text-gray-100 mb-8 text-center">
-                    Licenses & Certifications
+                    {translateText(
+                      "Licenses & Certifications",
+                      currentLanguage
+                    )}
                   </h2>
                   <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">
-                    Professional certifications and achievements validating
-                    expertise in various technical domains
+                    {translateText(
+                      "Professional certifications and achievements validating expertise in various technical domains",
+                      currentLanguage
+                    )}
                   </p>
                   <CertificationsSection />
                 </AnimatedSection>
@@ -667,11 +717,15 @@ const PortfolioContent = () => {
             {/* Contact Section */}
             <section id="contact" className="py-20 text-center">
               <AnimatedSection>
-                <SectionTitle>Get In Touch</SectionTitle>
+                {" "}
+                <SectionTitle>
+                  {translateText("Get In Touch", currentLanguage)}
+                </SectionTitle>
                 <p className="max-w-xl mx-auto text-slate-600 dark:text-gray-400 mb-8">
-                  I'm currently open to new opportunities and collaborations.
-                  Feel free to reach out if you have a project in mind or just
-                  want to connect!
+                  {translateText(
+                    "I'm currently open to new opportunities and collaborations. Feel free to reach out if you have a project in mind or just want to connect!",
+                    currentLanguage
+                  )}
                 </p>
                 <div className="flex flex-col md:flex-row justify-center items-center space-y-4 md:space-y-0 md:space-x-8 mb-8 text-lg">
                   <div className="flex items-center">
@@ -698,16 +752,17 @@ const PortfolioContent = () => {
                   rel="noopener noreferrer"
                   className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg transition-transform duration-300 hover:scale-105 inline-block shadow-lg shadow-cyan-500/20"
                 >
-                  Say Hello on WhatsApp
+                  {translateText("Say Hello on WhatsApp", currentLanguage)}
                 </a>
               </AnimatedSection>
             </section>
           </main>
           <footer className="py-8 border-t border-slate-200 dark:border-gray-800">
             <div className="container mx-auto px-6 text-center text-slate-500 dark:text-gray-500 text-sm">
+              {" "}
               <p>
-                &copy; {new Date().getFullYear()} {userProfile.name}. Designed &
-                Built with ❤️.
+                &copy; {new Date().getFullYear()} {userProfile.name}.{" "}
+                {translateText("Designed & Built with", currentLanguage)} ❤️.
               </p>
             </div>
           </footer>

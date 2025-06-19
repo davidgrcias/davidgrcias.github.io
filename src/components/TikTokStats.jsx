@@ -1,7 +1,8 @@
 import React from "react";
 import { Users, Heart } from "lucide-react";
 import { iconMap } from "../icons/iconMap";
-import userProfile from "../data/userProfile";
+import { getUserProfile } from "../data/userProfile";
+import { useTranslation } from "../contexts/TranslationContext";
 
 // Extend iconMap with newly needed icons
 Object.assign(iconMap, {
@@ -10,6 +11,8 @@ Object.assign(iconMap, {
 });
 
 const TikTokStats = () => {
+  const { currentLanguage } = useTranslation();
+  const userProfile = getUserProfile(currentLanguage);
   const stats = {
     followers: "17.2K",
     likes: "70K",

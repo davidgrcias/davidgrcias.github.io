@@ -2,9 +2,13 @@
 import React from "react";
 import { motion } from "framer-motion";
 import * as LucideIcons from "lucide-react";
-import certifications from "../data/certifications";
+import { getCertifications } from "../data/certifications";
+import { useTranslation } from "../contexts/TranslationContext";
 
 const CertificationsSection = () => {
+  const { currentLanguage } = useTranslation();
+  const certifications = getCertifications(currentLanguage);
+
   return (
     <div className="space-y-4">
       {certifications.map((cert, index) => {

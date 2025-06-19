@@ -1,5 +1,7 @@
 // src/data/skills.js
-const skills = [
+import { translateObject } from "../contexts/TranslationContext";
+
+const skillsBase = [
   {
     name: "HTML, CSS, Bootstrap & Tailwind",
     level: 100,
@@ -16,4 +18,12 @@ const skills = [
   { name: "Deployment & Hosting", level: "90", icon: "Server" },
 ];
 
-export default skills;
+// Function to get translated skills based on current language
+export const getSkills = (currentLanguage = "en") => {
+  if (currentLanguage === "en") {
+    return skillsBase;
+  }
+  return translateObject(skillsBase, currentLanguage);
+};
+
+export default skillsBase;

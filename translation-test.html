@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Translation Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+      .test-content {
+        margin: 20px 0;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 10px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Translation System Test</h1>
+
+    <button onclick="testTranslation()">Test Translation</button>
+
+    <div class="test-content">
+      <h2>About</h2>
+      <p>
+        I'm driven by curiosity and the excitement of learning something new,
+        especially when it comes to technology.
+      </p>
+
+      <h3>Experience</h3>
+      <p>Frontend Developer</p>
+      <p>Backend Developer</p>
+
+      <h3>Fun Facts</h3>
+      <p>Hidden Talent</p>
+      <p>
+        Though I might seem reserved at first, I genuinely love meeting and
+        chatting with new people.
+      </p>
+
+      <h3>Contact</h3>
+      <button>Get in Touch</button>
+    </div>
+
+    <script>
+      // Basic translation function for testing
+      function translateToIndonesian(text) {
+        const translations = {
+          About: "Tentang Saya",
+          "I'm driven by curiosity and the excitement of learning something new, especially when it comes to technology.":
+            "Saya didorong oleh rasa penasaran dan kegembiraan mempelajari hal baru, terutama dalam teknologi.",
+          Experience: "Pengalaman",
+          "Frontend Developer": "Frontend Developer",
+          "Backend Developer": "Backend Developer",
+          "Fun Facts": "Fakta Menarik",
+          "Hidden Talent": "Bakat Tersembunyi",
+          "Though I might seem reserved at first, I genuinely love meeting and chatting with new people.":
+            "Meskipun mungkin terlihat pendiam pada awalnya, saya benar-benar suka bertemu dan ngobrol dengan orang baru.",
+          Contact: "Hubungi",
+          "Get in Touch": "Hubungi Saya",
+        };
+
+        return translations[text] || text;
+      }
+
+      function testTranslation() {
+        // Get all text nodes and translate them
+        const walker = document.createTreeWalker(
+          document.body,
+          NodeFilter.SHOW_TEXT,
+          null,
+          false
+        );
+
+        const textNodes = [];
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.textContent.trim()) {
+            textNodes.push(node);
+          }
+        }
+
+        textNodes.forEach((textNode) => {
+          const original = textNode.textContent.trim();
+          const translated = translateToIndonesian(original);
+          if (translated !== original) {
+            textNode.textContent = translated;
+          }
+        });
+
+        console.log("Translation test completed!");
+      }
+    </script>
+  </body>
+</html>
