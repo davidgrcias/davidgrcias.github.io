@@ -47,6 +47,7 @@ const PortfolioContent = () => {
   const [showAllExperiences, setShowAllExperiences] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const EXPERIENCES_PER_PAGE = 6; // Get translated data based on current language
   const userProfile = getUserProfile(currentLanguage);
   const insights = getInsights(currentLanguage);
@@ -212,6 +213,21 @@ const PortfolioContent = () => {
     ? sortedExperiences
     : sortedExperiences.slice(0, EXPERIENCES_PER_PAGE);
   const hasMoreExperiences = sortedExperiences.length > EXPERIENCES_PER_PAGE;
+
+  // Toggle description expansion
+  const toggleDescription = (index) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  // Truncate description helper
+  const getTruncatedDescription = (description, maxLength = 150) => {
+    if (!description) return '';
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength) + '...';
+  };
 
   return (
     <div className="relative">
@@ -691,9 +707,30 @@ const PortfolioContent = () => {
                               
                               {/* Description */}
                               {exp.description && (
-                                <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
-                                  {exp.description}
-                                </p>
+                                <div className="mb-4">
+                                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                    {expandedDescriptions[index] 
+                                      ? exp.description 
+                                      : getTruncatedDescription(exp.description, 150)
+                                    }
+                                  </p>
+                                  {exp.description.length > 150 && (
+                                    <button
+                                      onClick={() => toggleDescription(index)}
+                                      className="text-xs text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 mt-2 font-medium flex items-center gap-1"
+                                    >
+                                      {expandedDescriptions[index] ? (
+                                        <>
+                                          Show Less {renderIcon("ChevronUp", 14)}
+                                        </>
+                                      ) : (
+                                        <>
+                                          Read More {renderIcon("ChevronDown", 14)}
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
                               )}
                               
                               {/* Skills */}
