@@ -747,28 +747,31 @@ const PortfolioContent = () => {
                                 </div>
                               )}
                               
-                              {/* Media Section - Disable on mobile if it causes issues */}
+                              {/* Media Section - Compact Layout */}
                               {exp.media && (
                                 <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                                   <a
                                     href={exp.media.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block group/media"
+                                    className="flex gap-3 group/media"
                                   >
-                                    <div className="relative overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-700 aspect-video mb-3 hover:ring-2 hover:ring-cyan-500 transition-all duration-300 shadow-md hover:shadow-xl">
+                                    {/* Compact Thumbnail - Left Side */}
+                                    <div className="relative overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-700 w-20 h-20 flex-shrink-0 hover:ring-2 hover:ring-cyan-500 transition-all duration-300 shadow-sm hover:shadow-md">
                                       {exp.media.type === 'pdf' && !exp.media.thumbnail ? (
-                                        <PDFThumbnail />
+                                        <div className="w-full h-full flex items-center justify-center">
+                                          {renderIcon("FileText", 32)}
+                                        </div>
                                       ) : exp.media.thumbnail ? (
                                         <>
                                           <img
                                             src={exp.media.thumbnail}
                                             alt={exp.media.title}
-                                            className="w-full h-full object-cover group-hover/media:scale-105 transition-transform duration-300"
+                                            className="w-full h-full object-cover group-hover/media:scale-110 transition-transform duration-300"
                                             loading="lazy"
                                           />
                                           {exp.media.type === 'pdf' && (
-                                            <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded shadow-lg">
+                                            <div className="absolute top-1 right-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
                                               PDF
                                             </div>
                                           )}
@@ -777,23 +780,25 @@ const PortfolioContent = () => {
                                         <img
                                           src={exp.media.url}
                                           alt={exp.media.title}
-                                          className="w-full h-full object-cover group-hover/media:scale-105 transition-transform duration-300"
+                                          className="w-full h-full object-cover group-hover/media:scale-110 transition-transform duration-300"
                                           loading="lazy"
                                         />
                                       )}
                                       <div className="absolute inset-0 bg-black/0 group-hover/media:bg-black/10 transition-colors duration-300 flex items-center justify-center">
-                                        <div className="opacity-0 group-hover/media:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-slate-800/90 rounded-full p-3 shadow-lg">
-                                          {renderIcon("ExternalLink", 24)}
+                                        <div className="opacity-0 group-hover/media:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-slate-800/90 rounded-full p-1.5">
+                                          {renderIcon("ExternalLink", 16)}
                                         </div>
                                       </div>
                                     </div>
-                                    <div>
-                                      <h4 className="text-sm font-semibold text-slate-800 dark:text-white group-hover/media:text-cyan-600 dark:group-hover/media:text-cyan-400 transition-colors flex items-center gap-2">
-                                        <span className="flex-1">{exp.media.title}</span>
-                                        {renderIcon("ExternalLink", 16)}
+                                    
+                                    {/* Media Info - Right Side */}
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="text-xs font-semibold text-slate-800 dark:text-white group-hover/media:text-cyan-600 dark:group-hover/media:text-cyan-400 transition-colors flex items-center gap-1.5 mb-1">
+                                        <span className="truncate">{exp.media.title}</span>
+                                        {renderIcon("ExternalLink", 12)}
                                       </h4>
                                       {exp.media.description && (
-                                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                                        <p className="text-[10px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
                                           {exp.media.description}
                                         </p>
                                       )}
