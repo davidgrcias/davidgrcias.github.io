@@ -1,22 +1,87 @@
 // src/data/skills.js
 import { translateObject } from "../contexts/TranslationContext";
 
-const skillsBase = [
-  {
-    name: "HTML, CSS, Bootstrap & Tailwind",
-    level: 100,
-    icon: "Code",
-  },
-  { name: "JavaScript & TypeScript", level: 95, icon: "Code" },
-  { name: "React.js", level: 95, icon: "Code" },
-  { name: "Backend (PHP, Laravel, MySQL)", level: 95, icon: "Database" },
-  { name: "Python", level: 50, icon: "Code" },
-  { name: "Git & Version Control", level: 85, icon: "GitBranch" },
-  { name: "SEO (Search Engine Optimization)", level: "90", icon: "Search" },
-  { name: "API Integration & RESTful Services", level: "90", icon: "Cloud" },
-  { name: "UI Implementation & Design-to-Code", level: "90", icon: "Layout" },
-  { name: "Deployment & Hosting", level: "90", icon: "Server" },
-];
+const skillsBase = {
+  technical: [
+    {
+      category: "Front-End",
+      skills: [
+        "HTML",
+        "CSS",
+        "Tailwind CSS",
+        "JavaScript & TypeScript",
+        "React.js",
+        "UI/UX Implementation"
+      ],
+      icon: "Layout"
+    },
+    {
+      category: "Back-End",
+      skills: [
+        "PHP",
+        "Laravel",
+        "Node.js (TypeScript)",
+        "PostgreSQL",
+        "Prisma ORM",
+        "MySQL",
+        "REST API",
+        "Auth & Session",
+        "MVC",
+        "Python",
+        "Kotlin",
+        "Java"
+      ],
+      icon: "Database"
+    },
+    {
+      category: "DevOps & Deployment",
+      skills: [
+        "Git & GitHub",
+        "Firebase",
+        "Vercel",
+        "cPanel Hosting",
+        "Chrome DevTools",
+        "Nginx"
+      ],
+      icon: "Server"
+    },
+    {
+      category: "AI & Optimization Tools",
+      skills: [
+        "Google Analytics",
+        "Google Search Console",
+        "SEO Optimization",
+        "Prompt Engineering"
+      ],
+      icon: "Brain"
+    },
+    {
+      category: "Others",
+      skills: [
+        "Docs Writing",
+        "Canva",
+        "Figma",
+        "Mobile-First Development",
+        "Continually learning new technologies"
+      ],
+      icon: "Lightbulb"
+    }
+  ],
+  soft: [
+    "Problem Solving",
+    "Critical Thinking",
+    "Fast Learning",
+    "Adaptability",
+    "Creativity",
+    "Digital Communication",
+    "Initiative",
+    "Strong Work Ethic",
+    "Team Collaboration",
+    "Curiosity-Driven",
+    "Branding",
+    "Resilience"
+  ]
+};
 
 // Function to get translated skills based on current language
 export const getSkills = (currentLanguage = "en") => {

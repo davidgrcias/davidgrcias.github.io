@@ -105,9 +105,12 @@ const ChatBot = () => {
     },
     personality: personalityInsights,
     professional: {
-      skills: skills
-        .map((skill) => `${skill.name} (Proficiency: ${skill.level}%)`)
-        .join("\n"),
+      skills: `Technical Skills:\n${skills.technical
+        ?.map(
+          (category) =>
+            `${category.category}: ${category.skills.join(", ")}`
+        )
+        .join("\n")}\n\nSoft Skills:\n${skills.soft?.join(", ")}`,
       certifications: certifications
         .map((cert) => `${cert.name} from ${cert.provider} (${cert.date})`)
         .join("\n"),
