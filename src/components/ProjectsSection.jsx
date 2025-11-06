@@ -98,26 +98,19 @@ const ProjectsSection = () => {
   return (
     <div className="w-full">
       <SectionTitle>{translateText("Projects", currentLanguage)}</SectionTitle>
-      <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+      <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
         {translateText(
           "From beginner-friendly to real-world applications, explore my journey through different project tiers",
           currentLanguage
         )}
       </p>
 
-      {/* 3D Carousel Showcase - Featured Projects */}
-      <ProjectCarousel projects={projects.slice(0, 5)} />
-
-      {/* Divider */}
-      <div className="relative my-16">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-300 dark:border-slate-700"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-medium">
-            {translateText("All Projects", currentLanguage)}
-          </span>
-        </div>
+      {/* 3D Carousel Showcase - Featured Projects - Compact */}
+      <div className="mb-12">
+        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 text-center">
+          {translateText("Featured Projects", currentLanguage)}
+        </h3>
+        <ProjectCarousel projects={projects.slice(0, 5)} />
       </div>
 
       {/* Filter and Sort Controls */}
