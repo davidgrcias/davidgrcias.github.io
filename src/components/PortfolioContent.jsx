@@ -10,6 +10,7 @@ import TikTokStats from "./TikTokStats";
 import CertificationsSection from "./CertificationsSection";
 import ProjectsSection from "./ProjectsSection";
 import PDFThumbnail from "./PDFThumbnail";
+import CommandPalette from "./CommandPalette";
 import GradientBackground from "./GradientBackground"; // Import the new component
 import { getUserProfile } from "../data/userProfile";
 import { getInsights } from "../data/insights";
@@ -18,6 +19,7 @@ import { getExperiences } from "../data/experiences";
 import { getProjects } from "../data/projects";
 import { getSkills } from "../data/skills";
 import { getEducation } from "../data/education";
+import { getCertifications } from "../data/certifications";
 import { AppContext } from "../AppContext";
 import { useTranslation } from "../contexts/TranslationContext";
 import ScrollProgressBar from "./ScrollProgressBar";
@@ -36,12 +38,13 @@ const renderIcon = (iconName, size = 24) => {
 };
 
 const PortfolioContent = () => {
-  const { theme } = useContext(AppContext);
+  const { theme, setTheme } = useContext(AppContext);
   const { currentLanguage, translateText } = useTranslation();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [activeTab, setActiveTab] = useState("philosophy");
   const [experienceSortOrder, setExperienceSortOrder] = useState("newest");
   const [showAllExperiences, setShowAllExperiences] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const EXPERIENCES_PER_PAGE = 6; // Get translated data based on current language
   const userProfile = getUserProfile(currentLanguage);
   const insights = getInsights(currentLanguage);
@@ -50,6 +53,33 @@ const PortfolioContent = () => {
   const projects = getProjects(currentLanguage);
   const skills = getSkills(currentLanguage);
   const education = getEducation(currentLanguage);
+  const certifications = getCertifications(currentLanguage);
+
+  // Command Palette keyboard shortcut (Cmd+K or Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandPaletteOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Handle navigation from Command Palette
+  const handleNavigate = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Toggle theme
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   // Save scroll position before page refresh
   useEffect(() => {
@@ -173,6 +203,21 @@ const PortfolioContent = () => {
 
   return (
     <div className="relative">
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        experiences={experiences}
+        projects={projects}
+        skills={skills}
+        certifications={certifications}
+        education={education}
+        userProfile={userProfile}
+        onNavigate={handleNavigate}
+        isDarkMode={theme === 'dark'}
+        toggleTheme={toggleTheme}
+      />
+      
       <ShootingStars />
       <ScrollProgressBar />
       <div
@@ -312,6 +357,32 @@ const PortfolioContent = () => {
                     </span>
                   </span>
                 </a>
+              </motion.div>
+              
+              {/* Command Palette Hint */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+                className="mt-12"
+              >
+                <button
+                  onClick={() => setIsCommandPaletteOpen(true)}
+                  className="group inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-all duration-200 border border-slate-200 dark:border-slate-700 hover:border-cyan-500/50"
+                >
+                  <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-cyan-600 dark:group-hover:text-cyan-400">
+                    Quick navigation
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <kbd className="px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-xs text-slate-600 dark:text-slate-400 font-mono">
+                      {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}
+                    </kbd>
+                    <span className="text-slate-400">+</span>
+                    <kbd className="px-2 py-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded text-xs text-slate-600 dark:text-slate-400 font-mono">
+                      K
+                    </kbd>
+                  </div>
+                </button>
               </motion.div>
             </section>
             {/* About Section */}
