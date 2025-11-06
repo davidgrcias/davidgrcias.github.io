@@ -727,69 +727,96 @@ const PortfolioContent = () => {
             </section>
             {/* Skills & Certifications Section */}
             <section id="skills" className="py-20">
-              <div className="grid md:grid-cols-2 gap-16">
-                <AnimatedSection>
-                  {" "}
-                  <h2 className="text-3xl font-bold text-slate-800 dark:text-gray-100 mb-8 text-center">
-                    {translateText("Core Competencies", currentLanguage)}
-                  </h2>
-                  <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">
-                    {translateText(
-                      "Technical expertise and professional skills developed through practical experience and continuous learning",
-                      currentLanguage
-                    )}
-                  </p>
-                  <div className="space-y-6">
-                    {skills.map((skill, index) => (
-                      <div key={index}>
-                        <div className="flex justify-between items-center mb-1">
-                          {" "}
-                          <span className="font-bold text-slate-800 dark:text-white flex items-center">
-                            {" "}
-                            <span className="mr-3">
-                              {renderIcon(skill.icon) || renderIcon("Code", 24)}
+              <AnimatedSection>
+                <SectionTitle>
+                  {translateText("Core Competencies", currentLanguage)}
+                </SectionTitle>
+                <p className="text-center text-slate-600 dark:text-gray-400 mb-12 max-w-3xl mx-auto">
+                  {translateText(
+                    "A comprehensive overview of technical expertise and professional skills developed through hands-on experience, continuous learning, and diverse projects",
+                    currentLanguage
+                  )}
+                </p>
+
+                {/* Technical Skills */}
+                <div className="mb-16">
+                  <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-8 flex items-center justify-center gap-3">
+                    {renderIcon("Code", 28)}
+                    <span>{translateText("Technical Skills", currentLanguage)}</span>
+                  </h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {skills.technical?.map((category, index) => (
+                      <motion.div
+                        key={index}
+                        className="bg-slate-100 dark:bg-slate-800/50 p-6 rounded-xl border border-slate-200 dark:border-gray-700 hover:border-cyan-500/50 hover:shadow-xl hover:shadow-cyan-500/10 transition-all duration-300"
+                        viewport={{ once: true }}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                      >
+                        <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-700">
+                          <div className="bg-cyan-500/10 dark:bg-cyan-500/20 p-2 rounded-lg text-cyan-600 dark:text-cyan-400">
+                            {renderIcon(category.icon, 24)}
+                          </div>
+                          <h4 className="text-lg font-bold text-slate-800 dark:text-white">
+                            {category.category}
+                          </h4>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {category.skills.map((skill, skillIndex) => (
+                            <span
+                              key={skillIndex}
+                              className="bg-slate-200/70 dark:bg-slate-700/50 text-xs text-slate-700 dark:text-slate-300 py-1.5 px-3 rounded-full hover:bg-cyan-500/20 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors duration-200"
+                            >
+                              {skill}
                             </span>
-                            <span>{skill.name}</span>
-                          </span>
-                          <span className="text-sm text-cyan-600 dark:text-cyan-400">
-                            {skill.level}%
-                          </span>
+                          ))}
                         </div>
-                        <div className="w-full bg-slate-200 dark:bg-gray-700 rounded-full h-2.5">
-                          <motion.div
-                            className="bg-cyan-500 h-2.5 rounded-full"
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${skill.level}%` }}
-                            viewport={{ once: true }}
-                            transition={{
-                              duration: 1.5,
-                              ease: "easeOut",
-                              delay: 0.2,
-                            }}
-                          ></motion.div>
-                        </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
-                </AnimatedSection>
+                </div>
 
-                <AnimatedSection>
-                  {" "}
-                  <h2 className="text-3xl font-bold text-slate-800 dark:text-gray-100 mb-8 text-center">
-                    {translateText(
-                      "Licenses & Certifications",
-                      currentLanguage
-                    )}
-                  </h2>
-                  <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-xl mx-auto">
+                {/* Soft Skills */}
+                <div className="mb-16">
+                  <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-8 flex items-center justify-center gap-3">
+                    {renderIcon("Heart", 28)}
+                    <span>{translateText("Soft Skills", currentLanguage)}</span>
+                  </h3>
+                  <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/30 dark:to-slate-800/50 p-8 rounded-2xl border border-slate-200 dark:border-gray-700">
+                    <div className="flex flex-wrap justify-center gap-3">
+                      {skills.soft?.map((skill, index) => (
+                        <motion.span
+                          key={index}
+                          className="bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 py-2.5 px-5 rounded-full border border-slate-200 dark:border-slate-700 hover:border-cyan-500 hover:shadow-md hover:shadow-cyan-500/20 transition-all duration-200 font-medium text-sm"
+                          viewport={{ once: true }}
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          whileHover={{ y: -2 }}
+                        >
+                          {skill}
+                        </motion.span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Certifications */}
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-8 flex items-center justify-center gap-3">
+                    {renderIcon("Trophy", 28)}
+                    <span>{translateText("Licenses & Certifications", currentLanguage)}</span>
+                  </h3>
+                  <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
                     {translateText(
                       "Professional certifications and achievements validating expertise in various technical domains",
                       currentLanguage
                     )}
                   </p>
                   <CertificationsSection />
-                </AnimatedSection>
-              </div>
+                </div>
+              </AnimatedSection>
             </section>
             {/* Contact Section */}
             <section id="contact" className="py-20 text-center">
