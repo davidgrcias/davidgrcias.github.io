@@ -50,6 +50,11 @@ import {
   ChevronDown,
   ArrowUp,
   ArrowDown,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Play,
+  Pause,
 } from "lucide-react";
 import TikTokIcon from "../components/icons/TikTokIcon";
 import React from "react";
@@ -126,6 +131,11 @@ export const iconMap = {
   ChevronDown: ChevronDown,
   ArrowUp: ArrowUp,
   ArrowDown: ArrowDown,
+  ChevronLeft: ChevronLeft,
+  ChevronRight: ChevronRight,
+  Calendar: Calendar,
+  Play: Play,
+  Pause: Pause,
 };
 
 // Common icon sizes for consistency
