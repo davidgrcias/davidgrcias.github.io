@@ -9,6 +9,7 @@ import YouTubeStats from "./YouTubeStats";
 import TikTokStats from "./TikTokStats";
 import CertificationsSection from "./CertificationsSection";
 import ProjectsSection from "./ProjectsSection";
+import PDFThumbnail from "./PDFThumbnail";
 import GradientBackground from "./GradientBackground"; // Import the new component
 import { getUserProfile } from "../data/userProfile";
 import { getInsights } from "../data/insights";
@@ -571,13 +572,13 @@ const PortfolioContent = () => {
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ duration: 0.5, delay: index * 0.1 }}
                       >
-                        <div className="flex items-start gap-4">
-                          <div className="bg-cyan-500/10 dark:bg-cyan-500/5 rounded-lg p-3 text-cyan-500 dark:text-cyan-400">
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className="bg-cyan-500/10 dark:bg-cyan-500/5 rounded-lg p-3 text-cyan-500 dark:text-cyan-400 flex-shrink-0">
                             {renderIcon("Building", 24)}
                           </div>
-                          <div className="flex-1">
-                            <div className="flex justify-between items-start mb-2">
-                              <div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start gap-4 mb-2">
+                              <div className="flex-1 min-w-0">
                                 <h3 className="text-lg font-bold text-slate-800 dark:text-white">
                                   {exp.role}
                                 </h3>
@@ -585,7 +586,7 @@ const PortfolioContent = () => {
                                   {exp.company}
                                 </p>
                               </div>{" "}
-                              <div className="text-right">
+                              <div className="text-right flex-shrink-0">
                                 <span className="text-sm text-slate-500 dark:text-slate-400">
                                   {formatDateRange(exp.startDate, exp.endDate)}
                                 </span>
@@ -594,7 +595,30 @@ const PortfolioContent = () => {
                                 </p>
                               </div>
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            
+                            {/* Location */}
+                            {exp.location && (
+                              <div className="flex items-center gap-2 mb-3 text-sm text-slate-600 dark:text-slate-400">
+                                {renderIcon("MapPin", 16)}
+                                <span>{exp.location}</span>
+                                {exp.locationType && (
+                                  <>
+                                    <span className="text-slate-400 dark:text-slate-500">•</span>
+                                    <span>{exp.locationType}</span>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* Description */}
+                            {exp.description && (
+                              <p className="text-sm text-slate-600 dark:text-slate-300 mb-4 leading-relaxed whitespace-pre-line">
+                                {exp.description}
+                              </p>
+                            )}
+                            
+                            {/* Skills */}
+                            <div className="flex flex-wrap gap-2 mb-4">
                               {exp.skills.map((skill) => (
                                 <span
                                   key={skill}
@@ -604,6 +628,59 @@ const PortfolioContent = () => {
                                 </span>
                               ))}
                             </div>
+                            
+                            {/* Media Section */}
+                            {exp.media && (
+                              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                                <a
+                                  href={exp.media.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block group/media"
+                                >
+                                  <div className="relative overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-700 aspect-video mb-3 hover:ring-2 hover:ring-cyan-500 transition-all duration-300 shadow-md hover:shadow-xl">
+                                    {exp.media.type === 'pdf' && !exp.media.thumbnail ? (
+                                      <PDFThumbnail />
+                                    ) : exp.media.thumbnail ? (
+                                      <>
+                                        <img
+                                          src={exp.media.thumbnail}
+                                          alt={exp.media.title}
+                                          className="w-full h-full object-cover group-hover/media:scale-105 transition-transform duration-300"
+                                        />
+                                        {exp.media.type === 'pdf' && (
+                                          <div className="absolute top-3 right-3 bg-red-500 text-white text-xs font-bold px-2.5 py-1 rounded shadow-lg">
+                                            PDF
+                                          </div>
+                                        )}
+                                      </>
+                                    ) : (
+                                      <img
+                                        src={exp.media.url}
+                                        alt={exp.media.title}
+                                        className="w-full h-full object-cover group-hover/media:scale-105 transition-transform duration-300"
+                                      />
+                                    )}
+                                    <div className="absolute inset-0 bg-black/0 group-hover/media:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                                      <div className="opacity-0 group-hover/media:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-slate-800/90 rounded-full p-3 shadow-lg">
+                                        {renderIcon("ExternalLink", 24)}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-slate-800 dark:text-white group-hover/media:text-cyan-600 dark:group-hover/media:text-cyan-400 transition-colors flex items-center gap-2">
+                                      <span className="flex-1">{exp.media.title}</span>
+                                      {renderIcon("ExternalLink", 16)}
+                                    </h4>
+                                    {exp.media.description && (
+                                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">
+                                        {exp.media.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </a>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </motion.div>
