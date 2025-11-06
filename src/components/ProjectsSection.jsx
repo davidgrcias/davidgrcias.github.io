@@ -98,16 +98,17 @@ const ProjectsSection = () => {
   return (
     <div className="w-full">
       <SectionTitle>{translateText("Projects", currentLanguage)}</SectionTitle>
-      <p className="text-center text-slate-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+      <p className="text-center text-slate-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
         {translateText(
           "From beginner-friendly to real-world applications, explore my journey through different project tiers",
           currentLanguage
         )}
       </p>
 
-      {/* 3D Carousel Showcase - Featured Projects - Compact */}
-      <div className="mb-12">
-        <h3 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 text-center">
+      {/* 3D Carousel Showcase - Featured Projects - Very Compact */}
+      <div className="mb-8">
+        <h3 className="text-base font-semibold text-slate-700 dark:text-slate-300 mb-3 text-center flex items-center justify-center gap-2">
+          <span className="text-cyan-500">{renderIcon("Star")}</span>
           {translateText("Featured Projects", currentLanguage)}
         </h3>
         <ProjectCarousel projects={projects.slice(0, 5)} />
