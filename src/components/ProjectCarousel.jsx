@@ -124,22 +124,17 @@ const ProjectCarousel = ({ projects }) => {
     return null;
   }
 
-  // Hide carousel on mobile
-  if (isMobile) {
-    return null;
-  }
-
   const currentProject = projects[currentIndex];
 
   return (
     <div
-      className="relative w-full max-w-4xl mx-auto px-2 sm:px-4 py-3 sm:py-4"
+      className="relative w-full max-w-4xl mx-auto px-2 sm:px-4 py-2 sm:py-3 md:py-4"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Main Carousel Container - More Compact */}
+      {/* Main Carousel Container - Fully Responsive */}
       <div
-        className="relative h-auto min-h-[320px] sm:min-h-[300px] md:h-[360px]"
+        className="relative h-auto min-h-[380px] xs:min-h-[360px] sm:min-h-[340px] md:h-[360px]"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -182,17 +177,17 @@ const ProjectCarousel = ({ projects }) => {
             className={!isMobile ? "cursor-grab active:cursor-grabbing w-full" : "w-full"}
           >
             <div className="w-full h-auto bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-lg shadow-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-              <div className="flex flex-col md:flex-row min-h-[320px] sm:min-h-[300px] md:h-[360px]">
+              <div className="flex flex-col md:flex-row min-h-[380px] xs:min-h-[360px] sm:min-h-[340px] md:h-[360px]">
                 {/* Left Side - Project Info with Custom Scrollbar */}
-                <div className="flex-1 p-3 sm:p-4 md:p-5 flex flex-col justify-between overflow-y-auto custom-scrollbar-thin">
+                <div className="flex-1 p-4 sm:p-5 md:p-5 flex flex-col justify-between overflow-y-auto custom-scrollbar-thin">
                   {/* Top Section */}
-                  <div className="space-y-3 sm:space-y-4">
+                  <div className="space-y-2 sm:space-y-3 md:space-y-4">
                     {/* Project Tiers */}
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {currentProject.tiers.map((tier) => (
                         <span
                           key={tier}
-                          className={`text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 sm:py-1 rounded-full font-medium ${
+                          className={`text-[10px] sm:text-xs px-2 sm:px-3 py-1 rounded-full font-medium ${
                             tier === "Beginner"
                               ? "bg-cyan-100/80 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
                               : tier === "Intermediate"
@@ -212,7 +207,7 @@ const ProjectCarousel = ({ projects }) => {
                     </div>
 
                     {/* Project Name */}
-                    <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 dark:text-white leading-tight">
+                    <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 dark:text-white leading-tight">
                       {currentProject.name}
                     </h3>
 
@@ -228,36 +223,41 @@ const ProjectCarousel = ({ projects }) => {
                     </div>
 
                     {/* Description */}
-                    <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="text-xs sm:text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3 sm:line-clamp-none">
                       {currentProject.description}
                     </p>
 
                     {/* Technologies */}
                     <div>
-                      <h4 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 sm:mb-3 flex items-center gap-2">
+                      <h4 className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
                         {renderIcon("Code2", 14)}
                         <span>{translateText("Technologies", currentLanguage)}</span>
                       </h4>
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                        {currentProject.tech.map((tech) => (
+                        {currentProject.tech.slice(0, 6).map((tech) => (
                           <span
                             key={tech}
-                            className="text-[10px] sm:text-xs md:text-sm px-2 sm:px-3 py-1 sm:py-1.5 bg-slate-200/70 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 rounded-lg font-medium"
+                            className="text-[10px] sm:text-xs px-2 sm:px-3 py-1 bg-slate-200/70 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 rounded-lg font-medium"
                           >
                             {tech}
                           </span>
                         ))}
+                        {currentProject.tech.length > 6 && (
+                          <span className="text-[10px] sm:text-xs px-2 sm:px-3 py-1 bg-slate-200/70 dark:bg-slate-700/50 text-slate-700 dark:text-slate-300 rounded-lg font-medium">
+                            +{currentProject.tech.length - 6}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
 
                   {/* Bottom Section - CTA */}
-                  <div className="mt-4 sm:mt-6">
+                  <div className="mt-3 sm:mt-4 md:mt-6">
                     <a
                       href={currentProject.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 bg-cyan-500 hover:bg-cyan-600 text-white text-sm sm:text-base rounded-lg font-medium transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 hover:-translate-y-0.5"
+                      className="inline-flex items-center gap-2 px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 md:py-3 bg-cyan-500 hover:bg-cyan-600 text-white text-xs sm:text-sm md:text-base rounded-lg font-medium transition-all duration-300 shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
                     >
                       {translateText("View Project", currentLanguage)}
                       {renderIcon("ExternalLink", 16)}
@@ -292,10 +292,10 @@ const ProjectCarousel = ({ projects }) => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation Arrows */}
+        {/* Navigation Arrows - Desktop only, mobile uses swipe */}
         <button
           onClick={prevProject}
-          className="absolute left-1 sm:left-2 md:-left-16 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 hover:bg-cyan-500 dark:hover:bg-cyan-600 text-slate-800 dark:text-white hover:text-white rounded-full p-2 sm:p-3 shadow-lg transition-all duration-300 hover:scale-110 z-10"
+          className="hidden md:flex absolute -left-16 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 hover:bg-cyan-500 dark:hover:bg-cyan-600 text-slate-800 dark:text-white hover:text-white rounded-full p-3 shadow-lg transition-all duration-300 hover:scale-110 z-10 items-center justify-center"
           aria-label="Previous project"
         >
           {renderIcon("ChevronLeft", 20)}
@@ -303,7 +303,7 @@ const ProjectCarousel = ({ projects }) => {
 
         <button
           onClick={nextProject}
-          className="absolute right-1 sm:right-2 md:-right-16 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 hover:bg-cyan-500 dark:hover:bg-cyan-600 text-slate-800 dark:text-white hover:text-white rounded-full p-2 sm:p-3 shadow-lg transition-all duration-300 hover:scale-110 z-10"
+          className="hidden md:flex absolute -right-16 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 hover:bg-cyan-500 dark:hover:bg-cyan-600 text-slate-800 dark:text-white hover:text-white rounded-full p-3 shadow-lg transition-all duration-300 hover:scale-110 z-10 items-center justify-center"
           aria-label="Next project"
         >
           {renderIcon("ChevronRight", 20)}
