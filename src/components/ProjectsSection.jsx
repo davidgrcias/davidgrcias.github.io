@@ -5,6 +5,8 @@ import { getUserProfile } from "../data/userProfile";
 import * as LucideIcons from "lucide-react";
 import SectionTitle from "./SectionTitle";
 import { useTranslation } from "../contexts/TranslationContext";
+import TiltCard from "./TiltCard";
+import ProjectCarousel from "./ProjectCarousel";
 
 const ProjectsSection = () => {
   const { currentLanguage, translateText } = useTranslation();
@@ -102,6 +104,22 @@ const ProjectsSection = () => {
           currentLanguage
         )}
       </p>
+
+      {/* 3D Carousel Showcase - Featured Projects */}
+      <ProjectCarousel projects={projects.slice(0, 5)} />
+
+      {/* Divider */}
+      <div className="relative my-16">
+        <div className="absolute inset-0 flex items-center">
+          <div className="w-full border-t border-slate-300 dark:border-slate-700"></div>
+        </div>
+        <div className="relative flex justify-center text-sm">
+          <span className="px-4 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 font-medium">
+            {translateText("All Projects", currentLanguage)}
+          </span>
+        </div>
+      </div>
+
       {/* Filter and Sort Controls */}
       <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
         {/* Project Type Tabs */}
@@ -145,18 +163,13 @@ const ProjectsSection = () => {
         </motion.button>
       </div>
       {/* Projects Grid with Animation */}
-      <motion.div className="grid grid-cols-1 md:grid-cols-2 gap-6" layout>
-        <AnimatePresence mode="popLayout">
-          {visibleProjects.map((project) => (
-            <motion.div
-              key={project.name}
-              layout
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.3 }}
-              className="group relative bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {visibleProjects.map((project, index) => (
+          <div
+            key={`${project.name}-${index}`}
+            className="h-full"
+          >
+            <div className="h-full relative bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg transition-all duration-300">
               {/* Project Date */}
               <div className="absolute top-6 right-16 text-sm text-slate-500 dark:text-slate-400">
                 {formatDate(project.date)}
@@ -167,60 +180,60 @@ const ProjectsSection = () => {
               </div>
               {/* Project Tiers Tags */}
               <div className="flex flex-wrap gap-2 mb-3">
-                {project.tiers.map((tier) => (
-                  <span
-                    key={tier}
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      tier === "Beginner"
-                        ? "bg-cyan-100/80 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
-                        : tier === "Intermediate"
-                        ? "bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                        : tier === "Advanced"
-                        ? "bg-indigo-100/80 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-                        : tier === "Real-World"
-                        ? "bg-teal-100/80 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                        : tier === "Experimental"
-                        ? "bg-amber-100/80 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
-                        : "bg-violet-100/80 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
-                    }`}
-                  >
-                    {tier}
-                  </span>
-                ))}
-              </div>
-              {/* Rest of Project Content */}
-              <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
-                {project.name}
-              </h3>
-              <p className="text-sm font-medium text-cyan-500 dark:text-cyan-400 mb-3">
-                {project.role}
-              </p>
-              <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">
-                {project.description}
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {project.tech.map((tech) => (
-                  <span
-                    key={tech}
-                    className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>{" "}
-              <a
-                href={project.link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-medium text-cyan-500 hover:text-cyan-600 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors"
-              >
-                {translateText("View Project", currentLanguage)}{" "}
-                {renderIcon("ArrowUpRight")}
-              </a>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>{" "}
+                    {project.tiers.map((tier) => (
+                      <span
+                        key={tier}
+                        className={`text-xs px-2 py-1 rounded-full ${
+                          tier === "Beginner"
+                            ? "bg-cyan-100/80 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
+                            : tier === "Intermediate"
+                            ? "bg-blue-100/80 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                            : tier === "Advanced"
+                            ? "bg-indigo-100/80 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
+                            : tier === "Real-World"
+                            ? "bg-teal-100/80 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                            : tier === "Experimental"
+                            ? "bg-amber-100/80 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
+                            : "bg-violet-100/80 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300"
+                        }`}
+                      >
+                  {tier}
+                </span>
+              ))}
+            </div>
+            {/* Rest of Project Content */}
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+              {project.name}
+            </h3>
+            <p className="text-sm font-medium text-cyan-500 dark:text-cyan-400 mb-3">
+              {project.role}
+            </p>
+            <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">
+              {project.description}
+            </p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {project.tech.map((tech) => (
+                <span
+                  key={tech}
+                  className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded"
+                >
+                  {tech}
+                </span>
+              ))}
+            </div>{" "}
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-medium text-cyan-500 hover:text-cyan-600 dark:text-cyan-400 dark:hover:text-cyan-300 transition-colors"
+            >
+              {translateText("View Project", currentLanguage)}{" "}
+              {renderIcon("ArrowUpRight")}
+            </a>
+            </div>
+          </div>
+        ))}
+      </div>
       {/* Additional Projects Note - Show when all projects are displayed */}
       {showAll && (
         <motion.div
