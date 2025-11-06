@@ -133,13 +133,13 @@ const ProjectCarousel = ({ projects }) => {
 
   return (
     <div
-      className="relative w-full max-w-5xl mx-auto px-2 sm:px-4 py-4 sm:py-6"
+      className="relative w-full max-w-4xl mx-auto px-2 sm:px-4 py-3 sm:py-4"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Main Carousel Container - Compact */}
+      {/* Main Carousel Container - More Compact */}
       <div
-        className="relative h-auto min-h-[450px] sm:min-h-[400px] md:h-[480px]"
+        className="relative h-auto min-h-[320px] sm:min-h-[300px] md:h-[360px]"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -181,10 +181,10 @@ const ProjectCarousel = ({ projects }) => {
             }}
             className={!isMobile ? "cursor-grab active:cursor-grabbing w-full" : "w-full"}
           >
-            <div className="w-full h-auto bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-xl shadow-xl overflow-hidden">
-              <div className="flex flex-col md:flex-row min-h-[450px] sm:min-h-[400px] md:h-[480px]">
-                {/* Left Side - Project Info */}
-                <div className="flex-1 p-4 sm:p-5 md:p-6 lg:p-8 flex flex-col justify-between overflow-y-auto">
+            <div className="w-full h-auto bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-lg shadow-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col md:flex-row min-h-[320px] sm:min-h-[300px] md:h-[360px]">
+                {/* Left Side - Project Info with Custom Scrollbar */}
+                <div className="flex-1 p-3 sm:p-4 md:p-5 flex flex-col justify-between overflow-y-auto custom-scrollbar-thin">
                   {/* Top Section */}
                   <div className="space-y-3 sm:space-y-4">
                     {/* Project Tiers */}
