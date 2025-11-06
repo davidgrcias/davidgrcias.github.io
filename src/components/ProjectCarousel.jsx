@@ -133,26 +133,13 @@ const ProjectCarousel = ({ projects }) => {
 
   return (
     <div
-      className="relative w-full max-w-6xl mx-auto px-2 sm:px-4 py-8 sm:py-12"
+      className="relative w-full max-w-5xl mx-auto px-2 sm:px-4 py-4 sm:py-6"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {/* Carousel Header */}
-      <div className="text-center mb-6 sm:mb-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-800 dark:text-white mb-2">
-          {translateText("Featured Projects", currentLanguage)}
-        </h2>
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 px-4">
-          {translateText(
-            "Explore my best work",
-            currentLanguage
-          )}
-        </p>
-      </div>
-
-      {/* Main Carousel Container */}
+      {/* Main Carousel Container - Compact */}
       <div
-        className="relative h-auto min-h-[550px] sm:min-h-[500px] md:h-[600px]"
+        className="relative h-auto min-h-[450px] sm:min-h-[400px] md:h-[480px]"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -194,10 +181,10 @@ const ProjectCarousel = ({ projects }) => {
             }}
             className={!isMobile ? "cursor-grab active:cursor-grabbing w-full" : "w-full"}
           >
-            <div className="w-full h-auto bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden">
-              <div className="flex flex-col md:flex-row min-h-[550px] sm:min-h-[500px] md:h-[600px]">
+            <div className="w-full h-auto bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-xl shadow-xl overflow-hidden">
+              <div className="flex flex-col md:flex-row min-h-[450px] sm:min-h-[400px] md:h-[480px]">
                 {/* Left Side - Project Info */}
-                <div className="flex-1 p-4 sm:p-6 md:p-8 lg:p-12 flex flex-col justify-between overflow-y-auto">
+                <div className="flex-1 p-4 sm:p-5 md:p-6 lg:p-8 flex flex-col justify-between overflow-y-auto">
                   {/* Top Section */}
                   <div className="space-y-3 sm:space-y-4">
                     {/* Project Tiers */}
