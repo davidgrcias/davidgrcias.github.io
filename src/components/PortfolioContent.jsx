@@ -940,6 +940,7 @@ const PortfolioContent = () => {
                 </div>
               </AnimatedSection>
             </section>
+
             {/* Contact Section */}
             <section id="contact" className="py-20 text-center">
               <AnimatedSection>
@@ -971,15 +972,76 @@ const PortfolioContent = () => {
                       {userProfile.contact.location}
                     </span>
                   </div>
-                </div>{" "}
-                <a
-                  href={`https://wa.me/${userProfile.contact.whatsapp}?text=Hi`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-3 px-8 rounded-lg transition-transform duration-300 hover:scale-105 inline-block shadow-lg shadow-cyan-500/20"
-                >
-                  {translateText("Say Hello on WhatsApp", currentLanguage)}
-                </a>
+                </div>
+                
+                {/* Contact Buttons - Symmetric Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 max-w-5xl mx-auto mb-6">
+                  {/* WhatsApp */}
+                  <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900/20 dark:to-cyan-800/20 p-5 rounded-xl border border-cyan-200 dark:border-cyan-800 flex flex-col h-full">
+                    <div className="flex items-center gap-2 mb-3">
+                      {renderIcon("MessageCircle", 24)}
+                      <h3 className="font-bold text-lg text-slate-800 dark:text-white">WhatsApp</h3>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 flex-1">
+                      {translateText("Quick messages and instant responses", currentLanguage)}
+                    </p>
+                    <a
+                      href={`https://wa.me/${userProfile.contact.whatsapp}?text=Hi`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-center bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg shadow-cyan-500/20"
+                    >
+                      {translateText("Chat Now", currentLanguage)}
+                    </a>
+                  </div>
+                  
+                  {/* 15 min Meeting */}
+                  <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800/30 dark:to-slate-800/50 p-5 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col h-full">
+                    <div className="flex items-center gap-2 mb-3">
+                      {renderIcon("Clock", 24)}
+                      <h3 className="font-bold text-lg text-slate-800 dark:text-white">
+                        {translateText("Quick Chat", currentLanguage)}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 flex-1">
+                      {translateText("15-minute Google Meet for quick questions", currentLanguage)}
+                    </p>
+                    <a
+                      href="https://cal.com/davidgrcias/15min"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-center bg-slate-600 hover:bg-slate-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg shadow-slate-500/20"
+                    >
+                      {translateText("Book 15 min", currentLanguage)}
+                    </a>
+                  </div>
+                  
+                  {/* 30 min Meeting */}
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-5 rounded-xl border border-blue-200 dark:border-blue-800 flex flex-col h-full">
+                    <div className="flex items-center gap-2 mb-3">
+                      {renderIcon("Video", 24)}
+                      <h3 className="font-bold text-lg text-slate-800 dark:text-white">
+                        {translateText("Deep Dive", currentLanguage)}
+                      </h3>
+                    </div>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4 flex-1">
+                      {translateText("30-minute Google Meet for detailed discussion", currentLanguage)}
+                    </p>
+                    <a
+                      href="https://cal.com/davidgrcias/30min"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg shadow-blue-500/20"
+                    >
+                      {translateText("Book 30 min", currentLanguage)}
+                    </a>
+                  </div>
+                </div>
+                
+                {/* Additional Note */}
+                <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
+                  {translateText("All meetings are conducted via Google Meet and scheduled through Cal.com", currentLanguage)}
+                </p>
               </AnimatedSection>
             </section>
           </main>
