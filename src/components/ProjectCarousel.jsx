@@ -134,7 +134,7 @@ const ProjectCarousel = ({ projects }) => {
     >
       {/* Main Carousel Container - Fully Responsive */}
       <div
-        className="relative h-auto min-h-[380px] xs:min-h-[360px] sm:min-h-[340px] md:h-[360px]"
+        className="relative h-auto min-h-[360px] xs:min-h-[340px] sm:min-h-[320px] md:h-[340px]"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -177,7 +177,7 @@ const ProjectCarousel = ({ projects }) => {
             className={!isMobile ? "cursor-grab active:cursor-grabbing w-full" : "w-full"}
           >
             <div className="w-full h-auto bg-gradient-to-br from-white to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-lg shadow-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-              <div className="flex flex-col md:flex-row min-h-[380px] xs:min-h-[360px] sm:min-h-[340px] md:h-[360px]">
+              <div className="flex flex-col md:flex-row min-h-[360px] xs:min-h-[340px] sm:min-h-[320px] md:h-[340px]">
                 {/* Left Side - Project Info with Custom Scrollbar */}
                 <div className="flex-1 p-4 sm:p-5 md:p-5 flex flex-col justify-between overflow-y-auto custom-scrollbar-thin">
                   {/* Top Section */}
@@ -249,6 +249,23 @@ const ProjectCarousel = ({ projects }) => {
                         )}
                       </div>
                     </div>
+
+                    {currentProject.highlights?.length > 0 && (
+                      <div className="rounded-lg bg-cyan-500/10 dark:bg-cyan-500/15 border border-cyan-500/20 dark:border-cyan-400/20 p-3 sm:p-4">
+                        <h4 className="text-xs sm:text-sm font-semibold text-cyan-600 dark:text-cyan-300 mb-2 flex items-center gap-2">
+                          {renderIcon("Sparkles", 14)}
+                          <span>{translateText("Key Contributions", currentLanguage)}</span>
+                        </h4>
+                        <ul className="space-y-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-200 leading-snug">
+                          {currentProject.highlights.map((highlight) => (
+                            <li key={highlight} className="flex items-start gap-2">
+                              <span className="mt-1 h-1.5 w-1.5 rounded-full bg-cyan-500 dark:bg-cyan-300" />
+                              <span>{highlight}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
 
                   {/* Bottom Section - CTA */}
