@@ -10,7 +10,7 @@ import {
   TranslationProvider,
   useTranslation,
 } from "./contexts/TranslationContext";
-import { X, Download } from "lucide-react";
+import { X } from "lucide-react";
 
 const CVModal = ({ showCVModal, setShowCVModal }) => {
   const { currentLanguage } = useTranslation();
@@ -42,34 +42,23 @@ const CVModal = ({ showCVModal, setShowCVModal }) => {
         className="relative bg-white dark:bg-slate-900 shadow-2xl flex flex-col w-full h-full xl:w-[95vw] xl:max-w-[1000px] xl:h-[90vh] xl:m-4 xl:rounded-2xl"
         style={{ boxShadow: "0 8px 32px 0 rgba(0,0,0,0.25)", cursor: "auto" }}
       >
-        <div className="absolute right-4 top-4 flex items-center gap-3 z-[2]">
-          <a
-            href="/CV-DavidGarciaSaragih.pdf"
-            download
-            className="p-3 rounded-full bg-cyan-500 text-white hover:bg-cyan-600 shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 hover:scale-105"
-            title={currentLanguage === "id" ? "Unduh PDF" : "Download PDF"}
-            style={{ cursor: "pointer !important" }}
-          >
-            <Download size={22} />
-          </a>
-          <button
-            onClick={() => setShowCVModal(false)}
-            className="p-3 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none hover:scale-105 transition-all"
-            title={currentLanguage === "id" ? "Tutup" : "Close"}
-            style={{ cursor: "pointer !important" }}
-          >
-            <X size={22} />
-          </button>
-        </div>
+        <button
+          onClick={() => setShowCVModal(false)}
+          className="absolute right-4 top-4 z-[2] p-3 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-gray-300 hover:bg-slate-300 dark:hover:bg-slate-600 focus:outline-none hover:scale-105 transition-all"
+          title={currentLanguage === "id" ? "Tutup" : "Close"}
+          style={{ cursor: "pointer !important" }}
+        >
+          <X size={22} />
+        </button>
         <div
           className="overflow-y-auto flex-1 p-4 xl:p-6"
           style={{ cursor: "auto" }}
         >
-          <img
-            src="/CV-DavidGarciaSaragih.png"
-            alt="CV Preview"
-            className="w-full h-auto object-contain rounded-lg border border-slate-200 dark:border-slate-700 shadow-md mx-auto"
-            style={{ background: "#f8fafc", cursor: "auto" }}
+          <iframe
+            src="/CV-DavidGarciaSaragih.pdf"
+            className="w-full h-full border-0 rounded-lg"
+            title="CV Preview"
+            style={{ minHeight: "600px" }}
           />
         </div>
       </div>
