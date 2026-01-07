@@ -111,7 +111,14 @@ const ProjectsSection = () => {
           <span className="text-cyan-500">{renderIcon("Star")}</span>
           {translateText("Featured Projects", currentLanguage)}
         </h3>
-        <ProjectCarousel projects={projects.slice(0, 5)} />
+        <ProjectCarousel
+          projects={projects.filter((p) =>
+            [
+              "Komilet (JakLingko Management System)",
+              "UMN Festival 2025 (Official Platform)",
+            ].includes(p.name)
+          )}
+        />
       </div>
 
       {/* Filter and Sort Controls */}
