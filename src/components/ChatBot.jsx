@@ -269,7 +269,7 @@ ${personalInfo.professionalExperience
 ${Object.entries(personalInfo.faq).map(([q, a]) => `Q: ${q}\nA: ${a}`).join("\n\n")}
 `;
 
-      const contextPrompt = `You are David Garcia Saragih's advanced AI assistant. Your goal is to represent David professionally, enthusiastically, and smartly.
+      const contextPrompt = `You are David Garcia Saragih's advanced AI assistant. Your goal is to represent David (a Full-Stack Web & Systems Engineer) professionally, enthusiastically, and smartly.
 
 TODAY'S DATE: ${new Date().toLocaleDateString("en-US", {
         weekday: "long",

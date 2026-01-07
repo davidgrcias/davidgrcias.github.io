@@ -88,6 +88,14 @@ const personalInfo = {
   // Professional experience from CV
   professionalExperience: [
     {
+      role: "Full-Stack Web & Systems Engineer",
+      company: "Komilet (JakLingko System)",
+      period: "2024 - Present",
+      description:
+        "Architecting a massive-scale fleet management ERP with Next.js 16, managing 42+ database tables and complex approval workflows.",
+      achievements: "Built End-to-End System for Fleet Operations, 100% Digitized Financial Tracking",
+    },
+    {
       role: "Content Creator",
       company: "David G Tech (YouTube, TikTok & Instagram)",
       period: "Mar 2021 - Present",
@@ -108,7 +116,8 @@ const personalInfo = {
       company: "UMN Festival 2025",
       period: "Feb 2025 - Nov 2025",
       description:
-        "Led website development using Laravel & React as part of the event committee.",
+        "Leading the development of a Full-Stack Ticketing Ecosystem using Laravel 12 & Inertia.js. Managing payment gateways (Midtrans), QR check-in security, and high-traffic infrastructure.",
+      achievements: "Architected Secure Ticketing System & Real-time Payment Sync Logic",
     },
     {
       role: "Backend Developer & Project Lead (Volunteer)",
