@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquare,
@@ -175,237 +176,39 @@ const ChatBot = () => {
 
     return matrix[b.length][a.length];
   };
+  /* 
+    REFACTORED: Removed hardcoded keyword interceptors to allow Gemini AI 
+    to handle all conversational logic using the RAG context.
+  */
+
   const generateResponse = async (input) => {
     try {
       const inputLower = input.toLowerCase().trim();
-
-      // Get the last bot message to understand context
-      const lastBotMessage = messages
-        .filter((m) => m.type === "bot")
-        .slice(-1)[0];
-      const lastBotContent = lastBotMessage
-        ? lastBotMessage.content.toLowerCase()
-        : "";
-
-      // Enhanced conversational response detection
-      const isConversationalResponse = (input, lastBotMessage) => {
-        const conversationalKeywords = [
-          "yes",
-          "yeah",
-          "yep",
-          "yup",
-          "right",
-          "correct",
-          "exactly",
-          "true",
-          "definitely",
-          "absolutely",
-          "sure",
-          "of course",
-          "indeed",
-          "totally",
-          "no",
-          "nope",
-          "not really",
-          "disagree",
-          "wrong",
-          "false",
-          "incorrect",
-          "thanks",
-          "thank you",
-          "appreciate",
-          "helpful",
-          "great",
-          "awesome",
-          "cool",
-          "nice",
-          "good job",
-          "amazing",
-          "wow",
-          "impressive",
-        ];
-
-        const inputWords = input.toLowerCase().trim().split(" ");
-        const isShortResponse = inputWords.length <= 3;
-        const containsConversationalWord = conversationalKeywords.some(
-          (keyword) =>
-            inputWords.includes(keyword) ||
-            input.toLowerCase().includes(keyword)
-        );
-
-        // Check if the last bot message was asking a question or making a statement
-        const botAskedQuestion =
-          lastBotMessage &&
-          (lastBotMessage.content.includes("?") ||
-            lastBotMessage.content.includes("right?") ||
-            lastBotMessage.content.includes("isn't he?") ||
-            lastBotMessage.content.includes("isn't it?") ||
-            lastBotMessage.content.includes("don't you think?") ||
-            lastBotMessage.content.includes("wouldn't you say?"));
-
-        return (
-          isShortResponse && containsConversationalWord && botAskedQuestion
-        );
-      };
-
-      // Handle conversational responses and feedback
-      if (isConversationalResponse(inputLower, lastBotMessage)) {
-        // Handle affirmative responses
-        if (
-          findBestMatch(inputLower, [
-            "yes",
-            "yeah",
-            "yep",
-            "yup",
-            "right",
-            "correct",
-            "exactly",
-            "true",
-            "definitely",
-            "absolutely",
-            "sure",
-            "of course",
-            "indeed",
-            "totally",
-          ])
-        ) {
-          const affirmativeResponses = [
-            "I'm so glad you agree! 😊 David really is exceptional. What else would you like to explore about his journey?",
-            "Absolutely! 🎉 His achievements at just 19 are truly remarkable. Any specific area you'd like to dive deeper into?",
-            "Exactly! � It's amazing what he's accomplished. What other aspects of his profile interest you?",
-            "Right?! 🚀 His combination of technical skills and entrepreneurship is impressive. Want to know more about any particular area?",
-            "That's what I think too! ✨ There's so much more to discover about David. What would you like to explore next?",
-          ];
-          const response =
-            affirmativeResponses[
-              Math.floor(Math.random() * affirmativeResponses.length)
-            ];
-          updateSuggestedReplies("affirmative");
-          return response;
-        }
-
-        // Handle negative responses
-        if (
-          findBestMatch(inputLower, [
-            "no",
-            "nope",
-            "not really",
-            "disagree",
-            "wrong",
-            "false",
-            "incorrect",
-          ])
-        ) {
-          const clarifyResponses = [
-            "I understand! 🤔 What specific aspect would you like to know more about instead?",
-            "No worries at all! 😊 Is there something particular about David that interests you more?",
-            "Fair enough! 💭 What would you like me to focus on regarding David's background?",
-            "Got it! 🎯 What other information about David would be helpful for you?",
-          ];
-          const response =
-            clarifyResponses[
-              Math.floor(Math.random() * clarifyResponses.length)
-            ];
-          updateSuggestedReplies("clarify");
-          return response;
-        }
-
-        // Handle appreciation responses
-        if (
-          findBestMatch(inputLower, [
-            "thanks",
-            "thank you",
-            "appreciate",
-            "helpful",
-            "great",
-            "awesome",
-            "cool",
-            "nice",
-            "good job",
-            "amazing",
-            "wow",
-            "impressive",
-          ])
-        ) {
-          const thankResponses = [
-            "You're very welcome! � I love sharing David's story. What else would you like to discover?",
-            "Thank you! 🌟 It's my pleasure to help you learn about David. Any other questions?",
-            "I'm so glad you found it helpful! 🎉 Feel free to ask me anything else about David's journey.",
-            "Awesome! 💙 David's story is truly inspiring. What other aspects would you like to explore?",
-          ];
-          const response =
-            thankResponses[Math.floor(Math.random() * thankResponses.length)];
-          updateSuggestedReplies("thanks");
-          return response;
-        }
-      }
-
-      // Handle greetings (only if not a conversational response)
-      if (
-        findBestMatch(inputLower, [
-          "hi",
-          "hello",
-          "hey",
-          "good morning",
-          "good afternoon",
-          "good evening",
-          "greetings",
-        ]) &&
-        !isConversationalResponse(inputLower, lastBotMessage)
-      ) {
-        const greetingResponses = [
-          "Hello! � I'm here to tell you all about David Garcia Saragih. What would you like to know?",
-          "Hey there! 😊 Ready to learn about David's amazing journey? What interests you most?",
-          "Hi! � I'm David's AI assistant. Ask me anything about his skills, experience, or projects!",
-          "Greetings! 🎉 I know everything about David. What aspect of his profile would you like to explore?",
-        ];
-        const response =
-          greetingResponses[
-            Math.floor(Math.random() * greetingResponses.length)
-          ];
-        updateSuggestedReplies("greeting");
-        return response;
-      }
-
-      // Check if user is asking for CV
-      if (findBestMatch(inputLower, ["cv", "resume", "curriculum"])) {
-        const cvResponse = [
-          "📄 Here's David's comprehensive CV!",
-          "",
-          "You can download his full CV (PDF format) here:",
-          `🔗 ${window.location.origin}/CV-DavidGarciaSaragih.pdf`,
-          "",
-          "The CV includes:",
-          "• Complete professional experience",
-          "• Technical skills and certifications",
-          "• Educational background",
-          "• Notable achievements and projects",
-          "",
-          "Would you like me to tell you about any specific aspect of his background? 😊",
-        ].join("\n");
-        updateSuggestedReplies("cv");
-        return cvResponse;
-      }
+      setIsTyping(true); // Ensure typing state is valid
 
       // Create COMPREHENSIVE context using ALL data sources
       const comprehensiveContext = `
 COMPLETE PROFILE OF DAVID GARCIA SARAGIH:
 
 === BASIC INFORMATION ===
-Name: ${userProfile.name}
+${userProfile.name}
 Headline: ${userProfile.headline}
-Age: 19 years old (born September 13, 2005)
+Age: ${personalInfo.basic.age} years old (born ${personalInfo.basic.birthDate})
 Location: ${userProfile.contact.location}
-Religion: Christian
+Religion: ${personalInfo.basic.religion}
 Email: ${userProfile.contact.email}
 WhatsApp: ${userProfile.contact.whatsapp}
-Portfolio: davidgrcias.github.io
+Portfolio: ${personalInfo.basic.contactInfo.portfolio}
+Philosophy: "${personalInfo.basic.philosophy}"
 
 About: ${userProfile.aboutText}
 
 === TECHNICAL SKILLS ===
-${skills
-  .map((skill) => `• ${skill.name}: ${skill.level}% proficiency`)
+${skills.technical
+  .map(
+    (cat) =>
+      `• ${cat.category}: ${cat.skills.join(", ")}`
+  )
   .join("\n")}
 
 === PROFESSIONAL EXPERIENCE ===
@@ -415,6 +218,7 @@ ${experiences
       `• ${exp.role} at ${exp.company} (${exp.type}) - ${exp.startDate} to ${
         exp.endDate
       }
+    Description: ${exp.description || ""}
     Skills used: ${exp.skills.join(", ")}`
   )
   .join("\n\n")}
@@ -434,16 +238,14 @@ ${certifications
   .map((cert) => `• ${cert.name} from ${cert.provider} (${cert.date})`)
   .join("\n")}
 
-=== PERSONALITY INSIGHTS ===
+=== PERSONALITY INSIGHTS & FUN FACTS ===
 ${insights.map((insight) => `• ${insight.title}: ${insight.text}`).join("\n")}
-
-=== FUN FACTS ===
 ${funFacts.map((fact) => `• ${fact.title}: ${fact.text}`).join("\n")}
 
 === SOCIAL MEDIA PRESENCE ===
 • YouTube: ${userProfile.socials.youtube.url} (${
         userProfile.socials.youtube.handle
-      })
+      }) - ${personalInfo.professionalExperience.find(e => e.company.includes("YouTube"))?.achievements || ""}
 • TikTok: ${userProfile.socials.tiktok.url} (${
         userProfile.socials.tiktok.handle
       })
@@ -457,325 +259,61 @@ ${funFacts.map((fact) => `• ${fact.title}: ${fact.text}`).join("\n")}
         userProfile.socials.instagram.handle
       })
 
-=== CONTENT CREATION ACHIEVEMENTS ===
-• 7.7K+ YouTube subscribers with 1.8M+ total views
-• 17.2K+ TikTok followers
-• Creates tech content teaching programming in practical ways
-• Started content creation in March 2021
-
-=== ENTREPRENEURSHIP ===
-• Founder of Rental Mobil City Park (June 2024 - Present)
-• Built frontend platform and digital presence for the business
-• Digital strategist and web developer for the company
-
 === CURRENT PROJECTS & ROLES ===
-• Informatics student at Universitas Multimedia Nusantara (GPA: 3.87)
-• Coordinator of Web Development for UMN Festival 2025
-• Content Creator on YouTube and TikTok
-• Entrepreneur running Rental Mobil City Park
+${personalInfo.professionalExperience
+    .filter(e => e.period.includes("Present") || e.period.includes("2025"))
+    .map(e => `• ${e.role} at ${e.company}`)
+    .join("\n")}
 
-=== WORK STYLE & PERSONALITY ===
-• Most productive during late night hours
-• Fueled by ambition, not afraid to fail
-• Endlessly curious about how things work
-• Loves meeting and chatting with new people (despite seeming reserved)
-• Ambitious and analytical, always striving to improve
-• Expert in Jakarta's public transport routes
-• Philosophy: "Every setback is a setup for the next level"
-
-=== TECHNICAL EXPERTISE DETAILS ===
-• Frontend: HTML5, CSS3, Tailwind CSS, JavaScript, TypeScript, React.js
-• Backend: PHP, Laravel, MySQL, Python, REST API development
-• DevOps: Git, GitHub, Firebase, Vercel, cPanel Hosting
-• SEO and optimization tools
-• UI/UX implementation and design-to-code conversion
-• Mobile-first development approach
+=== FAQ & KNOWLEDGE ===
+${Object.entries(personalInfo.faq).map(([q, a]) => `Q: ${q}\nA: ${a}`).join("\n\n")}
 `;
-      const contextPrompt = `You are David Garcia Saragih's AI assistant. Using the comprehensive information below, answer this question: "${input}"
 
+      const contextPrompt = `You are David Garcia Saragih's advanced AI assistant. Your goal is to represent David professionally, enthusiastically, and smartly.
+
+CONTEXT DATA (Review this carefully):
 ${comprehensiveContext}
 
-CONVERSATION CONTEXT:
-Recent messages in this conversation:
+CONVERSATION HISTORY:
 ${messages
-  .slice(-3)
-  .map((m) => `${m.type}: ${m.content}`)
+  .slice(-5) // Increased context window slightly
+  .map((m) => `${m.type.toUpperCase()}: ${m.content}`)
   .join("\n")}
 
-IMPORTANT INSTRUCTIONS:
-- Answer based ONLY on the provided information about David
-- Be friendly, conversational, and enthusiastic about David's achievements
-- Use specific details and numbers from the context
-- If the user gives a simple response like "yes", "right", "cool", "thanks" - treat it as conversational feedback, not a question
-- For affirmative responses (yes/right/correct), acknowledge their agreement and offer to share more interesting facts
-- For appreciation (thanks/cool/awesome), acknowledge gratefully and suggest related topics
-- If asked about technical skills, mention specific proficiency levels
-- If asked about experience, reference specific companies and roles
-- If asked about personality, use the insights and fun facts
-- Keep responses engaging but not too long (2-4 sentences max unless specifically asked for details)
-- Use emojis sparingly for personality
-- Always sound knowledgeable about all aspects of David's profile
-- Adapt your response style based on the conversation flow
-- If the user seems interested in a topic, offer to dive deeper into related areas
+USER INPUT: "${input}"
 
-RESPONSE STYLE:
-- Conversational and natural
-- Enthusiastic but not overwhelming
-- Context-aware of previous messages
-- Encourage further exploration with relevant follow-up suggestions`; // Get AI response with FULL comprehensive context and conversation awareness
+INSTRUCTIONS:
+1. **Act as David's AI Agent**: You are helpful, friendly, and knowledgeable about David.
+2. **Use the Context**: Base your answers strictly on the provided profile data. If the answer isn't there, say you don't know but offer to connect them with David.
+3. **Be Conversational**:
+   - If the user says "hi" or "hello", greet them warmly and mention 1-2 highlights about David (e.g., his coding or content creation).
+   - If the user compliments David (e.g., "cool", "wow"), accept it graciously on his behalf.
+   - If the user asks a short question, give a direct, concise answer.
+   - If the user asks for a CV, provide the link: ${window.location.origin}/CV-DavidGarciaSaragih.pdf
+4. **Style**: Use emojis sparingly. Be professional yet approachable.
+5. **Formatting**: Use Markdown for lists or bold text if it improves readability.
+
+Your response:`;
+      
+      // Get AI response
       const aiResponse = await generateAIResponse(contextPrompt);
 
-      // Detect response type for better suggested replies
+      // Intelligent suggestion update based on input/response analysis
+      // (Simple keyword matching for suggestions is fine to keep the UI dynamic)
       let responseContext = "welcome";
-      if (
-        inputLower.includes("youtube") ||
-        inputLower.includes("content") ||
-        inputLower.includes("subscriber")
-      ) {
-        responseContext = "youtube";
-      } else if (
-        inputLower.includes("project") ||
-        inputLower.includes("working")
-      ) {
-        responseContext = "projects";
-      } else if (
-        inputLower.includes("skill") ||
-        inputLower.includes("technical") ||
-        inputLower.includes("programming")
-      ) {
-        responseContext = "skills";
-      } else if (
-        inputLower.includes("business") ||
-        inputLower.includes("entrepreneur")
-      ) {
-        responseContext = "business";
-      } else if (
-        inputLower.includes("education") ||
-        inputLower.includes("university") ||
-        inputLower.includes("gpa")
-      ) {
-        responseContext = "education";
-      } else if (
-        inputLower.includes("contact") ||
-        inputLower.includes("email") ||
-        inputLower.includes("connect")
-      ) {
-        responseContext = "contact";
-      } else if (
-        inputLower.includes("age") ||
-        inputLower.includes("background") ||
-        inputLower.includes("personal")
-      ) {
-        responseContext = "personal";
-      }
-
+      if (inputLower.includes("youtube") || inputLower.includes("video")) responseContext = "youtube";
+      else if (inputLower.includes("project") || inputLower.includes("work")) responseContext = "projects";
+      else if (inputLower.includes("skill") || inputLower.includes("tech")) responseContext = "skills";
+      else if (inputLower.includes("contact") || inputLower.includes("email")) responseContext = "contact";
+      
       updateSuggestedReplies(responseContext);
+
       return aiResponse;
+
     } catch (error) {
       console.error("Error getting AI response:", error);
-      return handleFallbackResponse(input.toLowerCase());
+      return "I'm having a bit of trouble connecting to my brain right now! 🧠 Please try asking again in a moment.";
     }
-  };
-  const handleFallbackResponse = (input) => {
-    // Enhanced creative fallback responses using updated personalInfo
-    const lowercaseInput = input.toLowerCase();
-
-    // CV/Resume requests
-    if (findBestMatch(lowercaseInput, ["cv", "resume", "curriculum"])) {
-      const response = [
-        "📄 You can download David's comprehensive CV here:",
-        `🔗 ${window.location.origin}/CV-DavidGarciaSaragih.pdf`,
-        "",
-        "His CV includes complete details about:",
-        "• Professional experience (6+ roles)",
-        "• Technical skills across full-stack development",
-        "• Educational background (GPA: 3.87)",
-        "• Notable achievements and certifications",
-        "",
-        "What specific aspect would you like to know more about? 😊",
-      ].join("\n");
-      updateSuggestedReplies("cv");
-      return response;
-    }
-
-    // Age/Personal info queries
-    if (findBestMatch(lowercaseInput, ["age", "old", "born", "birth"])) {
-      const response = [
-        `David is currently ${personalInfo.basic.age} years old! 🎂`,
-        `Born on September 13, 2005, in ${personalInfo.basic.birthPlace}.`,
-        "",
-        "Despite his young age, he's already achieved remarkable things:",
-        `• Maintaining a ${personalInfo.educationalBackground[0].gpa} GPA in Informatics`,
-        `• Building a YouTube audience of 7.7K+ subscribers`,
-        `• Running his own business (Rental Mobil City Park)`,
-        `• Leading web development for major university events`,
-        "",
-        "Pretty impressive for a 19-year-old, right? 🚀",
-      ].join("\n");
-      updateSuggestedReplies("personal");
-      return response;
-    }
-
-    // Religion queries
-    if (
-      findBestMatch(lowercaseInput, [
-        "religion",
-        "faith",
-        "belief",
-        "christian",
-      ])
-    ) {
-      const response = [
-        `David is a ${personalInfo.basic.religion}. ✝️`,
-        "",
-        "His faith influences his approach to life and work, particularly his philosophy:",
-        `"${personalInfo.basic.philosophy}"`,
-        "",
-        "This positive mindset shows in how he handles challenges in both his studies and business ventures.",
-        "",
-        "Would you like to know more about his goals or achievements? 😊",
-      ].join("\n");
-      updateSuggestedReplies("personal");
-      return response;
-    }
-
-    // Goals and aspirations
-    if (
-      findBestMatch(lowercaseInput, [
-        "goals",
-        "future",
-        "aspirations",
-        "plans",
-        "ambitions",
-      ])
-    ) {
-      const response = [
-        "🎯 David has some exciting goals ahead!",
-        "",
-        "**Short-term goals:**",
-        personalInfo.goals.shortTerm.map((goal) => `• ${goal}`).join("\n"),
-        "",
-        "**Long-term vision:**",
-        personalInfo.goals.longTerm.map((goal) => `• ${goal}`).join("\n"),
-        "",
-        "His ultimate aim is to be at the intersection of innovation, education, and community-building! 🚀",
-        "",
-        "What aspect of his journey interests you most?",
-      ].join("\n");
-      updateSuggestedReplies("goals");
-      return response;
-    }
-
-    // Technical skills
-    if (
-      findBestMatch(lowercaseInput, [
-        "skills",
-        "technical",
-        "programming",
-        "tech",
-        "expertise",
-      ])
-    ) {
-      const response = [
-        "💻 David's technical skills are quite impressive!",
-        "",
-        "**Frontend:** " + personalInfo.technicalSkills.frontend.join(", "),
-        "**Backend:** " + personalInfo.technicalSkills.backend.join(", "),
-        "**DevOps:** " + personalInfo.technicalSkills.devops.join(", "),
-        "",
-        "**Currently mastering:** " +
-          personalInfo.interests.programming.currentlyLearning.join(", "),
-        "",
-        `He's particularly strong in full-stack development and has real-world experience through his ${personalInfo.professionalExperience.length} different roles!`,
-        "",
-        "Want to know about specific projects or his learning approach? 🤔",
-      ].join("\n");
-      updateSuggestedReplies("skills");
-      return response;
-    }
-
-    // Education queries
-    if (
-      findBestMatch(lowercaseInput, [
-        "education",
-        "study",
-        "university",
-        "school",
-        "gpa",
-      ])
-    ) {
-      const current = personalInfo.educationalBackground[0];
-      const previous = personalInfo.educationalBackground[1];
-      const response = [
-        "🎓 David's educational journey is quite impressive!",
-        "",
-        `**Currently:** ${current.level} at ${current.institution}`,
-        `📊 GPA: ${current.gpa} (${current.period})`,
-        "",
-        `**Previously:** ${previous.level} at ${previous.institution}`,
-        `🏆 Achievement: ${previous.achievement}`,
-        "",
-        "He's balancing academics with content creation and entrepreneurship - talk about time management skills! ⏰",
-        "",
-        "Curious about his projects or achievements? �",
-      ].join("\n");
-      updateSuggestedReplies("education");
-      return response;
-    }
-
-    // Contact information
-    if (
-      findBestMatch(lowercaseInput, [
-        "contact",
-        "reach",
-        "email",
-        "phone",
-        "connect",
-      ])
-    ) {
-      const contact = personalInfo.basic.contactInfo;
-      const social = personalInfo.socialMediaPresence;
-      const response = [
-        "📱 Here's how you can connect with David:",
-        "",
-        `📧 Email: ${contact.email}`,
-        `� Phone: ${contact.phone}`,
-        `🌐 Portfolio: ${contact.portfolio}`,
-        "",
-        "**Social Media:**",
-        `• GitHub: ${social.github}`,
-        `• Instagram: ${social.instagram}`,
-        `• YouTube: ${social.youtube}`,
-        `• TikTok: ${social.tiktok}`,
-        "",
-        "He's most active on YouTube and TikTok where he shares tech content! 🎥",
-        "",
-        "What's your preferred way to connect? 😊",
-      ].join("\n");
-      updateSuggestedReplies("contact");
-      return response;
-    }
-
-    // Default welcome response
-    const welcomeResponse = [
-      "👋 Hey there! I'm David's AI assistant!",
-      "",
-      "I know everything about David Garcia Saragih - from his technical skills to his entrepreneurial journey. Here's what I can tell you about:",
-      "",
-      "🎯 **Personal Info:** Age, background, goals, philosophy",
-      "💻 **Technical Skills:** Full-stack development expertise",
-      "🎓 **Education:** Current studies and achievements",
-      "💼 **Experience:** 6+ professional roles and projects",
-      "🚀 **Entrepreneurship:** His business ventures",
-      "🎥 **Content Creation:** YouTube/TikTok success",
-      "📱 **Contact Info:** How to connect with him",
-      "📄 **CV Download:** Get his complete resume",
-      "",
-      "What would you like to know about David? 😊",
-    ].join("\n");
-
-    updateSuggestedReplies("welcome");
-    return welcomeResponse;
   }; // Update suggested replies with more comprehensive options
   const updateSuggestedReplies = (context) => {
     const repliesMap = {
@@ -1064,7 +602,17 @@ RESPONSE STYLE:
                         : "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-bl-none"
                     }`}
                   >
-                    {message.content}
+                    <ReactMarkdown 
+                        components={{
+                          p: ({node, ...props}) => <p className="mb-2 last:mb-0" {...props} />,
+                          ul: ({node, ...props}) => <ul className="list-disc ml-4 mb-2" {...props} />,
+                          li: ({node, ...props}) => <li className="mb-1" {...props} />,
+                          a: ({node, ...props}) => <a className="text-cyan-500 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />,
+                          strong: ({node, ...props}) => <span className="font-bold" {...props} />
+                        }}
+                      >
+                        {message.content}
+                    </ReactMarkdown>
                   </div>
                 </motion.div>
               ))}

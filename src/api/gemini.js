@@ -14,21 +14,27 @@ if (API_KEY) {
 export const generateAIResponse = async (prompt) => {
   // Check if API is available
   if (!genAI) {
-    return "AI chatbot is currently unavailable. The API key is not configured in this environment.";
+    console.warn("Gemini API not initialized");
+    return "I apologize, but I'm currently unable to access my AI capabilities because the API key is missing. Please contact the administrator.";
   }
 
   try {
-    // Using a newer model to bypass potential SDK endpoint issues
+    // Using 'gemini-flash-latest' which is a standard alias and likely has better free tier availability
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-flash-latest",
     });
 
-    // Call the model with the content in text format
     const result = await model.generateContent(prompt);
     const response = await result.response;
     return response.text();
   } catch (error) {
     console.error("Error calling Gemini API:", error);
-    return "I apologize, but I'm having trouble connecting to the AI service right now. Please try again in a moment.";
+
+    // More specific error messages could be added here based on error.message
+    if (error.message?.includes("API key")) {
+      return "There seems to be an issue with the API key configuration.";
+    }
+
+    return `I apologize, but I'm having trouble connecting to the AI service right now. (Error: ${error.message})`;
   }
 };
