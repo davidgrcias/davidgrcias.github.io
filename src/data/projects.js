@@ -16,7 +16,7 @@ const projectsBase = [
     link: "#", // Private Enterprise System
     icon: "Bus",
     tiers: ["Advanced", "Real-World"],
-    date: "2024-Present",
+    date: "2025-11",
   },
   {
     name: "UMN Festival 2025 (Official Platform)",
@@ -32,7 +32,7 @@ const projectsBase = [
     link: "#", // Internal/Event System
     icon: "Ticket",
     tiers: ["Advanced", "Real-World", "Capstone"],
-    date: "2025-Present",
+    date: "2025-11",
   },
   {
     name: "Ark Care Ministry Website",
