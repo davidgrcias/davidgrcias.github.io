@@ -271,37 +271,94 @@ ${Object.entries(personalInfo.faq).map(([q, a]) => `Q: ${q}\nA: ${a}`).join("\n\
 
       const contextPrompt = `You are David Garcia Saragih's advanced AI assistant. Your goal is to represent David professionally, enthusiastically, and smartly.
 
-TODAY'S DATE: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+TODAY'S DATE: ${new Date().toLocaleDateString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })}
+
+=== CHAMELEON PERSONALITY MODE (CRITICAL) ===
+You must ADAPT your tone to match the user's vibe:
+- If user uses SLANG (e.g., "gw", "lu", "keren bet", "anjaye", "kocak", "bro"): Reply in "Jakarta South (Jaksel)" slang style. Be chill, use emojis, use words like "santuy", "gacor", "bestie", "literally".
+- If user is FORMAL (e.g., "Selamat siang", "Saya ingin", "Apakah"): Reply in standard, professional Indonesian/English.
+- DEFAULT: Be enthusiastic, helpful, and friendly.
+
+=== MAGIC ACTIONS (HIDDEN COMMANDS) ===
+You can CONTROL the website to help the user. Append these tags at the end of your response (invisible to user) to trigger actions:
+- User asks to see projects? -> Append [ACTION: SCROLL_PROJECTS]
+- User asks to see skills/stack? -> Append [ACTION: SCROLL_SKILLS]
+- User wants to contact/hire? -> Append [ACTION: SCROLL_CONTACT]
+- User wants to see CV/Resume? -> Append [ACTION: DOWNLOAD_CV]
+- User wants to see experiences? -> Append [ACTION: SCROLL_EXPERIENCE]
+- User asks about "About Me"? -> Append [ACTION: SCROLL_ABOUT]
+- User wants to WhatsApp? -> Append [ACTION: OPEN_WHATSAPP]
+- User wants to Email? -> Append [ACTION: OPEN_EMAIL]
+
+Example Response: "Sure bro! Cek project-project gw di bawah ini ya, keren-keren semua! 😎 [ACTION: SCROLL_PROJECTS]"
 
 CONTEXT DATA (Review this carefully):
 ${comprehensiveContext}
 
 CONVERSATION HISTORY:
 ${messages
-  .slice(-5) // Increased context window slightly
+  .slice(-5)
   .map((m) => `${m.type.toUpperCase()}: ${m.content}`)
   .join("\n")}
 
 USER INPUT: "${input}"
 
-INSTRUCTIONS:
-1. **Act as David's AI Agent**: You are helpful, friendly, and knowledgeable about David.
-2. **Use the Context**: Base your answers strictly on the provided profile data. If the answer isn't there, say you don't know but offer to connect them with David.
-3. **Be Conversational**:
-   - If the user says "hi" or "hello", greet them warmly and mention 1-2 highlights about David (e.g., his coding or content creation).
-   - If the user compliments David (e.g., "cool", "wow"), accept it graciously on his behalf.
-   - If the user asks a short question, give a direct, concise answer.
-   - If the user asks for a CV, provide the link: ${window.location.origin}/CV-DavidGarciaSaragih.pdf
-4. **Style**: Use emojis sparingly. Be professional yet approachable.
-5. **Formatting**: Use Markdown for lists or bold text if it improves readability.
+ANSWER:`;
 
-Your response:`;
-      
-      // Get AI response
       const aiResponse = await generateAIResponse(contextPrompt);
 
+      // --- MAGIC ACTION HANDLER ---
+      const actionRegex = /\[ACTION: ([^\]]+)\]/;
+      const match = aiResponse.match(actionRegex);
+      let cleanResponse = aiResponse;
+
+      if (match) {
+        const action = match[1];
+        cleanResponse = aiResponse.replace(match[0], "").trim(); // Remove tag from chat
+        console.log("🤖 Magic Action Triggered:", action);
+
+        // Execute Action with small delay to allow UI to update
+        setTimeout(() => {
+          switch (action) {
+            case "SCROLL_PROJECTS":
+              document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
+              break;
+            case "SCROLL_SKILLS":
+              document.getElementById("skills")?.scrollIntoView({ behavior: "smooth" });
+              break;
+            case "SCROLL_CONTACT":
+              document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+              break;
+            case "SCROLL_EXPERIENCE":
+              document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" });
+              break;
+            case "SCROLL_ABOUT":
+              document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
+              break;
+            case "DOWNLOAD_CV":
+               // Click the header CV button if available
+               const cvBtn = document.querySelector('button[title="Preview CV"]');
+               if(cvBtn) cvBtn.click(); 
+               else window.open("/CV-DavidGarciaSaragih.pdf", "_blank");
+              break;
+            case "OPEN_WHATSAPP":
+               if(userProfile?.contact?.whatsapp) window.open(`https://wa.me/${userProfile.contact.whatsapp}`, "_blank");
+              break;
+             case "OPEN_EMAIL":
+               if(userProfile?.contact?.email) window.open(`mailto:${userProfile.contact.email}`, "_blank");
+              break;
+            default:
+              console.warn("Unknown action:", action);
+          }
+        }, 100);
+      }
+
       // Intelligent suggestion update based on input/response analysis
-      // (Simple keyword matching for suggestions is fine to keep the UI dynamic)
       let responseContext = "welcome";
       if (inputLower.includes("youtube") || inputLower.includes("video")) responseContext = "youtube";
       else if (inputLower.includes("project") || inputLower.includes("work")) responseContext = "projects";
@@ -310,7 +367,7 @@ Your response:`;
       
       updateSuggestedReplies(responseContext);
 
-      return aiResponse;
+      return cleanResponse;
 
     } catch (error) {
       console.error("Error getting AI response:", error);
