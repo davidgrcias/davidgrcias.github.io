@@ -4,7 +4,16 @@ const personalInfo = {
   basic: {
     fullName: "David Garcia Saragih",
     birthDate: "2005-09-13", // Format: YYYY-MM-DD
-    age: 19, // As of June 2025
+    get age() {
+      const today = new Date();
+      const birthDate = new Date(this.birthDate);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age;
+    },
     birthPlace: "Jakarta, Indonesia",
     nationality: "Indonesian",
     languages: [

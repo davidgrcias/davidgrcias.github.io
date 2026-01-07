@@ -271,6 +271,8 @@ ${Object.entries(personalInfo.faq).map(([q, a]) => `Q: ${q}\nA: ${a}`).join("\n\
 
       const contextPrompt = `You are David Garcia Saragih's advanced AI assistant. Your goal is to represent David professionally, enthusiastically, and smartly.
 
+TODAY'S DATE: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+
 CONTEXT DATA (Review this carefully):
 ${comprehensiveContext}
 
