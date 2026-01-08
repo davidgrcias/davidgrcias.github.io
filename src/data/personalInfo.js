@@ -296,7 +296,7 @@ const personalInfo = {
   // CV download information
   cvInfo: {
     available: true,
-    downloadUrl: "/CV-DavidGarciaSaragih.pdf",
+    downloadUrl: "/CV_DavidGarciaSaragih.pdf",
     lastUpdated: "2025",
     description:
       "Comprehensive CV including all professional experience, technical skills, education, and achievements",

@@ -55,7 +55,7 @@ const CVModal = ({ showCVModal, setShowCVModal }) => {
           style={{ cursor: "auto" }}
         >
           <iframe
-            src="/CV-DavidGarciaSaragih.pdf"
+            src="/CV_DavidGarciaSaragih.pdf"
             className="w-full h-full border-0 rounded-lg"
             title="CV Preview"
             style={{ minHeight: "600px" }}

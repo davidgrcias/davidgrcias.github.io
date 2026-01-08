@@ -355,7 +355,7 @@ ANSWER:`;
                // Click the header CV button if available
                const cvBtn = document.querySelector('button[title="Preview CV"]');
                if(cvBtn) cvBtn.click(); 
-               else window.open("/CV-DavidGarciaSaragih.pdf", "_blank");
+               else window.open("/CV_DavidGarciaSaragih.pdf", "_blank");
               break;
             case "OPEN_WHATSAPP":
                if(userProfile?.contact?.whatsapp) window.open(`https://wa.me/${userProfile.contact.whatsapp}`, "_blank");
