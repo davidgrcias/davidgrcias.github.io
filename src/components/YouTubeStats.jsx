@@ -28,23 +28,31 @@ const YouTubeStats = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const apiKey = "REMOVED_KEY";
     const channelID = "UCDRagVrqj_v2Wbf_UFfTluw";
-    const part = "statistics";
-    const url = `https://www.googleapis.com/youtube/v3/channels?part=${part}&id=${channelID}&key=${apiKey}`;
+    
+    // Use Vercel serverless function to securely fetch YouTube stats
+    const getYouTubeApiUrl = () => {
+      // In production, call Vercel API
+      if (import.meta.env.PROD) {
+        return `https://davidgrcias-github-io-davidgrcias-projects-cc8794a2.vercel.app/api/youtube?channelId=${channelID}`;
+      }
+      // In development, also use Vercel (no local YouTube key needed)
+      return `https://davidgrcias-github-io-davidgrcias-projects-cc8794a2.vercel.app/api/youtube?channelId=${channelID}`;
+    };
+
     const fetchStats = async () => {
       try {
-        const response = await fetch(url);
+        const response = await fetch(getYouTubeApiUrl());
         if (!response.ok) throw new Error("Network response was not ok");
         const data = await response.json();
-        const channelStats = data.items[0].statistics;
         setStats({
-          subscribers: formatNumber(channelStats.subscriberCount),
-          views: formatNumber(channelStats.viewCount),
+          subscribers: formatNumber(data.subscriberCount),
+          views: formatNumber(data.viewCount),
           likes: "15K+",
           watchHours: "50K+",
         });
       } catch (error) {
+        console.error("YouTube stats fetch failed:", error);
         setStats(fallbackStats);
       } finally {
         setIsLoading(false);
