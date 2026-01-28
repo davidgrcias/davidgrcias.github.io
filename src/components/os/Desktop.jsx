@@ -13,7 +13,6 @@ import BootSequence from './BootSequence';
 import DesktopIcon from './DesktopIcon';
 import CommandPalette from './CommandPalette';
 import WindowSwitcher from './WindowSwitcher';
-import Dock from './Dock';
 import Spotlight from './Spotlight';
 import ErrorBoundary from '../ErrorBoundary';
 import MusicPlayer from '../widgets/MusicPlayer';
@@ -352,9 +351,6 @@ const DesktopContent = () => {
                 isOpen={snakeGameOpen}
                 onClose={() => setSnakeGameOpen(false)}
             />
-
-            {/* Dock */}
-            <Dock />
 
             {/* Taskbar */}
             <Taskbar />
