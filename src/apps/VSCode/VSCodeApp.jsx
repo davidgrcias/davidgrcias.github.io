@@ -6,7 +6,7 @@ import EditorArea from './components/EditorArea';
 import CopilotSidebar from './components/CopilotSidebar';
 
 const VSCodeApp = () => {
-  const [activeTab, setActiveTabTab] = useState('files'); // ActivityBar Tab
+  const [activeTab, setActiveTab] = useState('files'); // ActivityBar Tab
   const [openFiles, setOpenFiles] = useState([]);
   const [activeFileId, setActiveFileId] = useState(null);
 
@@ -17,7 +17,7 @@ const VSCodeApp = () => {
       setActiveFileId(file.id);
   };
 
-  const handCloseTab = (fileId) => {
+  const handleCloseTab = (fileId) => {
       const newFiles = openFiles.filter(f => f.id !== fileId);
       setOpenFiles(newFiles);
       
@@ -35,7 +35,7 @@ const VSCodeApp = () => {
   return (
     <div className="flex h-full w-full bg-[#1e1e1e] text-white overflow-hidden font-sans">
         {/* Left Side: Activity Bar */}
-        <ActivityBar activeTab={activeTab} setActiveTab={setActiveTabTab} />
+        <ActivityBar activeTab={activeTab} setActiveTab={setActiveTab} />
 
         {/* Sidebar Area */}
         {activeTab === 'files' && (
@@ -49,7 +49,7 @@ const VSCodeApp = () => {
                 openFiles={openFiles} 
                 activeFileId={activeFileId} 
                 onTabClick={(f) => setActiveFileId(f.id)}
-                onCloseTab={handCloseTab}
+                onCloseTab={handleCloseTab}
             />
             
             {/* Editor */}

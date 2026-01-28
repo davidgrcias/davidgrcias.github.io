@@ -19,7 +19,8 @@ const NotesApp = () => {
       try {
         setNotes(JSON.parse(savedNotes));
       } catch (error) {
-        console.error('Failed to load notes:', error);
+        // Failed to load notes - reset to empty
+        setNotes([]);
       }
     }
   }, []);
