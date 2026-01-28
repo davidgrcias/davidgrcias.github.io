@@ -3,6 +3,7 @@ import ActivityBar from './components/ActivityBar';
 import Explorer from './components/Explorer';
 import TabManager from './components/TabManager';
 import EditorArea from './components/EditorArea';
+import CopilotSidebar from './components/CopilotSidebar';
 
 const VSCodeApp = () => {
   const [activeTab, setActiveTabTab] = useState('files'); // ActivityBar Tab
@@ -36,9 +37,12 @@ const VSCodeApp = () => {
         {/* Left Side: Activity Bar */}
         <ActivityBar activeTab={activeTab} setActiveTab={setActiveTabTab} />
 
-        {/* Sidebar (Explorer) */}
+        {/* Sidebar Area */}
         {activeTab === 'files' && (
             <Explorer onOpenFile={handleOpenFile} activeFileId={activeFileId} />
+        )}
+        {activeTab === 'copilot' && (
+            <CopilotSidebar />
         )}
 
         {/* Main Content Area */}

@@ -1,11 +1,12 @@
 import React from 'react';
-import { Files, Search, GitGraph, Box, Settings } from 'lucide-react';
+import { Files, Search, GitGraph, Box, Settings, Bot } from 'lucide-react';
 
 const ActivityBar = ({ activeTab, setActiveTab }) => {
   const icons = [
     { id: 'files', icon: <Files size={24} />, label: 'Explorer' },
     { id: 'search', icon: <Search size={24} />, label: 'Search' },
     { id: 'git', icon: <GitGraph size={24} />, label: 'Source Control' },
+    { id: 'copilot', icon: <Bot size={24} />, label: 'AI Copilot' },
     { id: 'extensions', icon: <Box size={24} />, label: 'Extensions' },
   ];
 
