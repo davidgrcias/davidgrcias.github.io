@@ -1,15 +1,28 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Maximize2 } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
+import { useTouchGestures } from '../../hooks/useTouchGestures';
 
 const WindowFrame = ({ window }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
   const { isMobile, isTablet } = useDeviceDetection();
   const constraintsRef = useRef(null);
+  const [swipeOffset, setSwipeOffset] = useState(0);
   
   const isActive = activeWindowId === window.id;
+
+  // Touch gestures for mobile
+  useTouchGestures({
+    onSwipeDown: ({ deltaY }) => {
+      if (isMobile && deltaY > 100) {
+        closeWindow(window.id);
+      }
+    },
+    enabled: isMobile && isActive,
+    threshold: 80,
+  });
 
   // Responsive window dimensions
   const getWindowStyle = () => {
@@ -49,20 +62,27 @@ const WindowFrame = ({ window }) => {
     <motion.div
       drag={!isMobile && !window.isMaximized}
       dragMomentum={false}
+      dragElastic={0.1}
       dragConstraints={{ left: 0, top: 0, right: window.innerWidth - 400, bottom: window.innerHeight - 200 }}
-      initial={{ scale: 0.8, opacity: 0, y: 50 }}
+      initial={{ scale: 0.9, opacity: 0, y: 20, filter: 'blur(4px)' }}
       animate={{ 
-        scale: window.isMinimized ? 0.8 : 1, 
+        scale: window.isMinimized ? 0 : 1, 
         opacity: window.isMinimized ? 0 : 1, 
-        y: window.isMinimized ? 100 : 0,
+        y: window.isMinimized ? 200 : 0,
+        filter: window.isMinimized ? 'blur(8px)' : 'blur(0px)',
         display: window.isMinimized ? 'none' : 'flex',
       }}
-      exit={{ scale: 0.8, opacity: 0, y: 50 }}
+      exit={{ scale: 0.9, opacity: 0, y: 20, filter: 'blur(4px)' }}
       transition={{ 
         type: 'spring', 
-        damping: 25, 
-        stiffness: 300,
-        opacity: { duration: 0.2 },
+        damping: 30, 
+        stiffness: 400,
+        mass: 0.8,
+        opacity: { duration: 0.15 },
+        filter: { duration: 0.2 },
+      }}
+      whileHover={{ 
+        boxShadow: isActive ? '0 25px 50px -12px rgba(59, 130, 246, 0.3)' : '0 20px 40px -12px rgba(0, 0, 0, 0.5)'
       }}
       onMouseDown={() => focusWindow(window.id)}
       style={{ 
@@ -92,30 +112,36 @@ const WindowFrame = ({ window }) => {
 
         {/* Traffic Lights */}
         <div className="flex items-center gap-2">
-            <button 
+            <motion.button 
                 onClick={(e) => { e.stopPropagation(); minimizeWindow(window.id); }}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
                 className="p-1.5 hover:bg-yellow-500/20 rounded-full transition-all duration-200 group"
                 title="Minimize (Ctrl+M)"
                 aria-label="Minimize window"
             >
                 <Minus size={14} className="text-yellow-400 group-hover:scale-110 transition-transform" />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
                 onClick={(e) => { e.stopPropagation(); maximizeWindow(window.id); }}
+                whileHover={{ scale: 1.15 }}
+                whileTap={{ scale: 0.9 }}
                 className="p-1.5 hover:bg-green-500/20 rounded-full transition-all duration-200 group"
                 title="Maximize"
                 aria-label="Maximize window"
             >
                 <Maximize2 size={13} className="text-green-400 group-hover:scale-110 transition-transform" />
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
                 onClick={(e) => { e.stopPropagation(); closeWindow(window.id); }}
+                whileHover={{ scale: 1.15, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
                 className="p-1.5 hover:bg-red-500/20 rounded-full transition-all duration-200 group"
                 title="Close (Esc or Ctrl+W)"
                 aria-label="Close window"
             >
-                <X size={14} className="text-red-400 group-hover:scale-110 group-hover:rotate-90 transition-all" />
-            </button>
+                <X size={14} className="text-red-400 transition-all" />
+            </motion.button>
         </div>
       </div>
 

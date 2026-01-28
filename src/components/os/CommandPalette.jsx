@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Code, Terminal, MessageSquare, FolderOpen, Settings, X } from 'lucide-react';
+import { Search, Code, Terminal, MessageSquare, FolderOpen, Settings, X, User, StickyNote } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 
 /**
@@ -14,6 +14,8 @@ import TerminalApp from '../../apps/Terminal/TerminalApp';
 import MessengerApp from '../../apps/Messenger/MessengerApp';
 import FileManagerApp from '../../apps/FileManager/FileManagerApp';
 import SettingsApp from '../../apps/Settings/SettingsApp';
+import AboutMeApp from '../../apps/AboutMe/AboutMeApp';
+import NotesApp from '../../apps/Notes/NotesApp';
 
 const CommandPalette = ({ isOpen, onClose }) => {
   const { openApp, windows, closeWindow } = useOS();
@@ -53,6 +55,22 @@ const CommandPalette = ({ isOpen, onClose }) => {
       icon: <MessageSquare size={20} className="text-purple-400" />,
       keywords: ['chat', 'messenger', 'ai', 'talk'],
       action: () => openApp({ id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <MessengerApp /> }),
+    },
+    {
+      id: 'about-me',
+      title: 'About Me',
+      description: 'View personal info and skills',
+      icon: <User size={20} className="text-cyan-400" />,
+      keywords: ['about', 'bio', 'profile', 'info', 'me'],
+      action: () => openApp({ id: 'about-me', title: 'About Me', icon: <User size={24} />, component: <AboutMeApp /> }),
+    },
+    {
+      id: 'notes',
+      title: 'Quick Notes',
+      description: 'Create and manage notes',
+      icon: <StickyNote size={20} className="text-yellow-400" />,
+      keywords: ['notes', 'sticky', 'memo', 'write'],
+      action: () => openApp({ id: 'notes', title: 'Quick Notes', icon: <StickyNote size={24} />, component: <NotesApp /> }),
     },
     {
       id: 'settings',

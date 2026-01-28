@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { OSProvider, useOS } from '../../contexts/OSContext';
 import { NotificationProvider, useNotification } from '../../contexts/NotificationContext';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
-import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen } from 'lucide-react';
+import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote } from 'lucide-react';
 import Taskbar from './Taskbar';
 import WindowFrame from './WindowFrame';
 import ContextMenu from './ContextMenu';
 import BootSequence from './BootSequence';
 import DesktopIcon from './DesktopIcon';
 import CommandPalette from './CommandPalette';
+import WindowSwitcher from './WindowSwitcher';
 
 // Apps
 import VSCodeApp from '../../apps/VSCode/VSCodeApp';
@@ -16,6 +17,8 @@ import TerminalApp from '../../apps/Terminal/TerminalApp';
 import MessengerApp from '../../apps/Messenger/MessengerApp';
 import FileManagerApp from '../../apps/FileManager/FileManagerApp';
 import SettingsApp from '../../apps/Settings/SettingsApp';
+import AboutMeApp from '../../apps/AboutMe/AboutMeApp';
+import NotesApp from '../../apps/Notes/NotesApp';
 
 const DesktopContent = () => {
     const { windows, activeWindowId, closeWindow, minimizeWindow, openApp } = useOS();
@@ -23,6 +26,7 @@ const DesktopContent = () => {
     const [contextMenu, setContextMenu] = useState(null);
     const [showBoot, setShowBoot] = useState(true);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+    const [windowSwitcherOpen, setWindowSwitcherOpen] = useState(false);
 
     // Desktop shortcuts
     const desktopShortcuts = [
@@ -39,6 +43,20 @@ const DesktopContent = () => {
             icon: <FolderOpen size={32} />,
             component: <FileManagerApp />,
             title: 'File Manager',
+        },
+        { 
+            id: 'about-me', 
+            label: 'About Me', 
+            icon: <User size={32} />,
+            component: <AboutMeApp />,
+            title: 'About Me',
+        },
+        { 
+            id: 'notes', 
+            label: 'Notes', 
+            icon: <StickyNote size={32} />,
+            component: <NotesApp />,
+            title: 'Quick Notes',
         },
         { 
             id: 'messenger', 
@@ -73,7 +91,9 @@ const DesktopContent = () => {
     // Keyboard shortcuts
     useKeyboardShortcuts({
         'Escape': () => {
-            if (commandPaletteOpen) {
+            if (windowSwitcherOpen) {
+                setWindowSwitcherOpen(false);
+            } else if (commandPaletteOpen) {
                 setCommandPaletteOpen(false);
             } else if (contextMenu) {
                 setContextMenu(null);
@@ -83,6 +103,9 @@ const DesktopContent = () => {
         },
         'Ctrl+k': () => {
             setCommandPaletteOpen(true);
+        },
+        'Alt+Tab': () => {
+            setWindowSwitcherOpen(true);
         },
         'Ctrl+w': () => {
             if (activeWindowId) {
@@ -180,6 +203,12 @@ const DesktopContent = () => {
             <CommandPalette 
                 isOpen={commandPaletteOpen}
                 onClose={() => setCommandPaletteOpen(false)}
+            />
+
+            {/* Window Switcher */}
+            <WindowSwitcher 
+                isOpen={windowSwitcherOpen}
+                onClose={() => setWindowSwitcherOpen(false)}
             />
 
             {/* Taskbar */}
