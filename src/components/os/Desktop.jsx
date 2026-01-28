@@ -51,6 +51,7 @@ const DesktopContent = () => {
     const { theme } = useTheme();
     const [contextMenu, setContextMenu] = useState(null);
     const [showBoot, setShowBoot] = useState(true);
+    const hasShownWelcomeRef = React.useRef(false);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const [windowSwitcherOpen, setWindowSwitcherOpen] = useState(false);
     const [spotlightOpen, setSpotlightOpen] = useState(false);
@@ -153,7 +154,9 @@ const DesktopContent = () => {
 
     // Show welcome notification after boot
     useEffect(() => {
-        if (!showBoot) {
+        if (!showBoot && !hasShownWelcomeRef.current) {
+            hasShownWelcomeRef.current = true;
+            
             // Check if tutorial has been completed
             const tutorialCompleted = localStorage.getItem('webos-tutorial-completed');
             const tutorialSkipped = localStorage.getItem('webos-tutorial-skipped');
@@ -176,7 +179,7 @@ const DesktopContent = () => {
                 }, 500);
             }
         }
-    }, [showBoot, showNotification, unlockAchievement]);
+    }, [showBoot]);
 
     // Keyboard shortcuts
     useKeyboardShortcuts({

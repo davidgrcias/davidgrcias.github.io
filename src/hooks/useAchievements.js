@@ -157,14 +157,6 @@ export const useAchievements = () => {
       setCurrentAchievement(null);
     }, 6000);
 
-    // Also show basic notification as fallback
-    showNotification({
-      title: `🎉 ${achievement.title}`,
-      message: `${achievement.description} (+${achievement.points} XP)`,
-      type: 'success',
-      duration: 5000,
-    });
-
     // Play achievement sound (if sound is enabled)
     playAchievementSound();
   };

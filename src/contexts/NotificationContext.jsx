@@ -12,8 +12,15 @@ export const useNotification = () => useContext(NotificationContext);
  */
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
+  const recentNotificationsRef = React.useRef(new Set());
 
   const showNotification = useCallback(({ title, message, type = 'info', duration = 4000 }) => {
+    // Deduplication - prevent same notification within 2 seconds
+    const notificationKey = `${title}-${message}`;
+    if (recentNotificationsRef.current.has(notificationKey)) {
+      return null;
+    }
+    
     const id = Date.now() + Math.random();
     
     const notification = {
@@ -24,7 +31,20 @@ export const NotificationProvider = ({ children }) => {
       duration,
     };
 
-    setNotifications(prev => [...prev, notification]);
+    setNotifications(prev => {
+      // Max 3 notifications at once - remove oldest if limit exceeded
+      const updated = [...prev, notification];
+      if (updated.length > 3) {
+        return updated.slice(-3);
+      }
+      return updated;
+    });
+
+    // Add to recent notifications for deduplication
+    recentNotificationsRef.current.add(notificationKey);
+    setTimeout(() => {
+      recentNotificationsRef.current.delete(notificationKey);
+    }, 2000);
 
     // Auto-remove after duration
     if (duration > 0) {
@@ -54,12 +74,13 @@ export const NotificationProvider = ({ children }) => {
  */
 const NotificationContainer = ({ notifications, onRemove }) => {
   return (
-    <div className="fixed top-4 right-4 z-[10001] flex flex-col gap-2 pointer-events-none">
+    <div className="fixed top-4 right-4 z-[10001] pointer-events-none">
       <AnimatePresence>
-        {notifications.map((notification) => (
+        {notifications.map((notification, index) => (
           <Notification
             key={notification.id}
             notification={notification}
+            index={index}
             onClose={() => onRemove(notification.id)}
           />
         ))}
@@ -71,7 +92,7 @@ const NotificationContainer = ({ notifications, onRemove }) => {
 /**
  * Individual Notification
  */
-const Notification = ({ notification, onClose }) => {
+const Notification = ({ notification, index, onClose }) => {
   const icons = {
     success: <CheckCircle size={20} className="text-green-400" />,
     error: <AlertCircle size={20} className="text-red-400" />,
@@ -89,10 +110,15 @@ const Notification = ({ notification, onClose }) => {
   return (
     <motion.div
       initial={{ opacity: 0, x: 300, scale: 0.8 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
+      animate={{ 
+        opacity: 1, 
+        x: 0, 
+        scale: 1,
+        y: index * 110 // Stack notifications with 110px spacing
+      }}
       exit={{ opacity: 0, x: 300, scale: 0.8 }}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className={`pointer-events-auto min-w-[300px] max-w-[400px] bg-gray-900/95 backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden ${colors[notification.type]}`}
+      className={`absolute top-0 right-0 pointer-events-auto min-w-[300px] max-w-[400px] bg-gray-900/95 backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden ${colors[notification.type]}`}
     >
       <div className="p-4 flex items-start gap-3">
         {/* Icon */}

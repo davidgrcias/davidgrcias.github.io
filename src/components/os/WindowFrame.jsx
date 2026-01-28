@@ -9,7 +9,7 @@ import { useTouchGestures } from '../../hooks/useTouchGestures';
 const WindowFrame = ({ window }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
   const { theme } = useTheme();
-  const { isMobile, isTablet } = useDeviceDetection();
+  const { isMobile, isTablet, width, height } = useDeviceDetection();
   const constraintsRef = useRef(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   
@@ -65,7 +65,12 @@ const WindowFrame = ({ window }) => {
       drag={!isMobile && !window.isMaximized}
       dragMomentum={false}
       dragElastic={0.1}
-      dragConstraints={{ left: 0, top: 0, right: window.innerWidth - 400, bottom: window.innerHeight - 200 }}
+      dragConstraints={{ 
+        left: 0, 
+        top: 0, 
+        right: Math.max(0, width - 400), 
+        bottom: Math.max(0, height - 200) 
+      }}
       initial={{ scale: 0.9, opacity: 0, y: 20, filter: 'blur(4px)' }}
       animate={{ 
         scale: window.isMinimized ? 0 : 1, 
