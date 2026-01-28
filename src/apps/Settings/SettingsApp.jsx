@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Volume2, VolumeX, Moon, Sun, Monitor, Palette, Sliders, Globe, Info, Zap } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useTranslation } from '../../contexts/TranslationContext';
 import ThemeSettings from './ThemeSettings';
 
 /**
@@ -13,6 +14,7 @@ import ThemeSettings from './ThemeSettings';
 const SettingsApp = () => {
   const { toggleSounds, isSoundEnabled } = useOS();
   const { currentTheme } = useTheme();
+  const { currentLanguage, translatePage } = useTranslation();
   const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState({
     theme: 'dark',
@@ -26,7 +28,11 @@ const SettingsApp = () => {
   useEffect(() => {
     const saved = localStorage.getItem('webos-settings');
     if (saved) {
-      setSettings(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      setSettings(parsed);
+      if (parsed?.language && parsed.language !== currentLanguage) {
+        translatePage(parsed.language);
+      }
     }
     // Sync sound state
     setSettings(prev => ({ ...prev, soundEnabled: isSoundEnabled() }));
@@ -47,6 +53,9 @@ const SettingsApp = () => {
     }
     if (key === 'reducedMotion') {
       document.documentElement.style.setProperty('--motion-duration', value ? '0ms' : '300ms');
+    }
+    if (key === 'language') {
+      translatePage(value);
     }
   };
 
