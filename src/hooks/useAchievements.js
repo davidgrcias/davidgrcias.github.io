@@ -85,6 +85,18 @@ export const useAchievements = () => {
       description: 'Entered the Konami Code',
       points: 100,
     },
+    snakeMaster: {
+      id: 'snake-master',
+      title: '🐍 Snake Master',
+      description: 'Scored 50 points in Snake',
+      points: 50,
+    },
+    snakeGod: {
+      id: 'snake-god',
+      title: '👑 Snake God',
+      description: 'Scored 100 points in Snake',
+      points: 100,
+    },
   };
 
   // Get unlocked achievements from localStorage

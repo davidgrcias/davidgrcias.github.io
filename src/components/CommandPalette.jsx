@@ -20,7 +20,8 @@ import {
   Code,
   Trophy,
   ArrowRight,
-  X
+  X,
+  Gamepad2
 } from 'lucide-react';
 
 const CommandPalette = ({ 
@@ -34,7 +35,8 @@ const CommandPalette = ({
   userProfile = {},
   onNavigate,
   isDarkMode,
-  toggleTheme
+  toggleTheme,
+  onOpenSnake
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -112,6 +114,19 @@ const CommandPalette = ({
         onClose();
       },
       keywords: ['theme', 'dark', 'light', 'mode', 'appearance']
+    },
+
+    // Easter Eggs
+    { 
+      id: 'game-snake', 
+      label: 'Play Snake Game 🐍', 
+      icon: Gamepad2, 
+      category: 'Fun',
+      action: () => {
+        if (onOpenSnake) onOpenSnake();
+        onClose();
+      },
+      keywords: ['snake', 'game', 'play', 'fun', 'easter egg']
     },
 
     // Social Links (only if URLs exist)

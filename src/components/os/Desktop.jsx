@@ -1,8 +1,11 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { OSProvider, useOS } from '../../contexts/OSContext';
 import { NotificationProvider, useNotification } from '../../contexts/NotificationContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
-import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote } from 'lucide-react';
+import { useKonamiCode } from '../../hooks/useKonamiCode';
+import { useAchievements } from '../../hooks/useAchievements';
+import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Camera } from 'lucide-react';
 import Taskbar from './Taskbar';
 import WindowFrame from './WindowFrame';
 import ContextMenu from './ContextMenu';
@@ -15,6 +18,10 @@ import Spotlight from './Spotlight';
 import ErrorBoundary from '../ErrorBoundary';
 import MusicPlayer from '../widgets/MusicPlayer';
 import Calendar from '../widgets/Calendar';
+import PortfolioStats from '../widgets/PortfolioStats';
+import KonamiSecret from '../easter-eggs/KonamiSecret';
+import ScreenshotTool from '../tools/ScreenshotTool';
+import SnakeGame from '../easter-eggs/SnakeGame';
 
 // Lazy load apps for better performance
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -38,6 +45,8 @@ const AppLoadingFallback = () => (
 const DesktopContent = () => {
     const { windows, activeWindowId, closeWindow, minimizeWindow, openApp } = useOS();
     const { showNotification } = useNotification();
+    const { unlockAchievement, trackMetric } = useAchievements();
+    const { theme } = useTheme();
     const [contextMenu, setContextMenu] = useState(null);
     const [showBoot, setShowBoot] = useState(true);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -45,6 +54,16 @@ const DesktopContent = () => {
     const [spotlightOpen, setSpotlightOpen] = useState(false);
     const [musicPlayerOpen, setMusicPlayerOpen] = useState(false);
     const [calendarOpen, setCalendarOpen] = useState(false);
+    const [konamiSecretOpen, setKonamiSecretOpen] = useState(false);
+    const [screenshotToolOpen, setScreenshotToolOpen] = useState(false);
+    const [snakeGameOpen, setSnakeGameOpen] = useState(false);
+    const [statsOpen, setStatsOpen] = useState(false);
+
+    // Konami Code detection
+    useKonamiCode(() => {
+        setKonamiSecretOpen(true);
+        unlockAchievement('konamiCode');
+    });
 
     // Desktop shortcuts
     const desktopShortcuts = [
@@ -176,6 +195,10 @@ const DesktopContent = () => {
                 minimizeWindow(activeWindowId);
             }
         },
+        'Ctrl+Shift+s': () => {
+            setScreenshotToolOpen(true);
+            trackMetric('screenshot');
+        },
     });
 
     // Right-click context menu
@@ -193,6 +216,13 @@ const DesktopContent = () => {
         },
         { separator: true },
         {
+            label: 'Take Screenshot',
+            icon: <Camera size={16} />,
+            onClick: () => setScreenshotToolOpen(true),
+            shortcut: 'Ctrl+Shift+S',
+        },
+        { separator: true },
+        {
             label: 'Music Player',
             icon: <Info size={16} />,
             onClick: () => setMusicPlayerOpen(!musicPlayerOpen),
@@ -201,6 +231,11 @@ const DesktopContent = () => {
             label: 'Calendar',
             icon: <Info size={16} />,
             onClick: () => setCalendarOpen(!calendarOpen),
+        },
+        {
+            label: 'Portfolio Stats',
+            icon: <Info size={16} />,
+            onClick: () => setStatsOpen(!statsOpen),
         },
         { separator: true },
         {
@@ -234,11 +269,11 @@ const DesktopContent = () => {
 
     return (
         <div 
-            className="h-screen w-screen overflow-hidden bg-[url('https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?q=80&w=2613&auto=format&fit=crop')] bg-cover bg-center text-white relative"
+            className="h-screen w-screen overflow-hidden bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center text-white relative"
             onContextMenu={handleContextMenu}
             onClick={() => setContextMenu(null)}
         >
-            {/* Overlay */}
+            {/* Overlay - Subtle for high contrast */}
             <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
 
             {/* Desktop Icons Area (Clickable to open apps directly) */}
@@ -272,6 +307,7 @@ const DesktopContent = () => {
             <CommandPalette 
                 isOpen={commandPaletteOpen}
                 onClose={() => setCommandPaletteOpen(false)}
+                onOpenSnake={() => setSnakeGameOpen(true)}
             />
 
             {/* Window Switcher */}
@@ -294,6 +330,27 @@ const DesktopContent = () => {
             <Calendar 
                 isOpen={calendarOpen}
                 onClose={() => setCalendarOpen(false)}
+            />
+            <PortfolioStats 
+                isOpen={statsOpen}
+                onClose={() => setStatsOpen(false)}
+            />
+
+            {/* Easter Eggs */}
+            <KonamiSecret 
+                isOpen={konamiSecretOpen}
+                onClose={() => setKonamiSecretOpen(false)}
+            />
+
+            {/* Tools */}
+            {screenshotToolOpen && (
+                <ScreenshotTool onClose={() => setScreenshotToolOpen(false)} />
+            )}
+
+            {/* Easter Eggs & Games */}
+            <SnakeGame 
+                isOpen={snakeGameOpen}
+                onClose={() => setSnakeGameOpen(false)}
             />
 
             {/* Dock */}

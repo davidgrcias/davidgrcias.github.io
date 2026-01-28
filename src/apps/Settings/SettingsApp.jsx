@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Volume2, VolumeX, Moon, Sun, Monitor, Palette, Sliders, Globe, Info, Zap } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import ThemeSettings from './ThemeSettings';
 
 /**
  * Settings App
@@ -10,6 +12,8 @@ import { useOS } from '../../contexts/OSContext';
 
 const SettingsApp = () => {
   const { toggleSounds, isSoundEnabled } = useOS();
+  const { currentTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState('general');
   const [settings, setSettings] = useState({
     theme: 'dark',
     soundEnabled: true,
@@ -112,100 +116,120 @@ const SettingsApp = () => {
   );
 
   return (
-    <div className="w-full h-full bg-slate-950 text-white overflow-auto">
+    <div className="w-full h-full bg-slate-950 text-white overflow-hidden flex flex-col">
       {/* Header */}
       <div className="sticky top-0 bg-slate-900/80 backdrop-blur-xl border-b border-white/10 p-6 z-10">
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-sm text-white/60 mt-1">Customize your WebOS experience</p>
+        
+        {/* Tabs */}
+        <div className="flex gap-2 mt-4">
+          <button
+            onClick={() => setActiveTab('general')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'general'
+                ? 'bg-cyan-500/20 text-cyan-400'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            General
+          </button>
+          <button
+            onClick={() => setActiveTab('themes')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === 'themes'
+                ? 'bg-cyan-500/20 text-cyan-400'
+                : 'text-white/60 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            Themes
+          </button>
+        </div>
       </div>
 
       {/* Settings Content */}
-      <div className="p-6 max-w-3xl">
-        {/* Appearance */}
-        <SettingSection icon={Palette} title="Appearance">
-          <RadioGroup
-            label="Theme"
-            value={settings.theme}
-            onChange={(value) => updateSetting('theme', value)}
-            options={[
-              { value: 'dark', label: 'Dark', description: 'Dark mode (default)', icon: Moon },
-              { value: 'light', label: 'Light', description: 'Light mode', icon: Sun },
-              { value: 'auto', label: 'Auto', description: 'Match system preference', icon: Monitor },
-            ]}
-          />
-        </SettingSection>
+      <div className="flex-1 overflow-auto">
+        {activeTab === 'general' && (
+          <div className="p-6 max-w-3xl">
+            {/* Sound & Effects */}
+            <SettingSection icon={Volume2} title="Sound & Effects">
+              <Toggle
+                label="Sound Effects"
+                description="Play sounds when opening, closing, and minimizing windows"
+                checked={settings.soundEnabled}
+                onChange={(value) => updateSetting('soundEnabled', value)}
+              />
+              <Toggle
+                label="Reduce Motion"
+                description="Minimize animations throughout the interface"
+                checked={settings.reducedMotion}
+                onChange={(value) => updateSetting('reducedMotion', value)}
+              />
+            </SettingSection>
 
-        {/* Sound & Effects */}
-        <SettingSection icon={Volume2} title="Sound & Effects">
-          <Toggle
-            label="Sound Effects"
-            description="Play sounds when opening, closing, and minimizing windows"
-            checked={settings.soundEnabled}
-            onChange={(value) => updateSetting('soundEnabled', value)}
-          />
-          <Toggle
-            label="Reduce Motion"
-            description="Minimize animations throughout the interface"
-            checked={settings.reducedMotion}
-            onChange={(value) => updateSetting('reducedMotion', value)}
-          />
-        </SettingSection>
+            {/* Performance */}
+            <SettingSection icon={Zap} title="Performance">
+              <Toggle
+                label="Performance Mode"
+                description="Reduce visual effects for better performance on slower devices"
+                checked={settings.performanceMode}
+                onChange={(value) => updateSetting('performanceMode', value)}
+              />
+            </SettingSection>
 
-        {/* Performance */}
-        <SettingSection icon={Zap} title="Performance">
-          <Toggle
-            label="Performance Mode"
-            description="Reduce visual effects for better performance on slower devices"
-            checked={settings.performanceMode}
-            onChange={(value) => updateSetting('performanceMode', value)}
-          />
-        </SettingSection>
+            {/* Language & Region */}
+            <SettingSection icon={Globe} title="Language & Region">
+              <RadioGroup
+                label="Language"
+                value={settings.language}
+                onChange={(value) => updateSetting('language', value)}
+                options={[
+                  { value: 'en', label: 'English', description: 'English (United States)' },
+                  { value: 'id', label: 'Bahasa Indonesia', description: 'Indonesian' },
+                ]}
+              />
+            </SettingSection>
 
-        {/* Language & Region */}
-        <SettingSection icon={Globe} title="Language & Region">
-          <RadioGroup
-            label="Language"
-            value={settings.language}
-            onChange={(value) => updateSetting('language', value)}
-            options={[
-              { value: 'en', label: 'English', description: 'English (United States)' },
-              { value: 'id', label: 'Bahasa Indonesia', description: 'Indonesian' },
-            ]}
-          />
-        </SettingSection>
+            {/* About */}
+            <SettingSection icon={Info} title="About">
+              <div className="p-4 bg-white/5 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/60">Version</span>
+                  <span className="font-mono">1.0.0</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/60">Built with</span>
+                  <span>React + Vite + Tailwind</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/60">Developer</span>
+                  <span>David Gracias</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-white/60">Current Theme</span>
+                  <span className="capitalize">{currentTheme}</span>
+                </div>
+              </div>
+            </SettingSection>
 
-        {/* About */}
-        <SettingSection icon={Info} title="About">
-          <div className="p-4 bg-white/5 rounded-lg space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-white/60">Version</span>
-              <span className="font-mono">1.0.0</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/60">Built with</span>
-              <span>React + Vite + Tailwind</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-white/60">Developer</span>
-              <span>David Gracias</span>
+            {/* Reset */}
+            <div className="mt-8 pt-6 border-t border-white/10">
+              <button
+                onClick={() => {
+                  if (confirm('Reset all settings to default?')) {
+                    localStorage.removeItem('webos-settings');
+                    window.location.reload();
+                  }
+                }}
+                className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors"
+              >
+                Reset to Defaults
+              </button>
             </div>
           </div>
-        </SettingSection>
+        )}
 
-        {/* Reset */}
-        <div className="mt-8 pt-6 border-t border-white/10">
-          <button
-            onClick={() => {
-              if (confirm('Reset all settings to default?')) {
-                localStorage.removeItem('webos-settings');
-                window.location.reload();
-              }
-            }}
-            className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm transition-colors"
-          >
-            Reset to Defaults
-          </button>
-        </div>
+        {activeTab === 'themes' && <ThemeSettings />}
       </div>
     </div>
   );
