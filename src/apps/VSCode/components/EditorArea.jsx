@@ -40,7 +40,11 @@ ${demo ? `- [Live Demo](${demo})` : ''}
 
 ${readme || '### Case Study \n\nNo detailed case study available yet.'}
           `;
-          return <ReactMarkdown className="prose prose-invert prose-blue max-w-none p-8">{markdown}</ReactMarkdown>;
+          return (
+              <div className="prose prose-invert prose-blue max-w-none p-8">
+                  <ReactMarkdown>{markdown}</ReactMarkdown>
+              </div>
+          );
       }
 
       if (activeFile.id === 'about') {

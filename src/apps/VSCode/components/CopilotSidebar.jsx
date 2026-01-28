@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Bot, Loader, Sparkles } from 'lucide-react';
-import { generateAIResponse } from '../../../../api/gemini';
+import { generateAIResponse } from '../../../api/gemini';
 
 // Minimal Mock Data Imports (Since we are inside an "App", we might not have access to Context easily without passing it down. 
 // For simplicity in this extraction, I'll simplify the knowledge base access or rely on imports if they work relatively)
@@ -86,9 +86,11 @@ const CopilotSidebar = () => {
                                 <Bot size={12} /> Copilot
                              </div>
                         )}
-                        <ReactMarkdown className="prose prose-invert prose-xs max-w-none">
-                            {msg.content}
-                        </ReactMarkdown>
+                        <div className="prose prose-invert prose-xs max-w-none">
+                            <ReactMarkdown>
+                                {msg.content}
+                            </ReactMarkdown>
+                        </div>
                     </div>
                 </div>
             ))}

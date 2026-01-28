@@ -6,7 +6,6 @@ const ActivityBar = ({ activeTab, setActiveTab }) => {
     { id: 'files', icon: <Files size={24} />, label: 'Explorer' },
     { id: 'search', icon: <Search size={24} />, label: 'Search' },
     { id: 'git', icon: <GitGraph size={24} />, label: 'Source Control' },
-    { id: 'copilot', icon: <Bot size={24} />, label: 'AI Copilot' },
     { id: 'extensions', icon: <Box size={24} />, label: 'Extensions' },
   ];
 
