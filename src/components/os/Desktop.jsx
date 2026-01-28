@@ -23,6 +23,7 @@ import ScreenshotTool from '../tools/ScreenshotTool';
 import SnakeGame from '../easter-eggs/SnakeGame';
 import KeyboardHelp from './KeyboardHelp';
 import WelcomeTutorial from './WelcomeTutorial';
+import AchievementToast from '../achievements/AchievementToast';
 
 // Lazy load apps for better performance
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -46,7 +47,7 @@ const AppLoadingFallback = () => (
 const DesktopContent = () => {
     const { windows, activeWindowId, closeWindow, minimizeWindow, openApp } = useOS();
     const { showNotification } = useNotification();
-    const { unlockAchievement, trackMetric } = useAchievements();
+    const { unlockAchievement, trackMetric, currentAchievement, clearAchievement } = useAchievements();
     const { theme } = useTheme();
     const [contextMenu, setContextMenu] = useState(null);
     const [showBoot, setShowBoot] = useState(true);
@@ -385,6 +386,13 @@ const DesktopContent = () => {
             <WelcomeTutorial 
                 isOpen={welcomeTutorialOpen}
                 onClose={() => setWelcomeTutorialOpen(false)}
+            />
+
+            {/* Achievement Toast */}
+            <AchievementToast 
+                achievement={currentAchievement}
+                isVisible={!!currentAchievement}
+                onClose={clearAchievement}
             />
 
             {/* Taskbar */}

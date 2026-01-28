@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNotification } from '../contexts/NotificationContext';
 
 /**
@@ -7,95 +7,124 @@ import { useNotification } from '../contexts/NotificationContext';
  */
 export const useAchievements = () => {
   const { showNotification } = useNotification();
+  const [currentAchievement, setCurrentAchievement] = useState(null);
 
   // Achievement definitions
   const achievements = {
     firstBoot: {
       id: 'first-boot',
-      title: '🚀 Welcome Aboard!',
+      title: 'Welcome Aboard!',
       description: 'Launched the WebOS for the first time',
       points: 10,
+      icon: 'rocket',
+      rarity: 'common',
     },
     explorer: {
       id: 'explorer',
-      title: '🔍 Explorer',
+      title: 'Explorer',
       description: 'Opened 5 different apps',
       points: 20,
       requirement: 5,
+      icon: 'target',
+      rarity: 'common',
     },
     powerUser: {
       id: 'power-user',
-      title: '⚡ Power User',
+      title: 'Power User',
       description: 'Used 3 keyboard shortcuts',
       points: 30,
       requirement: 3,
+      icon: 'zap',
+      rarity: 'rare',
     },
     nightOwl: {
       id: 'night-owl',
-      title: '🦉 Night Owl',
+      title: 'Night Owl',
       description: 'Used the portfolio past midnight',
       points: 15,
+      icon: 'star',
+      rarity: 'common',
     },
     speedster: {
       id: 'speedster',
-      title: '⚡ Speedster',
+      title: 'Speedster',
       description: 'Used Spotlight search (Ctrl+Space)',
       points: 25,
+      icon: 'zap',
+      rarity: 'rare',
     },
     multitasker: {
       id: 'multitasker',
-      title: '🎯 Multitasker',
+      title: 'Multitasker',
       description: 'Had 4 windows open simultaneously',
       points: 20,
       requirement: 4,
+      icon: 'award',
+      rarity: 'rare',
     },
     musicLover: {
       id: 'music-lover',
-      title: '🎵 Music Lover',
+      title: 'Music Lover',
       description: 'Played music in the background',
       points: 15,
+      icon: 'star',
+      rarity: 'common',
     },
     organized: {
       id: 'organized',
-      title: '📅 Organized',
+      title: 'Organized',
       description: 'Checked the calendar',
       points: 10,
+      icon: 'trophy',
+      rarity: 'common',
     },
     curator: {
       id: 'curator',
-      title: '📝 Curator',
+      title: 'Curator',
       description: 'Created your first note',
       points: 15,
+      icon: 'award',
+      rarity: 'common',
     },
     socialite: {
       id: 'socialite',
-      title: '💬 Socialite',
+      title: 'Socialite',
       description: 'Opened the messenger app',
       points: 10,
+      icon: 'sparkles',
+      rarity: 'common',
     },
     developer: {
       id: 'developer',
-      title: '👨‍💻 Developer Mode',
+      title: 'Developer Mode',
       description: 'Opened DevTools (F12)',
       points: 50,
+      icon: 'crown',
+      rarity: 'epic',
     },
     konamiCode: {
       id: 'konami-code',
-      title: '🎮 Konami Master',
+      title: 'Konami Master',
       description: 'Entered the Konami Code',
       points: 100,
+      icon: 'crown',
+      rarity: 'legendary',
     },
     snakeMaster: {
       id: 'snake-master',
-      title: '🐍 Snake Master',
+      title: 'Snake Master',
       description: 'Scored 50 points in Snake',
       points: 50,
+      icon: 'award',
+      rarity: 'epic',
     },
     snakeGod: {
       id: 'snake-god',
-      title: '👑 Snake God',
+      title: 'Snake God',
       description: 'Scored 100 points in Snake',
       points: 100,
+      icon: 'crown',
+      rarity: 'legendary',
     },
   };
 
@@ -120,10 +149,18 @@ export const useAchievements = () => {
     unlocked.push(achievementId);
     localStorage.setItem('webos-achievements', JSON.stringify(unlocked));
 
-    // Show notification
+    // Set current achievement for toast display
+    setCurrentAchievement(achievement);
+
+    // Auto-hide after 6 seconds
+    setTimeout(() => {
+      setCurrentAchievement(null);
+    }, 6000);
+
+    // Also show basic notification as fallback
     showNotification({
-      title: `Achievement Unlocked! ${achievement.title}`,
-      message: `${achievement.description} (+${achievement.points} points)`,
+      title: `🎉 ${achievement.title}`,
+      message: `${achievement.description} (+${achievement.points} XP)`,
       type: 'success',
       duration: 5000,
     });
@@ -210,6 +247,8 @@ export const useAchievements = () => {
     trackMetric,
     getTotalPoints,
     getProgress,
+    currentAchievement,
+    clearAchievement: () => setCurrentAchievement(null),
   };
 };
 
