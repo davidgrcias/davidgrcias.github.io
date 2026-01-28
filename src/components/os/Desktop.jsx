@@ -268,12 +268,12 @@ const DesktopContent = () => {
 
     return (
         <div 
-            className="h-screen w-screen overflow-hidden bg-[url('https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=2670&auto=format&fit=crop')] bg-cover bg-center text-white relative"
+            className={`h-screen w-screen overflow-hidden bg-gradient-to-br ${theme.colors.bg} bg-cover bg-center text-white relative`}
             onContextMenu={handleContextMenu}
             onClick={() => setContextMenu(null)}
         >
-            {/* Overlay - Subtle for high contrast */}
-            <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
+            {/* Overlay for depth */}
+            <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
 
             {/* Desktop Icons Area (Clickable to open apps directly) */}
             <div className="relative z-10 w-full h-full p-6 flex flex-wrap gap-4 content-start items-start">

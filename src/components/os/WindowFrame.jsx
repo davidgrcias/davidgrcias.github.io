@@ -2,11 +2,13 @@ import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Minus, Maximize2 } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import { useTouchGestures } from '../../hooks/useTouchGestures';
 
 const WindowFrame = ({ window }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
+  const { theme } = useTheme();
   const { isMobile, isTablet } = useDeviceDetection();
   const constraintsRef = useRef(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
@@ -90,8 +92,8 @@ const WindowFrame = ({ window }) => {
         position: 'absolute',
         ...getWindowStyle(),
       }}
-      className={`bg-slate-900/95 backdrop-blur-xl border ${
-        isActive ? 'border-blue-500/50 shadow-2xl shadow-blue-500/20' : 'border-white/10 shadow-xl'
+      className={`${theme.colors.window} backdrop-blur-xl border ${
+        isActive ? `border-${theme.colors.accent}-500/50 shadow-2xl shadow-${theme.colors.accent}-500/20` : `${theme.colors.border} shadow-xl`
       } rounded-xl flex flex-col overflow-hidden transition-all duration-200`}
     >
       {/* Title Bar */}

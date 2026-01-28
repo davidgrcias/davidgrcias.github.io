@@ -1,5 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare, User, StickyNote } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
@@ -22,6 +23,7 @@ const AppLoadingFallback = () => (
 
 const Taskbar = ({ onOpenSpotlight }) => {
   const { windows, activeWindowId, openApp, minimizeWindow, focusWindow, toggleSounds, isSoundEnabled } = useOS();
+  const { theme } = useTheme();
   const { isMobile } = useDeviceDetection();
   
   // Real System States
@@ -94,7 +96,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
   };
 
   return (
-    <div className={`absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'} h-14 bg-gray-900/60 backdrop-blur-2xl border border-white/10 flex items-center justify-between px-4 z-[9999] shadow-2xl transition-all duration-300 hover:bg-gray-900/70`}>
+    <div className={`absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'} h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between px-4 z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95`}>
       
       {/* Start Button / Logo */}
       <div className="flex items-center">
