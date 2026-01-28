@@ -92,12 +92,12 @@ const WelcomeTutorial = ({ isOpen, onClose }) => {
 
   const handleFinish = () => {
     localStorage.setItem('webos-tutorial-completed', 'true');
-    onClose();
+    onClose('completed');
   };
 
   const handleSkip = () => {
     localStorage.setItem('webos-tutorial-skipped', 'true');
-    onClose();
+    onClose('skipped');
   };
 
   if (!isOpen) return null;

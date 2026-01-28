@@ -75,7 +75,7 @@ const AchievementToast = ({ achievement, isVisible, onClose }) => {
                             damping: 20,
                             duration: 0.5 
                         }}
-                        className="fixed top-20 right-6 z-[10000] max-w-sm"
+                        className="fixed top-6 right-6 z-[10000] max-w-sm"
                     >
                         <div className={`
                             relative overflow-hidden rounded-xl

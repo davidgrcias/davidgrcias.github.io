@@ -166,34 +166,31 @@ const DesktopContent = () => {
         ),
     };
 
-    // Show welcome notification after boot
+    // Show welcome flow after boot (mutually exclusive)
     useEffect(() => {
-        if (!showBoot && !hasShownWelcomeRef.current) {
-            hasShownWelcomeRef.current = true;
-            
-            // Check if tutorial has been completed
-            const tutorialCompleted = localStorage.getItem('webos-tutorial-completed');
-            const tutorialSkipped = localStorage.getItem('webos-tutorial-skipped');
-            
-            if (!tutorialCompleted && !tutorialSkipped) {
-                // First time user - show tutorial after a brief delay
-                setTimeout(() => {
-                    setWelcomeTutorialOpen(true);
-                }, 1000);
-            } else {
-                // Returning user - show welcome notification
-                setTimeout(() => {
-                    showNotification({
-                        title: 'Welcome back! 👋',
-                        message: 'Press Ctrl+/ for keyboard shortcuts.',
-                        type: 'info',
-                        duration: 5000,
-                    });
-                    unlockAchievement('firstBoot');
-                }, 500);
+        if (showBoot || hasShownWelcomeRef.current) return;
+        hasShownWelcomeRef.current = true;
+
+        const tutorialCompleted = localStorage.getItem('webos-tutorial-completed');
+        const tutorialSkipped = localStorage.getItem('webos-tutorial-skipped');
+        const hasTutorialFlag = Boolean(tutorialCompleted || tutorialSkipped);
+
+        const timer = setTimeout(() => {
+            if (!hasTutorialFlag) {
+                setWelcomeTutorialOpen(true);
+                return;
             }
-        }
-    }, [showBoot]);
+
+            showNotification({
+                title: 'Welcome back! 👋',
+                message: 'Press Ctrl+/ for keyboard shortcuts.',
+                type: 'info',
+                duration: 5000,
+            });
+        }, 800);
+
+        return () => clearTimeout(timer);
+    }, [showBoot, showNotification]);
 
     // Keyboard shortcuts
     useKeyboardShortcuts({
@@ -399,7 +396,13 @@ const DesktopContent = () => {
             {/* Welcome Tutorial */}
             <WelcomeTutorial 
                 isOpen={welcomeTutorialOpen}
-                onClose={() => setWelcomeTutorialOpen(false)}
+                onClose={(reason) => {
+                    setWelcomeTutorialOpen(false);
+                    unlockAchievement('firstBoot');
+                    if (!reason) {
+                        localStorage.setItem('webos-tutorial-skipped', 'true');
+                    }
+                }}
             />
 
             {/* Achievement Toast */}
