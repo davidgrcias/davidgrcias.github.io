@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { OSProvider, useOS } from '../../contexts/OSContext';
 import { NotificationProvider, useNotification } from '../../contexts/NotificationContext';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
@@ -10,15 +10,26 @@ import BootSequence from './BootSequence';
 import DesktopIcon from './DesktopIcon';
 import CommandPalette from './CommandPalette';
 import WindowSwitcher from './WindowSwitcher';
+import ErrorBoundary from '../ErrorBoundary';
 
-// Apps
-import VSCodeApp from '../../apps/VSCode/VSCodeApp';
-import TerminalApp from '../../apps/Terminal/TerminalApp';
-import MessengerApp from '../../apps/Messenger/MessengerApp';
-import FileManagerApp from '../../apps/FileManager/FileManagerApp';
-import SettingsApp from '../../apps/Settings/SettingsApp';
-import AboutMeApp from '../../apps/AboutMe/AboutMeApp';
-import NotesApp from '../../apps/Notes/NotesApp';
+// Lazy load apps for better performance
+const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
+const TerminalApp = lazy(() => import('../../apps/Terminal/TerminalApp'));
+const MessengerApp = lazy(() => import('../../apps/Messenger/MessengerApp'));
+const FileManagerApp = lazy(() => import('../../apps/FileManager/FileManagerApp'));
+const SettingsApp = lazy(() => import('../../apps/Settings/SettingsApp'));
+const AboutMeApp = lazy(() => import('../../apps/AboutMe/AboutMeApp'));
+const NotesApp = lazy(() => import('../../apps/Notes/NotesApp'));
+
+// Loading fallback for lazy-loaded apps
+const AppLoadingFallback = () => (
+    <div className="w-full h-full flex items-center justify-center bg-zinc-900">
+        <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-zinc-400 text-sm">Loading app...</p>
+        </div>
+    </div>
+);
 
 const DesktopContent = () => {
     const { windows, activeWindowId, closeWindow, minimizeWindow, openApp } = useOS();
@@ -34,42 +45,78 @@ const DesktopContent = () => {
             id: 'vscode', 
             label: 'Portfolio', 
             icon: <Code size={32} />,
-            component: <VSCodeApp />,
+            component: (
+                <Suspense fallback={<AppLoadingFallback />}>
+                    <ErrorBoundary componentName="VS Code">
+                        <VSCodeApp />
+                    </ErrorBoundary>
+                </Suspense>
+            ),
             title: 'VS Code',
         },
         { 
             id: 'file-manager', 
             label: 'Files', 
             icon: <FolderOpen size={32} />,
-            component: <FileManagerApp />,
+            component: (
+                <Suspense fallback={<AppLoadingFallback />}>
+                    <ErrorBoundary componentName="File Manager">
+                        <FileManagerApp />
+                    </ErrorBoundary>
+                </Suspense>
+            ),
             title: 'File Manager',
         },
         { 
             id: 'about-me', 
             label: 'About Me', 
             icon: <User size={32} />,
-            component: <AboutMeApp />,
+            component: (
+                <Suspense fallback={<AppLoadingFallback />}>
+                    <ErrorBoundary componentName="About Me">
+                        <AboutMeApp />
+                    </ErrorBoundary>
+                </Suspense>
+            ),
             title: 'About Me',
         },
         { 
             id: 'notes', 
             label: 'Notes', 
             icon: <StickyNote size={32} />,
-            component: <NotesApp />,
+            component: (
+                <Suspense fallback={<AppLoadingFallback />}>
+                    <ErrorBoundary componentName="Notes">
+                        <NotesApp />
+                    </ErrorBoundary>
+                </Suspense>
+            ),
             title: 'Quick Notes',
         },
         { 
             id: 'messenger', 
             label: 'Chat', 
             icon: <MessageSquare size={32} />,
-            component: <MessengerApp />,
+            component: (
+                <Suspense fallback={<AppLoadingFallback />}>
+                    <ErrorBoundary componentName="Messenger">
+                        <MessengerApp />
+                    </ErrorBoundary>
+                </Suspense>
+            ),
             title: 'Messages',
         },
         { 
             id: 'terminal', 
             label: 'Terminal', 
             icon: <Terminal size={32} />,
-            component: <TerminalApp />,
+            component: (
+                <Suspense fallback={<AppLoadingFallback />}>
+                    <ErrorBoundary componentName="Terminal">
+                        <TerminalApp />
+                    </ErrorBoundary>
+                </Suspense>
+            ),
             title: 'Terminal',
         },
     ];

@@ -1,17 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare, User, StickyNote } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
+import ErrorBoundary from '../ErrorBoundary';
 
-// Apps
-import VSCodeApp from '../../apps/VSCode/VSCodeApp';
-import TerminalApp from '../../apps/Terminal/TerminalApp';
-import MessengerApp from '../../apps/Messenger/MessengerApp';
-import FileManagerApp from '../../apps/FileManager/FileManagerApp';
-import SettingsApp from '../../apps/Settings/SettingsApp';
-import AboutMeApp from '../../apps/AboutMe/AboutMeApp';
-import NotesApp from '../../apps/Notes/NotesApp';
+// Lazy load apps
+const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
+const TerminalApp = lazy(() => import('../../apps/Terminal/TerminalApp'));
+const MessengerApp = lazy(() => import('../../apps/Messenger/MessengerApp'));
+const FileManagerApp = lazy(() => import('../../apps/FileManager/FileManagerApp'));
+const SettingsApp = lazy(() => import('../../apps/Settings/SettingsApp'));
+const AboutMeApp = lazy(() => import('../../apps/AboutMe/AboutMeApp'));
+const NotesApp = lazy(() => import('../../apps/Notes/NotesApp'));
+
+const AppLoadingFallback = () => (
+    <div className="w-full h-full flex items-center justify-center bg-zinc-900">
+        <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+    </div>
+);
 
 const Taskbar = () => {
   const { windows, activeWindowId, openApp, minimizeWindow, focusWindow, toggleSounds, isSoundEnabled } = useOS();
@@ -53,13 +60,13 @@ const Taskbar = () => {
 
   // Defined Apps
   const apps = [
-      { id: 'vscode', title: 'VS Code', icon: <Code size={24} />, component: <VSCodeApp /> },
-      { id: 'file-manager', title: 'File Manager', icon: <FolderOpen size={24} />, component: <FileManagerApp /> },
-      { id: 'about-me', title: 'About Me', icon: <User size={24} />, component: <AboutMeApp /> },
-      { id: 'notes', title: 'Notes', icon: <StickyNote size={24} />, component: <NotesApp /> },
-      { id: 'terminal', title: 'Terminal', icon: <Terminal size={24} />, component: <TerminalApp /> },
-      { id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <MessengerApp /> },
-      { id: 'settings', title: 'Settings', icon: <Settings size={24} />, component: <SettingsApp /> },
+      { id: 'vscode', title: 'VS Code', icon: <Code size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="VS Code"><VSCodeApp /></ErrorBoundary></Suspense> },
+      { id: 'file-manager', title: 'File Manager', icon: <FolderOpen size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="File Manager"><FileManagerApp /></ErrorBoundary></Suspense> },
+      { id: 'about-me', title: 'About Me', icon: <User size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense> },
+      { id: 'notes', title: 'Notes', icon: <StickyNote size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense> },
+      { id: 'terminal', title: 'Terminal', icon: <Terminal size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Terminal"><TerminalApp /></ErrorBoundary></Suspense> },
+      { id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense> },
+      { id: 'settings', title: 'Settings', icon: <Settings size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Settings"><SettingsApp /></ErrorBoundary></Suspense> },
   ];
 
   const handleAppClick = (app) => {

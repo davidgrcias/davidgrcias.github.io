@@ -1,21 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Code, Terminal, MessageSquare, FolderOpen, Settings, X, User, StickyNote } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
+import ErrorBoundary from '../ErrorBoundary';
 
 /**
  * Command Palette Component
  * Keyboard-driven app launcher (Cmd/Ctrl + K)
  */
 
-// Import apps
-import VSCodeApp from '../../apps/VSCode/VSCodeApp';
-import TerminalApp from '../../apps/Terminal/TerminalApp';
-import MessengerApp from '../../apps/Messenger/MessengerApp';
-import FileManagerApp from '../../apps/FileManager/FileManagerApp';
-import SettingsApp from '../../apps/Settings/SettingsApp';
-import AboutMeApp from '../../apps/AboutMe/AboutMeApp';
-import NotesApp from '../../apps/Notes/NotesApp';
+// Lazy load apps
+const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
+const TerminalApp = lazy(() => import('../../apps/Terminal/TerminalApp'));
+const MessengerApp = lazy(() => import('../../apps/Messenger/MessengerApp'));
+const FileManagerApp = lazy(() => import('../../apps/FileManager/FileManagerApp'));
+const SettingsApp = lazy(() => import('../../apps/Settings/SettingsApp'));
+const AboutMeApp = lazy(() => import('../../apps/AboutMe/AboutMeApp'));
+const NotesApp = lazy(() => import('../../apps/Notes/NotesApp'));
+
+const AppLoadingFallback = () => (
+    <div className="w-full h-full flex items-center justify-center bg-zinc-900">
+        <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+    </div>
+);
 
 const CommandPalette = ({ isOpen, onClose }) => {
   const { openApp, windows, closeWindow } = useOS();
@@ -30,7 +37,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
       description: 'Browse projects and experience',
       icon: <Code size={20} className="text-blue-400" />,
       keywords: ['portfolio', 'vscode', 'code', 'projects'],
-      action: () => openApp({ id: 'vscode', title: 'VS Code', icon: <Code size={24} />, component: <VSCodeApp /> }),
+      action: () => openApp({ id: 'vscode', title: 'VS Code', icon: <Code size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="VS Code"><VSCodeApp /></ErrorBoundary></Suspense> }),
     },
     {
       id: 'file-manager',
@@ -38,7 +45,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
       description: 'Browse portfolio as file system',
       icon: <FolderOpen size={20} className="text-yellow-400" />,
       keywords: ['files', 'explorer', 'folder', 'browse'],
-      action: () => openApp({ id: 'file-manager', title: 'File Manager', icon: <FolderOpen size={24} />, component: <FileManagerApp /> }),
+      action: () => openApp({ id: 'file-manager', title: 'File Manager', icon: <FolderOpen size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="File Manager"><FileManagerApp /></ErrorBoundary></Suspense> }),
     },
     {
       id: 'terminal',
@@ -46,7 +53,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
       description: 'Interactive command line',
       icon: <Terminal size={20} className="text-green-400" />,
       keywords: ['terminal', 'cli', 'command', 'shell'],
-      action: () => openApp({ id: 'terminal', title: 'Terminal', icon: <Terminal size={24} />, component: <TerminalApp /> }),
+      action: () => openApp({ id: 'terminal', title: 'Terminal', icon: <Terminal size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Terminal"><TerminalApp /></ErrorBoundary></Suspense> }),
     },
     {
       id: 'messenger',
@@ -54,7 +61,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
       description: 'Talk with AI assistant',
       icon: <MessageSquare size={20} className="text-purple-400" />,
       keywords: ['chat', 'messenger', 'ai', 'talk'],
-      action: () => openApp({ id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <MessengerApp /> }),
+      action: () => openApp({ id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense> }),
     },
     {
       id: 'about-me',
@@ -62,7 +69,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
       description: 'View personal info and skills',
       icon: <User size={20} className="text-cyan-400" />,
       keywords: ['about', 'bio', 'profile', 'info', 'me'],
-      action: () => openApp({ id: 'about-me', title: 'About Me', icon: <User size={24} />, component: <AboutMeApp /> }),
+      action: () => openApp({ id: 'about-me', title: 'About Me', icon: <User size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense> }),
     },
     {
       id: 'notes',
@@ -70,7 +77,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
       description: 'Create and manage notes',
       icon: <StickyNote size={20} className="text-yellow-400" />,
       keywords: ['notes', 'sticky', 'memo', 'write'],
-      action: () => openApp({ id: 'notes', title: 'Quick Notes', icon: <StickyNote size={24} />, component: <NotesApp /> }),
+      action: () => openApp({ id: 'notes', title: 'Quick Notes', icon: <StickyNote size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense> }),
     },
     {
       id: 'settings',
@@ -78,7 +85,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
       description: 'Configure system preferences',
       icon: <Settings size={20} className="text-gray-400" />,
       keywords: ['settings', 'preferences', 'config'],
-      action: () => openApp({ id: 'settings', title: 'Settings', icon: <Settings size={24} />, component: <SettingsApp /> }),
+      action: () => openApp({ id: 'settings', title: 'Settings', icon: <Settings size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Settings"><SettingsApp /></ErrorBoundary></Suspense> }),
     },
   ];
 
