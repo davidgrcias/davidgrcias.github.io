@@ -21,6 +21,8 @@ import PortfolioStats from '../widgets/PortfolioStats';
 import KonamiSecret from '../easter-eggs/KonamiSecret';
 import ScreenshotTool from '../tools/ScreenshotTool';
 import SnakeGame from '../easter-eggs/SnakeGame';
+import KeyboardHelp from './KeyboardHelp';
+import WelcomeTutorial from './WelcomeTutorial';
 
 // Lazy load apps for better performance
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -57,6 +59,8 @@ const DesktopContent = () => {
     const [screenshotToolOpen, setScreenshotToolOpen] = useState(false);
     const [snakeGameOpen, setSnakeGameOpen] = useState(false);
     const [statsOpen, setStatsOpen] = useState(false);
+    const [keyboardHelpOpen, setKeyboardHelpOpen] = useState(false);
+    const [welcomeTutorialOpen, setWelcomeTutorialOpen] = useState(false);
 
     // Konami Code detection
     useKonamiCode(() => {
@@ -149,16 +153,29 @@ const DesktopContent = () => {
     // Show welcome notification after boot
     useEffect(() => {
         if (!showBoot) {
-            setTimeout(() => {
-                showNotification({
-                    title: 'Welcome! 👋',
-                    message: 'Double-click apps in taskbar to open. Right-click desktop for options.',
-                    type: 'info',
-                    duration: 6000,
-                });
-            }, 500);
+            // Check if tutorial has been completed
+            const tutorialCompleted = localStorage.getItem('webos-tutorial-completed');
+            const tutorialSkipped = localStorage.getItem('webos-tutorial-skipped');
+            
+            if (!tutorialCompleted && !tutorialSkipped) {
+                // First time user - show tutorial after a brief delay
+                setTimeout(() => {
+                    setWelcomeTutorialOpen(true);
+                }, 1000);
+            } else {
+                // Returning user - show welcome notification
+                setTimeout(() => {
+                    showNotification({
+                        title: 'Welcome back! 👋',
+                        message: 'Press Ctrl+/ for keyboard shortcuts.',
+                        type: 'info',
+                        duration: 5000,
+                    });
+                    unlockAchievement('firstBoot');
+                }, 500);
+            }
         }
-    }, [showBoot, showNotification]);
+    }, [showBoot, showNotification, unlockAchievement]);
 
     // Keyboard shortcuts
     useKeyboardShortcuts({
@@ -197,6 +214,12 @@ const DesktopContent = () => {
         'Ctrl+Shift+s': () => {
             setScreenshotToolOpen(true);
             trackMetric('screenshot');
+        },
+        'Ctrl+/': () => {
+            setKeyboardHelpOpen(true);
+        },
+        '?': () => {
+            setKeyboardHelpOpen(true);
         },
     });
 
@@ -350,6 +373,18 @@ const DesktopContent = () => {
             <SnakeGame 
                 isOpen={snakeGameOpen}
                 onClose={() => setSnakeGameOpen(false)}
+            />
+
+            {/* Keyboard Help */}
+            <KeyboardHelp 
+                isOpen={keyboardHelpOpen}
+                onClose={() => setKeyboardHelpOpen(false)}
+            />
+
+            {/* Welcome Tutorial */}
+            <WelcomeTutorial 
+                isOpen={welcomeTutorialOpen}
+                onClose={() => setWelcomeTutorialOpen(false)}
             />
 
             {/* Taskbar */}
