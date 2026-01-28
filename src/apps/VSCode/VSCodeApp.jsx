@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import ActivityBar from './components/ActivityBar';
 import Explorer from './components/Explorer';
+import SearchPanel from './components/SearchPanel';
+import GitPanel from './components/GitPanel';
+import ExtensionsPanel from './components/ExtensionsPanel';
 import TabManager from './components/TabManager';
 import EditorArea from './components/EditorArea';
 import CopilotSidebar from './components/CopilotSidebar';
 
 const VSCodeApp = () => {
   const [activeTab, setActiveTab] = useState('files'); // ActivityBar Tab
-  const [openFiles, setOpenFiles] = useState([]);
+    const [openFiles, setOpenFiles] = useState([]);
   const [activeFileId, setActiveFileId] = useState(null);
+    const [allFiles, setAllFiles] = useState([]);
 
     const handleOpenFile = (file) => {
         if (!openFiles.find(f => f.id === file.id)) {
@@ -50,7 +54,20 @@ const VSCodeApp = () => {
 
         {/* Sidebar Area */}
         {activeTab === 'files' && (
-            <Explorer onOpenFile={handleOpenFile} activeFileId={activeFileId} />
+            <Explorer
+                onOpenFile={handleOpenFile}
+                activeFileId={activeFileId}
+                onFilesChange={setAllFiles}
+            />
+        )}
+        {activeTab === 'search' && (
+            <SearchPanel files={allFiles} onOpenFile={handleOpenFile} />
+        )}
+        {activeTab === 'git' && (
+            <GitPanel />
+        )}
+        {activeTab === 'extensions' && (
+            <ExtensionsPanel />
         )}
 
         {/* Main Content Area */}

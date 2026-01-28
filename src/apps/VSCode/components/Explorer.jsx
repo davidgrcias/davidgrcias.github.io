@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ChevronRight, ChevronDown, FileCode, FileJson, FileType, Folder, FolderOpen } from 'lucide-react';
 import { getFirestore, collection, getDocs } from 'firebase/firestore';
 
-const Explorer = ({ onOpenFile, activeFileId }) => {
+const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [projects, setProjects] = useState([]);
   const db = getFirestore();
@@ -43,6 +43,12 @@ const Explorer = ({ onOpenFile, activeFileId }) => {
       { id: 'contact', name: 'contact.json', type: 'json' },
       { id: 'skills', name: 'skills.xml', type: 'xml' },
   ];
+
+  useEffect(() => {
+    if (onFilesChange) {
+      onFilesChange([...staticFiles, ...projects]);
+    }
+  }, [projects, onFilesChange]);
 
   const getIcon = (name) => {
       if (name.endsWith('.js')) return <FileCode size={16} className="text-yellow-400" />;

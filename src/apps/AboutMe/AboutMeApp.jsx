@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, MapPin, Cake, Globe, Heart, Code, Mail, Phone, Linkedin, Github, Instagram, TrendingUp, Sparkles } from 'lucide-react';
+import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles } from 'lucide-react';
 
 /**
  * AboutMeApp - Personal information and bio in a beautiful card layout
@@ -12,15 +12,11 @@ const AboutMeApp = () => {
   // Personal Information
   const personalInfo = {
     name: "David Garcia Saragih",
-    birthDate: "September 13, 2005",
-    age: 19,
-    location: "Jakarta, Indonesia",
-    nationality: "Indonesian",
-    religion: "Christian",
+    title: "Full-Stack Developer & UI/UX Enthusiast",
+    location: "Jakarta",
     email: "davidgarciasaragih7@gmail.com",
-    phone: "0877-7680-3957",
     portfolio: "davidgrcias.github.io",
-    philosophy: "Every setback is a setup for the next level. I see challenges not as obstacles, but as stepping stones for growth and innovation.",
+    summary: "Full-stack developer focused on crafting fast, accessible, and delightful web experiences. I enjoy turning complex ideas into clean, scalable products.",
   };
 
   // Skills
@@ -35,7 +31,6 @@ const AboutMeApp = () => {
   const socials = [
     { name: "GitHub", icon: <Github size={20} />, link: "https://github.com/davidgrcias", color: "hover:text-purple-400" },
     { name: "LinkedIn", icon: <Linkedin size={20} />, link: "https://linkedin.com/in/david-garcia-saragih", color: "hover:text-blue-400" },
-    { name: "Instagram", icon: <Instagram size={20} />, link: "https://instagram.com/davidgrcias", color: "hover:text-pink-400" },
   ];
 
   const tabs = [
@@ -57,7 +52,7 @@ const AboutMeApp = () => {
             👨‍💻
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">{personalInfo.name}</h1>
-          <p className="text-lg text-zinc-400">Full-Stack Developer & UI/UX Enthusiast</p>
+          <p className="text-lg text-zinc-400">{personalInfo.title}</p>
           <div className="flex items-center justify-center gap-2 mt-2 text-zinc-500">
             <MapPin size={16} />
             <span>{personalInfo.location}</span>
@@ -100,15 +95,15 @@ const AboutMeApp = () => {
                   <Sparkles size={20} />
                   <h3 className="font-semibold">Life Philosophy</h3>
                 </div>
-                <p className="text-zinc-300 italic leading-relaxed">"{personalInfo.philosophy}"</p>
+                <p className="text-zinc-300 leading-relaxed">{personalInfo.summary}</p>
               </div>
 
               {/* Info Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoCard icon={<Cake />} label="Birth Date" value={personalInfo.birthDate} />
-                <InfoCard icon={<User />} label="Age" value={`${personalInfo.age} years old`} />
-                <InfoCard icon={<Globe />} label="Nationality" value={personalInfo.nationality} />
-                <InfoCard icon={<Heart />} label="Religion" value={personalInfo.religion} />
+                <InfoCard icon={<User />} label="Name" value={personalInfo.name} />
+                <InfoCard icon={<Code />} label="Role" value={personalInfo.title} />
+                <InfoCard icon={<MapPin />} label="Location" value={personalInfo.location} />
+                <InfoCard icon={<Globe />} label="Portfolio" value={personalInfo.portfolio} />
               </div>
             </div>
           )}
@@ -133,12 +128,6 @@ const AboutMeApp = () => {
                   label="Email" 
                   value={personalInfo.email}
                   link={`mailto:${personalInfo.email}`}
-                />
-                <ContactCard 
-                  icon={<Phone />} 
-                  label="Phone" 
-                  value={personalInfo.phone}
-                  link={`tel:${personalInfo.phone}`}
                 />
                 <ContactCard 
                   icon={<Globe />} 
