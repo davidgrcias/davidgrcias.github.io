@@ -8,17 +8,21 @@ import WindowFrame from './WindowFrame';
 import ContextMenu from './ContextMenu';
 import BootSequence from './BootSequence';
 import DesktopIcon from './DesktopIcon';
+import CommandPalette from './CommandPalette';
 
 // Apps
 import VSCodeApp from '../../apps/VSCode/VSCodeApp';
 import TerminalApp from '../../apps/Terminal/TerminalApp';
 import MessengerApp from '../../apps/Messenger/MessengerApp';
+import FileManagerApp from '../../apps/FileManager/FileManagerApp';
+import SettingsApp from '../../apps/Settings/SettingsApp';
 
 const DesktopContent = () => {
     const { windows, activeWindowId, closeWindow, minimizeWindow, openApp } = useOS();
     const { showNotification } = useNotification();
     const [contextMenu, setContextMenu] = useState(null);
     const [showBoot, setShowBoot] = useState(true);
+    const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
     // Desktop shortcuts
     const desktopShortcuts = [
@@ -28,6 +32,13 @@ const DesktopContent = () => {
             icon: <Code size={32} />,
             component: <VSCodeApp />,
             title: 'VS Code',
+        },
+        { 
+            id: 'file-manager', 
+            label: 'Files', 
+            icon: <FolderOpen size={32} />,
+            component: <FileManagerApp />,
+            title: 'File Manager',
         },
         { 
             id: 'messenger', 
@@ -62,11 +73,16 @@ const DesktopContent = () => {
     // Keyboard shortcuts
     useKeyboardShortcuts({
         'Escape': () => {
-            if (contextMenu) {
+            if (commandPaletteOpen) {
+                setCommandPaletteOpen(false);
+            } else if (contextMenu) {
                 setContextMenu(null);
             } else if (activeWindowId) {
                 closeWindow(activeWindowId);
             }
+        },
+        'Ctrl+k': () => {
+            setCommandPaletteOpen(true);
         },
         'Ctrl+w': () => {
             if (activeWindowId) {
@@ -159,6 +175,12 @@ const DesktopContent = () => {
                     onClose={() => setContextMenu(null)}
                 />
             )}
+
+            {/* Command Palette */}
+            <CommandPalette 
+                isOpen={commandPaletteOpen}
+                onClose={() => setCommandPaletteOpen(false)}
+            />
 
             {/* Taskbar */}
             <Taskbar />

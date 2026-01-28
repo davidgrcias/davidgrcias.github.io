@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOS } from '../../contexts/OSContext';
-import { Terminal, Code, Globe, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 
@@ -8,6 +8,8 @@ import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import VSCodeApp from '../../apps/VSCode/VSCodeApp';
 import TerminalApp from '../../apps/Terminal/TerminalApp';
 import MessengerApp from '../../apps/Messenger/MessengerApp';
+import FileManagerApp from '../../apps/FileManager/FileManagerApp';
+import SettingsApp from '../../apps/Settings/SettingsApp';
 
 const Taskbar = () => {
   const { windows, activeWindowId, openApp, minimizeWindow, focusWindow, toggleSounds, isSoundEnabled } = useOS();
@@ -50,10 +52,10 @@ const Taskbar = () => {
   // Defined Apps
   const apps = [
       { id: 'vscode', title: 'VS Code', icon: <Code size={24} />, component: <VSCodeApp /> },
+      { id: 'file-manager', title: 'File Manager', icon: <FolderOpen size={24} />, component: <FileManagerApp /> },
       { id: 'terminal', title: 'Terminal', icon: <Terminal size={24} />, component: <TerminalApp /> },
       { id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <MessengerApp /> },
-      { id: 'browser', title: 'Browser', icon: <Globe size={24} />, component: <div className="w-full h-full bg-white flex items-center justify-center text-black">Browser Placeholder</div> },
-      { id: 'settings', title: 'Settings', icon: <Settings size={24} />, component: <div className="p-10 text-white">Settings Panel</div> },
+      { id: 'settings', title: 'Settings', icon: <Settings size={24} />, component: <SettingsApp /> },
   ];
 
   const handleAppClick = (app) => {
