@@ -2,75 +2,67 @@ import { useCallback, useRef, useEffect } from 'react';
 
 /**
  * Sound effects system for WebOS
- * Uses Web Audio API for efficient sound playback
+ * Uses preloaded HTML5 Audio for reliable playback
  */
 
-// Sound data URLs (ultra-lightweight base64 encoded sounds)
-const SOUNDS = {
-  click: 'data:audio/wav;base64,UklGRhwAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=',
-  // We'll add more sounds later or use external files
-};
-
 export const useSoundEffects = () => {
-  const audioContextRef = useRef(null);
+  const soundsRef = useRef({});
   const soundsEnabledRef = useRef(true);
-  const soundBuffersRef = useRef({});
 
   useEffect(() => {
     // Check localStorage for sound preference
     const savedPref = localStorage.getItem('os-sounds-enabled');
     soundsEnabledRef.current = savedPref !== 'false';
 
-    // Initialize Web Audio Context on first user interaction
-    const initAudioContext = () => {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
+    // Preload sounds
+    const soundFiles = {
+      click: '/sounds/click.mp3',
+      open: '/sounds/open.mp3',
+      close: '/sounds/close.mp3',
+      minimize: '/sounds/minimize.mp3',
+      notification: '/sounds/notification.mp3',
+      startup: '/sounds/startup.mp3',
+      error: '/sounds/error.mp3',
+      trash: '/sounds/trash.mp3',
     };
 
-    // Initialize on first click
-    document.addEventListener('click', initAudioContext, { once: true });
+    Object.entries(soundFiles).forEach(([key, path]) => {
+      const audio = new Audio(path);
+      audio.volume = 0.4;
+      audio.preload = 'auto'; // Force preload
+      soundsRef.current[key] = audio;
 
+      // Optional: Trigger a load
+      audio.load();
+    });
+
+    // Cleanup
     return () => {
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
+      soundsRef.current = {};
     };
   }, []);
 
-  const playSound = useCallback((soundName, volume = 0.3) => {
-    if (!soundsEnabledRef.current || !audioContextRef.current) return;
+  const playSound = useCallback((soundName, volume = 0.5) => {
+    if (!soundsEnabledRef.current) return;
 
-    try {
-      const audioContext = audioContextRef.current;
-      
-      // Create oscillator for simple beep (temporary until we add real sounds)
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      // Different frequencies for different sounds
-      const frequencies = {
-        click: 800,
-        open: 600,
-        close: 400,
-        minimize: 500,
-        error: 300,
-        notification: 700,
-      };
-      
-      oscillator.frequency.value = frequencies[soundName] || 500;
-      oscillator.type = 'sine';
-      
-      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.1);
-    } catch (error) {
-      console.warn('Sound playback failed:', error);
+    const audio = soundsRef.current[soundName];
+    if (audio) {
+      // Clone node for overlapping sounds (rapid clicks) 
+      // OR simpler: just reset currentTime. Resetting is lighter.
+      try {
+        audio.currentTime = 0;
+        audio.volume = volume;
+        const playPromise = audio.play();
+
+        if (playPromise !== undefined) {
+          playPromise.catch((error) => {
+            // Auto-play might be blocked until user interaction
+            // Just ignore to prevent console spam
+          });
+        }
+      } catch (e) {
+        // Ignore
+      }
     }
   }, []);
 
