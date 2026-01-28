@@ -10,25 +10,36 @@ const VSCodeApp = () => {
   const [openFiles, setOpenFiles] = useState([]);
   const [activeFileId, setActiveFileId] = useState(null);
 
-  const handleOpenFile = (file) => {
-      if (!openFiles.find(f => f.id === file.id)) {
-          setOpenFiles([...openFiles, file]);
-      }
-      setActiveFileId(file.id);
-  };
+    const handleOpenFile = (file) => {
+        if (!openFiles.find(f => f.id === file.id)) {
+            setOpenFiles([...openFiles, file]);
+        }
+        setActiveFileId(file.id);
+    };
 
-  const handleCloseTab = (fileId) => {
-      const newFiles = openFiles.filter(f => f.id !== fileId);
-      setOpenFiles(newFiles);
-      
-      if (activeFileId === fileId) {
-          if (newFiles.length > 0) {
-              setActiveFileId(newFiles[newFiles.length - 1].id);
-          } else {
-              setActiveFileId(null);
-          }
-      }
-  };
+    const handleCloseTab = (fileId) => {
+        const newFiles = openFiles.filter(f => f.id !== fileId);
+        setOpenFiles(newFiles);
+    
+        if (activeFileId === fileId) {
+            if (newFiles.length > 0) {
+                setActiveFileId(newFiles[newFiles.length - 1].id);
+            } else {
+                setActiveFileId(null);
+            }
+        }
+    };
+  
+    // Reorder tabs (drag and drop)
+    const handleReorderTabs = (fromIndex, toIndex) => {
+        if (fromIndex === toIndex) return;
+        const updated = [...openFiles];
+        const [moved] = updated.splice(fromIndex, 1);
+        const insertIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+        const clampedIndex = Math.max(0, Math.min(updated.length, insertIndex));
+        updated.splice(clampedIndex, 0, moved);
+        setOpenFiles(updated);
+    };
 
   const activeFile = openFiles.find(f => f.id === activeFileId);
 
@@ -50,6 +61,7 @@ const VSCodeApp = () => {
                 activeFileId={activeFileId} 
                 onTabClick={(f) => setActiveFileId(f.id)}
                 onCloseTab={handleCloseTab}
+                onReorderTabs={handleReorderTabs}
             />
             
             {/* Editor */}
