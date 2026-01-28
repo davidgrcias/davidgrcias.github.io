@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Code, Terminal, MessageSquare, FolderOpen, Settings, X, User, StickyNote } from 'lucide-react';
+import { Search, Code, Terminal, MessageSquare, FolderOpen, Settings, X, User, StickyNote, Gamepad2 } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import ErrorBoundary from '../ErrorBoundary';
 
@@ -24,7 +24,7 @@ const AppLoadingFallback = () => (
     </div>
 );
 
-const CommandPalette = ({ isOpen, onClose }) => {
+const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
   const { openApp, windows, closeWindow } = useOS();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -89,6 +89,21 @@ const CommandPalette = ({ isOpen, onClose }) => {
     },
   ];
 
+  // Easter egg commands
+  const easterEggCommands = [
+    {
+      id: 'snake-game',
+      title: 'Play Snake Game 🐍',
+      description: 'Classic arcade game',
+      icon: <Gamepad2 size={20} className="text-green-400" />,
+      keywords: ['snake', 'game', 'play', 'fun', 'arcade'],
+      action: () => {
+        if (onOpenSnake) onOpenSnake();
+        onClose();
+      },
+    },
+  ];
+
   // Add close window commands for open windows
   const windowCommands = windows.map(window => ({
     id: `close-${window.id}`,
@@ -99,7 +114,7 @@ const CommandPalette = ({ isOpen, onClose }) => {
     action: () => closeWindow(window.id),
   }));
 
-  const allCommands = [...commands, ...windowCommands];
+  const allCommands = [...commands, ...easterEggCommands, ...windowCommands];
 
   // Filter commands by query
   const filteredCommands = query

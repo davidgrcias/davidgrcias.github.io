@@ -61,17 +61,26 @@ const PortfolioStats = ({ isOpen, onClose }) => {
     }
   }, [windows]);
 
-  // Track time spent (update every second)
+  // Track time spent (update every second and persist)
   useEffect(() => {
-    if (!isOpen) return;
-
     const interval = setInterval(() => {
-      const timeSpent = Math.floor((Date.now() - sessionStart) / 1000);
-      setStats(prev => ({ ...prev, sessionTime: timeSpent }));
+      const sessionTime = Math.floor((Date.now() - sessionStart) / 1000);
+      setStats(prev => {
+        const newStats = { 
+          ...prev, 
+          sessionTime,
+          timeSpent: (prev.timeSpent || 0) + 1  // Increment total time by 1 second
+        };
+        // Persist to localStorage every 10 seconds to avoid too many writes
+        if (sessionTime % 10 === 0) {
+          localStorage.setItem('webos-stats', JSON.stringify(newStats));
+        }
+        return newStats;
+      });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [isOpen, sessionStart]);
+  }, [sessionStart]);
 
   // Get achievements data
   useEffect(() => {

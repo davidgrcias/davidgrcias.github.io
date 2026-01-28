@@ -20,7 +20,7 @@ const AppLoadingFallback = () => (
     </div>
 );
 
-const Taskbar = () => {
+const Taskbar = ({ onOpenSpotlight }) => {
   const { windows, activeWindowId, openApp, minimizeWindow, focusWindow, toggleSounds, isSoundEnabled } = useOS();
   const { isMobile } = useDeviceDetection();
   
@@ -98,7 +98,11 @@ const Taskbar = () => {
       
       {/* Start Button / Logo */}
       <div className="flex items-center">
-          <button className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30 group">
+          <button 
+            onClick={() => onOpenSpotlight && onOpenSpotlight()}
+            title="Open Spotlight Search (Ctrl+Space)"
+            className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30 group"
+          >
               <span className="font-bold text-white text-sm group-hover:rotate-12 transition-transform">DG</span>
           </button>
       </div>

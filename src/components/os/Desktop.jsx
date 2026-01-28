@@ -353,7 +353,7 @@ const DesktopContent = () => {
             />
 
             {/* Taskbar */}
-            <Taskbar />
+            <Taskbar onOpenSpotlight={() => setSpotlightOpen(true)} />
         </div>
     );
 };
