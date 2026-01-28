@@ -10,7 +10,11 @@ import BootSequence from './BootSequence';
 import DesktopIcon from './DesktopIcon';
 import CommandPalette from './CommandPalette';
 import WindowSwitcher from './WindowSwitcher';
+import Dock from './Dock';
+import Spotlight from './Spotlight';
 import ErrorBoundary from '../ErrorBoundary';
+import MusicPlayer from '../widgets/MusicPlayer';
+import Calendar from '../widgets/Calendar';
 
 // Lazy load apps for better performance
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -38,6 +42,9 @@ const DesktopContent = () => {
     const [showBoot, setShowBoot] = useState(true);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const [windowSwitcherOpen, setWindowSwitcherOpen] = useState(false);
+    const [spotlightOpen, setSpotlightOpen] = useState(false);
+    const [musicPlayerOpen, setMusicPlayerOpen] = useState(false);
+    const [calendarOpen, setCalendarOpen] = useState(false);
 
     // Desktop shortcuts
     const desktopShortcuts = [
@@ -138,7 +145,9 @@ const DesktopContent = () => {
     // Keyboard shortcuts
     useKeyboardShortcuts({
         'Escape': () => {
-            if (windowSwitcherOpen) {
+            if (spotlightOpen) {
+                setSpotlightOpen(false);
+            } else if (windowSwitcherOpen) {
                 setWindowSwitcherOpen(false);
             } else if (commandPaletteOpen) {
                 setCommandPaletteOpen(false);
@@ -147,6 +156,9 @@ const DesktopContent = () => {
             } else if (activeWindowId) {
                 closeWindow(activeWindowId);
             }
+        },
+        'Ctrl+Space': () => {
+            setSpotlightOpen(true);
         },
         'Ctrl+k': () => {
             setCommandPaletteOpen(true);
@@ -181,10 +193,20 @@ const DesktopContent = () => {
         },
         { separator: true },
         {
+            label: 'Music Player',
+            icon: <Info size={16} />,
+            onClick: () => setMusicPlayerOpen(!musicPlayerOpen),
+        },
+        {
+            label: 'Calendar',
+            icon: <Info size={16} />,
+            onClick: () => setCalendarOpen(!calendarOpen),
+        },
+        { separator: true },
+        {
             label: 'Settings',
             icon: <Settings size={16} />,
-            onClick: () => console.log('Settings clicked'),
-            disabled: true,
+            onClick: () => openApp({ id: 'settings', title: 'Settings' }),
         },
         {
             label: 'About WebOS',
@@ -257,6 +279,25 @@ const DesktopContent = () => {
                 isOpen={windowSwitcherOpen}
                 onClose={() => setWindowSwitcherOpen(false)}
             />
+
+            {/* Spotlight Search */}
+            <Spotlight 
+                isOpen={spotlightOpen}
+                onClose={() => setSpotlightOpen(false)}
+            />
+
+            {/* Widgets */}
+            <MusicPlayer 
+                isOpen={musicPlayerOpen}
+                onClose={() => setMusicPlayerOpen(false)}
+            />
+            <Calendar 
+                isOpen={calendarOpen}
+                onClose={() => setCalendarOpen(false)}
+            />
+
+            {/* Dock */}
+            <Dock />
 
             {/* Taskbar */}
             <Taskbar />
