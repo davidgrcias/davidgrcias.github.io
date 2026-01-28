@@ -153,6 +153,19 @@ const DesktopContent = () => {
         },
     ];
 
+    const settingsApp = {
+        id: 'settings',
+        title: 'Settings',
+        icon: <Settings size={32} />,
+        component: (
+            <Suspense fallback={<AppLoadingFallback />}>
+                <ErrorBoundary componentName="Settings">
+                    <SettingsApp />
+                </ErrorBoundary>
+            </Suspense>
+        ),
+    };
+
     // Show welcome notification after boot
     useEffect(() => {
         if (!showBoot && !hasShownWelcomeRef.current) {
@@ -268,7 +281,7 @@ const DesktopContent = () => {
         {
             label: 'Settings',
             icon: <Settings size={16} />,
-            onClick: () => openApp({ id: 'settings', title: 'Settings' }),
+            onClick: () => openApp(settingsApp),
         },
         {
             label: 'About WebOS',
