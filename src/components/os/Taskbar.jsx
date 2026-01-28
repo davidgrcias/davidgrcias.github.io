@@ -1,10 +1,11 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare, User, StickyNote } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare, User, StickyNote, Music } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
+import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 
 // Lazy load apps
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -25,6 +26,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
   const { windows, activeWindowId, openApp, minimizeWindow, focusWindow, toggleSounds, isSoundEnabled } = useOS();
   const { theme } = useTheme();
   const { isMobile } = useDeviceDetection();
+    const { isPlaying, track, setPlayerOpen } = useMusicPlayer();
   
   // Real System States
   const [battery, setBattery] = useState({ level: 1, charging: false });
@@ -143,7 +145,22 @@ const Taskbar = ({ onOpenSpotlight }) => {
       </div>
 
       {/* System Tray */}
-      <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-4'} text-white/90`}>
+            <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-4'} text-white/90`}>
+                    {isPlaying && (
+                        <button
+                            onClick={() => setPlayerOpen(true)}
+                            className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full border border-white/10 hover:bg-white/20 transition-colors"
+                            title={`${track?.title || 'Now Playing'} — ${track?.artist || ''}`}
+                            aria-label="Music playing"
+                        >
+                            <Music size={16} className="text-pink-300" />
+                            {!isMobile && (
+                                <span className="text-xs text-white/80 truncate max-w-[120px]">
+                                    {track?.title || 'Now Playing'}
+                                </span>
+                            )}
+                        </button>
+                    )}
           <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'} px-3 py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
                
                {/* Wifi */}

@@ -1,88 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Music, Repeat, Shuffle, X } from 'lucide-react';
+import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 
 /**
  * MusicPlayer - Floating music player widget
  * Features: Play/pause, skip tracks, volume control, playlist
  */
-const MusicPlayer = ({ isOpen, onClose }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTrack, setCurrentTrack] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [volume, setVolume] = useState(70);
-  const [isMuted, setIsMuted] = useState(false);
-  const [isRepeat, setIsRepeat] = useState(false);
-  const [isShuffle, setIsShuffle] = useState(false);
+const MusicPlayer = () => {
+  const {
+    playlist,
+    track,
+    currentTrack,
+    isPlaying,
+    progress,
+    duration,
+    volume,
+    isMuted,
+    isRepeat,
+    isShuffle,
+    isPlayerOpen,
+    setPlayerOpen,
+    togglePlay,
+    next,
+    prev,
+    toggleMute,
+    toggleRepeat,
+    toggleShuffle,
+    setVolume,
+    setMuted,
+    playTrackByIndex,
+  } = useMusicPlayer();
+
   const [isExpanded, setIsExpanded] = useState(false);
-
-  // Demo playlist (can be replaced with real audio)
-  const playlist = [
-    { id: 1, title: 'Lofi Beats', artist: 'Chill Study', duration: 180, cover: '🎵' },
-    { id: 2, title: 'Coding Jazz', artist: 'Dev Tunes', duration: 240, cover: '🎷' },
-    { id: 3, title: 'Focus Flow', artist: 'Productivity Mix', duration: 200, cover: '🎹' },
-    { id: 4, title: 'Deep Work', artist: 'Concentration', duration: 220, cover: '🎸' },
-  ];
-
-  const track = playlist[currentTrack];
-
-  // Simulate progress
-  useEffect(() => {
-    if (!isPlaying) return;
-
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 100) {
-          // Track ended
-          if (isRepeat) {
-            return 0;
-          } else {
-            handleNext();
-            return 0;
-          }
-        }
-        return prev + (100 / track.duration);
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [isPlaying, currentTrack, isRepeat]);
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
-  const handleNext = () => {
-    if (isShuffle) {
-      const random = Math.floor(Math.random() * playlist.length);
-      setCurrentTrack(random);
-    } else {
-      setCurrentTrack((prev) => (prev + 1) % playlist.length);
-    }
-    setProgress(0);
-  };
-
-  const handlePrevious = () => {
-    if (progress > 5) {
-      setProgress(0);
-    } else {
-      setCurrentTrack((prev) => (prev - 1 + playlist.length) % playlist.length);
-      setProgress(0);
-    }
-  };
 
   const handleVolumeChange = (e) => {
     const newVolume = parseInt(e.target.value);
     setVolume(newVolume);
     if (newVolume === 0) {
-      setIsMuted(true);
+      setMuted(true);
     } else if (isMuted) {
-      setIsMuted(false);
+      setMuted(false);
     }
-  };
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted);
   };
 
   const formatTime = (seconds) => {
@@ -91,10 +50,10 @@ const MusicPlayer = ({ isOpen, onClose }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const currentTime = formatTime((progress / 100) * track.duration);
-  const totalTime = formatTime(track.duration);
+  const currentTime = formatTime(((progress / 100) * duration) || 0);
+  const totalTime = formatTime(duration || track.duration);
 
-  if (!isOpen) return null;
+  if (!isPlayerOpen) return null;
 
   return (
     <AnimatePresence>
@@ -129,7 +88,7 @@ const MusicPlayer = ({ isOpen, onClose }) => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={onClose}
+                onClick={() => setPlayerOpen(false)}
                 className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-purple-200"
               >
                 <X size={16} />
@@ -175,7 +134,7 @@ const MusicPlayer = ({ isOpen, onClose }) => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsShuffle(!isShuffle)}
+                onClick={toggleShuffle}
                 className={`p-2 rounded-lg transition-colors ${
                   isShuffle ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10'
                 }`}
@@ -187,7 +146,7 @@ const MusicPlayer = ({ isOpen, onClose }) => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={handlePrevious}
+                onClick={() => prev(true)}
                 className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
               >
                 <SkipBack size={20} />
@@ -197,7 +156,7 @@ const MusicPlayer = ({ isOpen, onClose }) => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={handlePlayPause}
+                onClick={togglePlay}
                 className="p-4 bg-white rounded-full text-purple-900 shadow-lg hover:shadow-xl transition-all"
               >
                 {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-0.5" />}
@@ -207,7 +166,7 @@ const MusicPlayer = ({ isOpen, onClose }) => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={handleNext}
+                onClick={() => next(true)}
                 className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
               >
                 <SkipForward size={20} />
@@ -217,7 +176,7 @@ const MusicPlayer = ({ isOpen, onClose }) => {
               <motion.button
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsRepeat(!isRepeat)}
+                onClick={toggleRepeat}
                 className={`p-2 rounded-lg transition-colors ${
                   isRepeat ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10'
                 }`}
@@ -267,11 +226,7 @@ const MusicPlayer = ({ isOpen, onClose }) => {
                 <motion.div
                   key={item.id}
                   whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                  onClick={() => {
-                    setCurrentTrack(index);
-                    setProgress(0);
-                    setIsPlaying(true);
-                  }}
+                  onClick={() => playTrackByIndex(index, true)}
                   className={`
                     flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors
                     ${currentTrack === index ? 'bg-white/10' : ''}
@@ -287,6 +242,8 @@ const MusicPlayer = ({ isOpen, onClose }) => {
               ))}
             </motion.div>
           )}
+
+          {/* Audio is managed by MusicPlayerContext */}
         </motion.div>
       </motion.div>
     </AnimatePresence>

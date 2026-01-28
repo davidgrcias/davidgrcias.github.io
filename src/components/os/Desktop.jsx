@@ -16,6 +16,7 @@ import WindowSwitcher from './WindowSwitcher';
 import Spotlight from './Spotlight';
 import ErrorBoundary from '../ErrorBoundary';
 import MusicPlayer from '../widgets/MusicPlayer';
+import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 import Calendar from '../widgets/Calendar';
 import PortfolioStats from '../widgets/PortfolioStats';
 import KonamiSecret from '../easter-eggs/KonamiSecret';
@@ -55,7 +56,7 @@ const DesktopContent = () => {
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const [windowSwitcherOpen, setWindowSwitcherOpen] = useState(false);
     const [spotlightOpen, setSpotlightOpen] = useState(false);
-    const [musicPlayerOpen, setMusicPlayerOpen] = useState(false);
+    const { isPlayerOpen, setPlayerOpen } = useMusicPlayer();
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [konamiSecretOpen, setKonamiSecretOpen] = useState(false);
     const [screenshotToolOpen, setScreenshotToolOpen] = useState(false);
@@ -251,7 +252,7 @@ const DesktopContent = () => {
         {
             label: 'Music Player',
             icon: <Info size={16} />,
-            onClick: () => setMusicPlayerOpen(!musicPlayerOpen),
+            onClick: () => setPlayerOpen(!isPlayerOpen),
         },
         {
             label: 'Calendar',
@@ -349,10 +350,7 @@ const DesktopContent = () => {
             />
 
             {/* Widgets */}
-            <MusicPlayer 
-                isOpen={musicPlayerOpen}
-                onClose={() => setMusicPlayerOpen(false)}
-            />
+            <MusicPlayer />
             <Calendar 
                 isOpen={calendarOpen}
                 onClose={() => setCalendarOpen(false)}

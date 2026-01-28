@@ -2,6 +2,7 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { TranslationProvider } from "./contexts/TranslationContext";
+import { MusicPlayerProvider } from "./contexts/MusicPlayerContext";
 import "./config/firebase"; // Initialize Firebase
 
 // Layouts & Pages
@@ -17,8 +18,9 @@ import Desktop from "./components/os/Desktop";
 export default function App() {
   return (
     <TranslationProvider>
-      <BrowserRouter>
-        <Routes>
+      <MusicPlayerProvider>
+        <BrowserRouter>
+          <Routes>
           {/* Public Route: The WebOS Portfolio Experience */}
           <Route path="/" element={<Desktop />} />
 
@@ -39,8 +41,9 @@ export default function App() {
 
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </MusicPlayerProvider>
     </TranslationProvider>
   );
 }
