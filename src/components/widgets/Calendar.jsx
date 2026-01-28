@@ -6,7 +6,7 @@ import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, Star, X } f
  * Calendar - Interactive calendar widget
  * Features: Month view, events, today highlight
  */
-const Calendar = ({ isOpen, onClose }) => {
+const Calendar = ({ isOpen, onClose, isPopover = false, wrapperClassName = '', position = 'left' }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
 
@@ -125,13 +125,19 @@ const Calendar = ({ isOpen, onClose }) => {
 
   if (!isOpen) return null;
 
+  const wrapperClasses = isPopover
+    ? `relative z-[10000] pointer-events-auto ${wrapperClassName}`
+    : position === 'right'
+        ? 'fixed bottom-20 right-6 z-[9997] pointer-events-auto'
+        : 'fixed bottom-20 left-6 z-[9997] pointer-events-auto';
+
   return (
     <AnimatePresence>
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-20 left-6 z-[9997] pointer-events-auto"
+        className={wrapperClasses}
       >
         <div className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-700 rounded-2xl shadow-2xl w-80 overflow-hidden">
           {/* Header */}
