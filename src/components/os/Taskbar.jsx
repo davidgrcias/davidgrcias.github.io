@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { Terminal, Code, Globe, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare } from 'lucide-react';
 import SystemClock from './SystemClock';
+import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 
 // Apps
 import VSCodeApp from '../../apps/VSCode/VSCodeApp';
@@ -9,13 +10,18 @@ import TerminalApp from '../../apps/Terminal/TerminalApp';
 import MessengerApp from '../../apps/Messenger/MessengerApp';
 
 const Taskbar = () => {
-  const { windows, activeWindowId, openApp, minimizeWindow, focusWindow } = useOS();
+  const { windows, activeWindowId, openApp, minimizeWindow, focusWindow, toggleSounds, isSoundEnabled } = useOS();
+  const { isMobile } = useDeviceDetection();
   
   // Real System States
   const [battery, setBattery] = useState({ level: 1, charging: false });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [volume, setVolume] = useState(80);
-  const [isMuted, setIsMuted] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
+  // Update sound state from context
+  useEffect(() => {
+    setSoundEnabled(isSoundEnabled());
+  }, [isSoundEnabled]);
 
   // Battery API
   useEffect(() => {
@@ -64,13 +70,18 @@ const Taskbar = () => {
   };
 
   const getBatteryIcon = () => {
-      if (battery.charging) return <BatteryCharging size={16} className="text-green-400" />;
-      if (battery.level < 0.2) return <Battery size={16} className="text-red-500" />;
+      if (battery.charging) return <BatteryCharging size={16} className="text-green-400 animate-pulse" />;
+      if (battery.level < 0.2) return <Battery size={16} className="text-red-500 animate-pulse" />;
       return <Battery size={16} />;
   };
 
+  const handleSoundToggle = () => {
+    const newState = toggleSounds();
+    setSoundEnabled(newState);
+  };
+
   return (
-    <div className="absolute bottom-2 left-2 right-2 h-14 bg-gray-900/60 backdrop-blur-2xl rounded-2xl border border-white/10 flex items-center justify-between px-4 z-[9999] shadow-2xl transition-all duration-300 hover:bg-gray-900/70">
+    <div className={`absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'} h-14 bg-gray-900/60 backdrop-blur-2xl border border-white/10 flex items-center justify-between px-4 z-[9999] shadow-2xl transition-all duration-300 hover:bg-gray-900/70`}>
       
       {/* Start Button / Logo */}
       <div className="flex items-center">
@@ -113,8 +124,8 @@ const Taskbar = () => {
       </div>
 
       {/* System Tray */}
-      <div className="flex items-center gap-4 text-white/90">
-          <div className="flex items-center gap-3 px-3 py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors">
+      <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-4'} text-white/90`}>
+          <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'} px-3 py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
                
                {/* Wifi */}
                <div title={isOnline ? "Connected" : "Offline"} className={isOnline ? "text-white" : "text-gray-500"}>
@@ -123,20 +134,22 @@ const Taskbar = () => {
                
                {/* Sound */}
                <div 
-                  className="cursor-pointer hover:text-cyan-400 transition-colors"
-                  onClick={() => setIsMuted(!isMuted)}
+                  className="cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95"
+                  onClick={handleSoundToggle}
+                  title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+                  aria-label={soundEnabled ? "Sounds on" : "Sounds off"}
                >
-                   {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                   {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
                </div>
 
                {/* Battery */}
-               <div className="flex items-center gap-1 cursor-help" title={`${Math.round(battery.level * 100)}%${battery.charging ? ' - Charging' : ''}`}>
+               <div className="flex items-center gap-1 cursor-help hover:text-cyan-400 transition-colors" title={`${Math.round(battery.level * 100)}%${battery.charging ? ' - Charging' : ''}`} aria-label={`Battery ${Math.round(battery.level * 100)}%`}>
                     {getBatteryIcon()}
                     <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level * 100)}%</span>
                </div>
           </div>
 
-          <SystemClock />
+          {!isMobile && <SystemClock />}
       </div>
     </div>
   );
