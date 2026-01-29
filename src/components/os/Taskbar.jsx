@@ -93,8 +93,8 @@ const Taskbar = ({ onOpenSpotlight }) => {
     };
   }, []);
 
-  // Defined Apps
-  const apps = [
+  // Defined Apps - Memoized to prevent recreation
+  const apps = React.useMemo(() => [
     { id: 'vscode', title: 'VS Code', icon: <Code size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="VS Code"><VSCodeApp /></ErrorBoundary></Suspense> },
     { id: 'file-manager', title: 'File Manager', icon: <FolderOpen size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="File Manager"><FileManagerApp /></ErrorBoundary></Suspense> },
     { id: 'about-me', title: 'About Me', icon: <User size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense> },
@@ -102,7 +102,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
     { id: 'terminal', title: 'Terminal', icon: <Terminal size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Terminal"><TerminalApp /></ErrorBoundary></Suspense> },
     { id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense> },
     { id: 'settings', title: 'Settings', icon: <Settings size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Settings"><SettingsApp /></ErrorBoundary></Suspense> },
-  ];
+  ], []);
 
   const handleAppClick = (app) => {
     const isOpen = windows.find(w => w.id === app.id);
@@ -176,17 +176,6 @@ const Taskbar = ({ onOpenSpotlight }) => {
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [contextMenu, taskbarContextMenu, networksOpen]);
-
-  // Handle search
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      // Open Spotlight with the search query
-      onOpenSpotlight && onOpenSpotlight(searchQuery);
-      setSearchQuery('');
-      setSearchFocused(false);
-    }
-  };
 
   // Taskbar right-click handler
   const handleTaskbarContextMenu = (e) => {
@@ -264,12 +253,16 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
   return (
     <div
-      className={`absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'} h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between px-4 z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95`}
+      className={`absolute ${
+        isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'
+      } h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${
+        isMobile ? 'px-2' : 'px-4'
+      } z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95`}
       onContextMenu={handleTaskbarContextMenu}
     >
 
       {/* Start Button / Logo */}
-      <div className="flex items-center gap-3 mr-2">
+      <div className="flex items-center gap-2 sm:gap-3 mr-1 sm:mr-2">
         <button
           onClick={() => onOpenSpotlight && onOpenSpotlight()}
           title="Open Spotlight Search (Ctrl+Space)"
@@ -357,10 +350,10 @@ const Taskbar = ({ onOpenSpotlight }) => {
       {/* Context Menu */}
       {contextMenu && (
         <div
-          className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[180px] z-[10000]"
+          className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[180px] max-w-[250px] z-[10000]"
           style={{
-            left: `${contextMenu.x}px`,
-            top: `${contextMenu.y - 200}px`,
+            left: Math.min(contextMenu.x, window.innerWidth - 200),
+            top: Math.max(10, contextMenu.y - 200),
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -412,10 +405,10 @@ const Taskbar = ({ onOpenSpotlight }) => {
       {/* Taskbar Settings Context Menu */}
       {taskbarContextMenu && (
         <div
-          className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[200px] z-[10000]"
+          className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[200px] max-w-[280px] z-[10000]"
           style={{
-            left: `${taskbarContextMenu.x}px`,
-            top: `${taskbarContextMenu.y - 250}px`,
+            left: Math.min(taskbarContextMenu.x, window.innerWidth - 220),
+            top: Math.max(10, taskbarContextMenu.y - 250),
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -484,23 +477,27 @@ const Taskbar = ({ onOpenSpotlight }) => {
           </button>
         </div>
       )}
-      <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-4'} text-white/90`}>
+      <div className={`flex items-center ${
+        isMobile ? 'gap-1' : 'gap-2 sm:gap-3 md:gap-4'
+      } text-white/90`}>
         {isPlaying && (
           <button
             onClick={() => setPlayerOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-full border border-white/10 hover:bg-white/20 transition-colors"
+            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-white/10 rounded-full border border-white/10 hover:bg-white/20 transition-colors"
             title={`${track?.title || 'Now Playing'} — ${track?.artist || ''}`}
             aria-label="Music playing"
           >
-            <Music size={16} className="text-pink-300" />
+            <Music size={14} className="sm:w-4 sm:h-4 text-pink-300" />
             {!isMobile && (
-              <span className="text-xs text-white/80 truncate max-w-[120px]">
+              <span className="text-xs text-white/80 truncate max-w-[80px] sm:max-w-[100px] md:max-w-[120px]">
                 {track?.title || 'Now Playing'}
               </span>
             )}
           </button>
         )}
-        <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'} px-3 py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
+        <div className={`flex items-center ${
+          isMobile ? 'gap-2 px-2' : 'gap-2 sm:gap-3 px-2 sm:px-3'
+        } py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
 
           {/* Wifi */}
           <div 
@@ -519,10 +516,11 @@ const Taskbar = ({ onOpenSpotlight }) => {
           {/* Networks Dropdown */}
           {networksOpen && isOnline && (
             <div
-              className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[280px] z-[10000]"
+              className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 w-[90vw] sm:w-[280px] md:w-[320px] max-w-[350px] z-[10000]"
               style={{
-                right: isMobile ? '10px' : '80px',
+                right: isMobile ? '5vw' : 'clamp(10px, 5vw, 80px)',
                 bottom: isMobile ? '70px' : '80px',
+                maxHeight: 'calc(100vh - 150px)',
               }}
               onClick={(e) => e.stopPropagation()}
             >

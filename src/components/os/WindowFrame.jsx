@@ -71,10 +71,15 @@ const WindowFrame = ({ window }) => {
     <motion.div
       drag={!isMobile && !window.isMaximized}
       dragControls={dragControls}
-      dragListener={false} // Disable auto drag listener, we control it manually
+      dragListener={false}
       dragMomentum={false}
-      dragElastic={0} // No rubber banding - instant follow
-      dragConstraints={false} // No constraints - completely free movement
+      dragElastic={0}
+      dragConstraints={{
+        top: 0,
+        left: 0,
+        right: width - 100,
+        bottom: height - 100,
+      }}
       onDragStart={() => setIsDragging(true)}
       onDragEnd={() => setIsDragging(false)}
       initial={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -86,13 +91,9 @@ const WindowFrame = ({ window }) => {
       }}
       exit={{ scale: 0.9, opacity: 0, y: 20 }}
       transition={{
-        // Only apply spring to non-drag animations
-        type: 'spring',
-        damping: 25,
-        stiffness: 300,
-        // Make drag instant with no transition
-        x: { duration: 0 },
-        y: { duration: 0 },
+        type: isDragging ? false : 'spring',
+        damping: isDragging ? 0 : 25,
+        stiffness: isDragging ? 0 : 300,
       }}
       whileHover={{
         boxShadow: isActive ? '0 25px 50px -12px rgba(59, 130, 246, 0.3)' : undefined

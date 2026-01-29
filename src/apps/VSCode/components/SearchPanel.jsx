@@ -11,7 +11,7 @@ const SearchPanel = ({ files = [], onOpenFile }) => {
   }, [files, query]);
 
   return (
-    <div className="w-60 bg-[#252526] text-[#CCCCCC] text-sm h-full flex flex-col font-sans select-none border-r border-[#1e1e1e]">
+    <div className="w-full bg-[#252526] text-[#CCCCCC] text-sm h-full flex flex-col font-sans select-none border-r border-[#1e1e1e]">
       <div className="text-xs font-bold px-4 py-2 uppercase tracking-wider text-[#BBBBBB]">Search</div>
       <div className="px-3 py-2">
         <div className="flex items-center gap-2 px-2 py-1.5 bg-[#1f1f1f] border border-[#3c3c3c] rounded">

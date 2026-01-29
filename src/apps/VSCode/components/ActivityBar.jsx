@@ -15,10 +15,9 @@ const ActivityBar = ({ activeTab, setActiveTab }) => {
         {icons.map((item) => (
           <button
             key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`w-full flex justify-center py-2 relative group hover:text-white transition-colors ${
-              activeTab === item.id ? 'text-white border-l-2 border-white' : 'text-[#858585] border-l-2 border-transparent'
-            }`}
+            onClick={() => setActiveTab(activeTab === item.id ? null : item.id)}
+            className={`w-full flex justify-center py-2 relative group hover:text-white transition-colors ${activeTab === item.id ? 'text-white border-l-2 border-white' : 'text-[#858585] border-l-2 border-transparent'
+              }`}
             title={item.label}
           >
             {item.icon}
@@ -26,9 +25,9 @@ const ActivityBar = ({ activeTab, setActiveTab }) => {
         ))}
       </div>
       <div className="pb-2">
-         <button className="text-[#858585] hover:text-white p-2">
-            <Settings size={24} />
-         </button>
+        <button className="text-[#858585] hover:text-white p-2">
+          <Settings size={24} />
+        </button>
       </div>
     </div>
   );

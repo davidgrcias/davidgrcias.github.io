@@ -9,7 +9,7 @@ const ExtensionsPanel = () => {
   ];
 
   return (
-    <div className="w-60 bg-[#252526] text-[#CCCCCC] text-sm h-full flex flex-col font-sans select-none border-r border-[#1e1e1e]">
+    <div className="w-full bg-[#252526] text-[#CCCCCC] text-sm h-full flex flex-col font-sans select-none border-r border-[#1e1e1e]">
       <div className="text-xs font-bold px-4 py-2 uppercase tracking-wider text-[#BBBBBB]">Extensions</div>
       <div className="flex-1 overflow-y-auto">
         {extensions.map((ext) => (

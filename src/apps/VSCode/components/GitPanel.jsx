@@ -6,7 +6,7 @@ const GitPanel = () => {
   const unstaged = ['src/apps/VSCode/VSCodeApp.jsx', 'src/components/widgets/MusicPlayer.jsx'];
 
   return (
-    <div className="w-60 bg-[#252526] text-[#CCCCCC] text-sm h-full flex flex-col font-sans select-none border-r border-[#1e1e1e]">
+    <div className="w-full bg-[#252526] text-[#CCCCCC] text-sm h-full flex flex-col font-sans select-none border-r border-[#1e1e1e]">
       <div className="text-xs font-bold px-4 py-2 uppercase tracking-wider text-[#BBBBBB]">Source Control</div>
       <div className="px-4 py-2 text-xs flex items-center gap-2 text-[#9aa0a6]">
         <GitBranch size={14} />

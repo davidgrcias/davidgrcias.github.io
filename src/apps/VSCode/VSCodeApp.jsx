@@ -14,6 +14,36 @@ const VSCodeApp = () => {
     const [activeFileId, setActiveFileId] = useState(null);
     const [allFiles, setAllFiles] = useState([]);
 
+    // Sidebar Resizing
+    const [sidebarWidth, setSidebarWidth] = useState(250);
+    const [isResizing, setIsResizing] = useState(false);
+
+    const startResizing = React.useCallback(() => {
+        setIsResizing(true);
+    }, []);
+
+    const stopResizing = React.useCallback(() => {
+        setIsResizing(false);
+    }, []);
+
+    const resize = React.useCallback((mouseMoveEvent) => {
+        if (isResizing) {
+            const newWidth = mouseMoveEvent.clientX - 48; // 48px is roughly the activity bar width
+            if (newWidth > 150 && newWidth < 600) {
+                setSidebarWidth(newWidth);
+            }
+        }
+    }, [isResizing]);
+
+    React.useEffect(() => {
+        window.addEventListener('mousemove', resize);
+        window.addEventListener('mouseup', stopResizing);
+        return () => {
+            window.removeEventListener('mousemove', resize);
+            window.removeEventListener('mouseup', stopResizing);
+        };
+    }, [resize, stopResizing]);
+
     const handleOpenFile = (file) => {
         if (!openFiles.find(f => f.id === file.id)) {
             setOpenFiles([...openFiles, file]);
@@ -53,21 +83,34 @@ const VSCodeApp = () => {
             <ActivityBar activeTab={activeTab} setActiveTab={setActiveTab} />
 
             {/* Sidebar Area */}
-            {activeTab === 'files' && (
-                <Explorer
-                    onOpenFile={handleOpenFile}
-                    activeFileId={activeFileId}
-                    onFilesChange={setAllFiles}
-                />
-            )}
-            {activeTab === 'search' && (
-                <SearchPanel files={allFiles} onOpenFile={handleOpenFile} />
-            )}
-            {activeTab === 'git' && (
-                <GitPanel />
-            )}
-            {activeTab === 'extensions' && (
-                <ExtensionsPanel />
+            {activeTab && (
+                <div
+                    className="flex h-full relative"
+                    style={{ width: sidebarWidth }}
+                >
+                    {activeTab === 'files' && (
+                        <Explorer
+                            onOpenFile={handleOpenFile}
+                            activeFileId={activeFileId}
+                            onFilesChange={setAllFiles}
+                        />
+                    )}
+                    {activeTab === 'search' && (
+                        <SearchPanel files={allFiles} onOpenFile={handleOpenFile} />
+                    )}
+                    {activeTab === 'git' && (
+                        <GitPanel />
+                    )}
+                    {activeTab === 'extensions' && (
+                        <ExtensionsPanel />
+                    )}
+
+                    {/* Resize Handle */}
+                    <div
+                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 active:bg-blue-500 z-10"
+                        onMouseDown={startResizing}
+                    />
+                </div>
             )}
 
             {/* Main Content Area */}

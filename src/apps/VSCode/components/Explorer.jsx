@@ -5,9 +5,6 @@ import { getFirestore, collection, getDocs } from 'firebase/firestore';
 const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [projects, setProjects] = useState([]);
-  const [width, setWidth] = useState(240); // Default width
-  const [isResizing, setIsResizing] = useState(false);
-  const resizerRef = useRef(null);
   const db = getFirestore();
 
   useEffect(() => {
@@ -53,40 +50,6 @@ const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
     }
   }, [projects, onFilesChange]);
 
-  // Resize handlers
-  const handleMouseDown = (e) => {
-    e.preventDefault();
-    setIsResizing(true);
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (!isResizing) return;
-
-      // Get the new width based on mouse position
-      // Offset by activity bar width (48px)
-      const newWidth = e.clientX - 48;
-      // Clamp between 150 and 400
-      if (newWidth >= 150 && newWidth <= 400) {
-        setWidth(newWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing]);
-
   const getIcon = (name) => {
     if (name.endsWith('.js')) return <FileCode size={16} className="text-yellow-400" />;
     if (name.endsWith('.json')) return <FileJson size={16} className="text-yellow-400" />;
@@ -96,8 +59,7 @@ const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
 
   return (
     <div
-      className="bg-[#252526] text-[#CCCCCC] text-sm h-full flex flex-col font-sans select-none relative"
-      style={{ width: `${width}px`, minWidth: '150px', maxWidth: '400px' }}
+      className="bg-[#252526] text-[#CCCCCC] text-sm h-full flex flex-col font-sans select-none relative w-full"
     >
       <div className="text-xs font-bold px-4 py-2 uppercase tracking-wider text-[#BBBBBB]">Explorer</div>
 
@@ -149,13 +111,6 @@ const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
           )}
         </div>
       </div>
-
-      {/* Resize Handle */}
-      <div
-        ref={resizerRef}
-        onMouseDown={handleMouseDown}
-        className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-[#007acc] transition-colors ${isResizing ? 'bg-[#007acc]' : 'bg-transparent'}`}
-      />
     </div>
   );
 };
