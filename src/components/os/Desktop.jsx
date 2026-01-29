@@ -69,11 +69,54 @@ const DesktopContent = () => {
     const [welcomeTutorialOpen, setWelcomeTutorialOpen] = useState(false);
     const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
 
-    // Icon Positioning State
-    const [iconPositions, setIconPositions] = useState(() => {
-        const saved = localStorage.getItem('webos-desktop-icons');
-        return saved ? JSON.parse(saved) : {};
+    // Grid configuration constants - CENTERED with equal margins
+    const GRID_SIZE = 120; // pixels per cell (bigger for more visible icons)
+    const TASKBAR_HEIGHT = 48;
+    const MIN_MARGIN = 24; // minimum margin on all sides
+    
+    // Calculate how many cells fit with equal margins
+    const availableWidth = window.innerWidth - (MIN_MARGIN * 2);
+    const availableHeight = window.innerHeight - TASKBAR_HEIGHT - (MIN_MARGIN * 2);
+    const GRID_COLS = Math.floor(availableWidth / GRID_SIZE);
+    const GRID_ROWS = Math.floor(availableHeight / GRID_SIZE);
+    
+    // Calculate actual margins to center the grid perfectly
+    const GRID_WIDTH = GRID_COLS * GRID_SIZE;
+    const GRID_HEIGHT = GRID_ROWS * GRID_SIZE;
+    const MARGIN_X = Math.floor((window.innerWidth - GRID_WIDTH) / 2);
+    const MARGIN_Y = Math.floor((window.innerHeight - TASKBAR_HEIGHT - GRID_HEIGHT) / 2);
+
+    // Icon Grid Positions State (stored as {row, col} indices)
+    // Validates saved positions and removes invalid ones
+    const [iconGridPositions, setIconGridPositions] = useState(() => {
+        const saved = localStorage.getItem('webos-desktop-grid');
+        if (!saved) return {};
+        
+        try {
+            const parsed = JSON.parse(saved);
+            // Validate each position - must have valid row/col within bounds
+            const validated = {};
+            for (const [id, pos] of Object.entries(parsed)) {
+                if (
+                    pos && 
+                    typeof pos.row === 'number' && 
+                    typeof pos.col === 'number' &&
+                    pos.row >= 0 && 
+                    pos.col >= 0
+                ) {
+                    validated[id] = pos;
+                }
+            }
+            return validated;
+        } catch {
+            // Invalid JSON, clear it
+            localStorage.removeItem('webos-desktop-grid');
+            return {};
+        }
     });
+
+    // Counter to force DesktopIcon re-mount after drag (resets framer-motion transform)
+    const [dragKeyCounter, setDragKeyCounter] = useState(0);
 
     const [draggingId, setDraggingId] = useState(null);
 
@@ -249,23 +292,85 @@ const DesktopContent = () => {
         });
     };
 
-    // Drag Handler
-    const handleDragEnd = (id, info) => {
-        setDraggingId(null);
-        const newPositions = {
-            ...iconPositions,
-            [id]: {
-                x: (iconPositions[id]?.x || 0) + info.offset.x,
-                y: (iconPositions[id]?.y || 0) + info.offset.y
+    // Helper: Get all occupied grid cells
+    const getOccupiedCells = (currentId) => {
+        const occupied = new Set();
+        allShortcuts.forEach((shortcut, index) => {
+            if (shortcut.id === currentId) return; // Skip current dragging icon
+            
+            const gridPos = iconGridPositions[shortcut.id];
+            if (gridPos) {
+                occupied.add(`${gridPos.row},${gridPos.col}`);
+            } else {
+                // Default position based on index
+                const defaultRow = Math.floor(index / GRID_COLS);
+                const defaultCol = index % GRID_COLS;
+                occupied.add(`${defaultRow},${defaultCol}`);
             }
+        });
+        return occupied;
+    };
+
+    // Helper: Find nearest free cell if target is occupied
+    const findNearestFreeCell = (targetRow, targetCol, occupied) => {
+        // First check if target is free
+        if (!occupied.has(`${targetRow},${targetCol}`)) {
+            return { row: targetRow, col: targetCol };
+        }
+        
+        // Spiral search for nearest free cell
+        for (let radius = 1; radius <= 20; radius++) {
+            for (let dr = -radius; dr <= radius; dr++) {
+                for (let dc = -radius; dc <= radius; dc++) {
+                    if (Math.abs(dr) !== radius && Math.abs(dc) !== radius) continue;
+                    const newRow = targetRow + dr;
+                    const newCol = targetCol + dc;
+                    if (newRow >= 0 && newCol >= 0 && newCol < GRID_COLS) {
+                        if (!occupied.has(`${newRow},${newCol}`)) {
+                            return { row: newRow, col: newCol };
+                        }
+                    }
+                }
+            }
+        }
+        // Fallback: return target anyway
+        return { row: targetRow, col: targetCol };
+    };
+
+    // Drag Handler with Grid Snapping and Collision Detection
+    const handleDragEnd = (id, info, currentIndex) => {
+        setDraggingId(null);
+        
+        // Use mouse position to determine target cell
+        // info.point is the absolute position of the pointer
+        const mouseX = info.point.x;
+        const mouseY = info.point.y;
+        
+        // Convert mouse position to grid indices
+        const targetCol = Math.floor((mouseX - MARGIN_X) / GRID_SIZE);
+        const targetRow = Math.floor((mouseY - MARGIN_Y) / GRID_SIZE);
+        
+        // Clamp to valid range
+        const clampedRow = Math.max(0, Math.min(GRID_ROWS - 1, targetRow));
+        const clampedCol = Math.max(0, Math.min(GRID_COLS - 1, targetCol));
+        
+        // Check for collision and find free cell
+        const occupied = getOccupiedCells(id);
+        const finalPos = findNearestFreeCell(clampedRow, clampedCol, occupied);
+        
+        console.log('DRAG:', { id, mouseX, mouseY, targetRow, targetCol, clampedRow, clampedCol, finalPos });
+        
+        // Update state
+        const newGridPositions = {
+            ...iconGridPositions,
+            [id]: finalPos
         };
 
-        // Snap to grid logic (simple 100x100 grid for tidiness)
-        // newPositions[id].x = Math.round(newPositions[id].x / 100) * 100;
-        // newPositions[id].y = Math.round(newPositions[id].y / 100) * 100;
-
-        setIconPositions(newPositions);
-        localStorage.setItem('webos-desktop-icons', JSON.stringify(newPositions));
+        setIconGridPositions(newGridPositions);
+        localStorage.setItem('webos-desktop-grid', JSON.stringify(newGridPositions));
+        
+        // Increment dragKey to force DesktopIcon re-mount
+        setDragKeyCounter(prev => prev + 1);
     };
 
     const contextMenuOptions = [
@@ -340,26 +445,60 @@ const DesktopContent = () => {
             {/* Overlay for depth */}
             <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
 
+            {/* DEBUG: Visible Grid Overlay - CENTERED - Remove in production */}
+            <div 
+                className="absolute pointer-events-none z-[5] flex items-center justify-center"
+                style={{ 
+                    top: MARGIN_Y,
+                    left: MARGIN_X,
+                    width: GRID_WIDTH,
+                    height: GRID_HEIGHT,
+                }}
+            >
+                <div 
+                    className="w-full h-full"
+                    style={{
+                        display: 'grid',
+                        gridTemplateColumns: `repeat(${GRID_COLS}, ${GRID_SIZE}px)`,
+                        gridTemplateRows: `repeat(${GRID_ROWS}, ${GRID_SIZE}px)`,
+                        gap: 0,
+                    }}
+                >
+                    {/* Generate grid cells for entire grid area */}
+                    {Array.from({ length: GRID_COLS * GRID_ROWS }).map((_, i) => (
+                        <div 
+                            key={i}
+                            className="border border-dashed border-cyan-500/40 flex items-center justify-center text-cyan-400/30 text-[10px] font-mono"
+                        >
+                            {Math.floor(i / GRID_COLS)},{i % GRID_COLS}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
             {/* Desktop Icons Area */}
             <div className="relative z-10 w-full h-full">
                 {allShortcuts.map((shortcut, index) => {
-                    // Calculate initial grid position if no saved position exists
-                    // Grid: 6 columns, spacing 110px x 110px, starting at 24px, 24px
-                    const savedPos = iconPositions[shortcut.id];
-                    const defaultX = 24 + (index % 6) * 110;
-                    const defaultY = 24 + Math.floor(index / 6) * 110;
-
-                    const x = savedPos ? savedPos.x : defaultX;
-                    const y = savedPos ? savedPos.y : defaultY;
+                    // Get grid position from state or use default based on index
+                    const gridPos = iconGridPositions[shortcut.id] || {
+                        row: Math.floor(index / GRID_COLS),
+                        col: index % GRID_COLS
+                    };
+                    
+                    // Convert grid position to pixel coordinates (using centered margins)
+                    const x = MARGIN_X + gridPos.col * GRID_SIZE;
+                    const y = MARGIN_Y + gridPos.row * GRID_SIZE;
 
                     return (
                         <DesktopIcon
-                            key={shortcut.id}
+                            key={`${shortcut.id}-${dragKeyCounter}`}
+                            dragKey={`${shortcut.id}-${dragKeyCounter}`}
+                            gridSize={GRID_SIZE}
                             icon={shortcut.icon}
                             label={shortcut.label}
                             onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
                             onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
-                            onDragEnd={(e, info) => handleDragEnd(shortcut.id, info)}
+                            onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
                             isDragging={draggingId === shortcut.id}
                             style={{ left: x, top: y }}
                         />

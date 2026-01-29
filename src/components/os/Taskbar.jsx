@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
@@ -26,12 +26,15 @@ const Taskbar = ({ onOpenSpotlight }) => {
   const { windows, activeWindowId, openApp, minimizeWindow, closeWindow, focusWindow, toggleSounds, isSoundEnabled, pinnedApps, togglePinApp, isPinned, reorderPinnedApps } = useOS();
   const { theme } = useTheme();
   const { isMobile } = useDeviceDetection();
-  const { isPlaying, track, setPlayerOpen } = useMusicPlayer();
+  const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
 
   // Real System States
   const [battery, setBattery] = useState({ level: 1, charging: false });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  
+  // Volume popup state
+  const [volumePopupOpen, setVolumePopupOpen] = useState(false);
 
   // Drag & drop state
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -192,9 +195,10 @@ const Taskbar = ({ onOpenSpotlight }) => {
       setContextMenu(null);
       setTaskbarContextMenu(null);
       setNetworksOpen(false);
+      setVolumePopupOpen(false);
     };
 
-    if (contextMenu || taskbarContextMenu || networksOpen) {
+    if (contextMenu || taskbarContextMenu || networksOpen || volumePopupOpen) {
       document.addEventListener('click', handleClickOutside);
       // Also close on right click elsewhere
       document.addEventListener('contextmenu', handleClickOutside);
@@ -203,7 +207,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
         document.removeEventListener('contextmenu', handleClickOutside);
       };
     }
-  }, [contextMenu, taskbarContextMenu, networksOpen]);
+  }, [contextMenu, taskbarContextMenu, networksOpen, volumePopupOpen]);
 
   // Taskbar right-click handler
   const handleTaskbarContextMenu = (e) => {
@@ -522,14 +526,98 @@ const Taskbar = ({ onOpenSpotlight }) => {
               </div>
             )}
 
-            {/* Sound */}
-            <div
-              className="cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95"
-              onClick={handleSoundToggle}
-              title={soundEnabled ? "Mute sounds" : "Enable sounds"}
-              aria-label={soundEnabled ? "Sounds on" : "Sounds off"}
-            >
-              {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            {/* Volume Control */}
+            <div className="relative">
+              <div
+                className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 ${isMuted ? 'text-red-400' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setVolumePopupOpen(!volumePopupOpen);
+                }}
+                title={isMuted ? "Unmute" : `Volume: ${volume}%`}
+                aria-label={isMuted ? "Muted" : `Volume ${volume}%`}
+              >
+                {isMuted ? <VolumeX size={16} /> : volume < 50 ? <Volume1 size={16} /> : <Volume2 size={16} />}
+              </div>
+
+              {/* Volume Popup */}
+              {volumePopupOpen && (
+                <div
+                  className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-64 z-[10000]"
+                  style={{
+                    right: isMobile ? '10px' : '80px',
+                    bottom: isMobile ? '70px' : '80px',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Volume2 size={18} className="text-cyan-400" />
+                      <span className="text-white font-semibold text-sm">Volume Control</span>
+                    </div>
+                    <span className="text-cyan-400 text-sm font-mono">{volume}%</span>
+                  </div>
+
+                  {/* Volume Slider */}
+                  <div className="mb-4">
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={isMuted ? 0 : volume}
+                      onChange={(e) => {
+                        const newVol = parseInt(e.target.value);
+                        setVolume(newVol);
+                        if (newVol > 0 && isMuted) {
+                          setMuted(false);
+                        }
+                      }}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                        [&::-webkit-slider-thumb]:bg-cyan-400 [&::-webkit-slider-thumb]:rounded-full 
+                        [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg
+                        [&::-webkit-slider-thumb]:hover:bg-cyan-300 [&::-webkit-slider-thumb]:transition-colors"
+                      style={{
+                        background: `linear-gradient(to right, rgb(34 211 238) 0%, rgb(34 211 238) ${isMuted ? 0 : volume}%, rgba(255,255,255,0.1) ${isMuted ? 0 : volume}%, rgba(255,255,255,0.1) 100%)`
+                      }}
+                    />
+                  </div>
+
+                  {/* Quick Volume Buttons */}
+                  <div className="flex gap-2 mb-4">
+                    {[0, 25, 50, 75, 100].map(v => (
+                      <button
+                        key={v}
+                        onClick={() => {
+                          setVolume(v);
+                          if (v > 0) setMuted(false);
+                          else setMuted(true);
+                        }}
+                        className={`flex-1 py-1.5 text-xs rounded-lg transition-colors ${
+                          volume === v && !isMuted
+                            ? 'bg-cyan-500 text-white'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                        }`}
+                      >
+                        {v}%
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Mute Toggle */}
+                  <button
+                    onClick={() => setMuted(!isMuted)}
+                    className={`w-full py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                      isMuted
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                    {isMuted ? 'Unmute' : 'Mute'}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Battery */}
