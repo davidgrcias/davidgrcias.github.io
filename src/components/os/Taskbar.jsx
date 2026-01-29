@@ -64,6 +64,26 @@ const Taskbar = ({ onOpenSpotlight }) => {
     };
   });
 
+  // Handle auto-hide hover state
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Helper for icon sizes
+  const getIconSize = () => {
+    switch (taskbarSettings.iconSize) {
+      case 'small': return 16;
+      case 'large': return 32;
+      default: return 24; // medium
+    }
+  };
+
+  const getButtonPadding = () => {
+    switch (taskbarSettings.iconSize) {
+      case 'small': return 'p-1.5';
+      case 'large': return 'p-3';
+      default: return 'p-2'; // medium
+    }
+  };
+
   // Update sound state from context
   useEffect(() => {
     setSoundEnabled(isSoundEnabled());
@@ -160,6 +180,8 @@ const Taskbar = ({ onOpenSpotlight }) => {
   // Context menu
   const handleContextMenu = (e, app) => {
     e.preventDefault();
+    e.stopPropagation();
+    e.nativeEvent.stopImmediatePropagation(); // Extra protection against event bubbling
     const isOpen = windows.find(w => w.id === app.id);
     setContextMenu({ x: e.clientX, y: e.clientY, app, isOpen });
   };
@@ -171,16 +193,22 @@ const Taskbar = ({ onOpenSpotlight }) => {
       setTaskbarContextMenu(null);
       setNetworksOpen(false);
     };
+
     if (contextMenu || taskbarContextMenu || networksOpen) {
       document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
+      // Also close on right click elsewhere
+      document.addEventListener('contextmenu', handleClickOutside);
+      return () => {
+        document.removeEventListener('click', handleClickOutside);
+        document.removeEventListener('contextmenu', handleClickOutside);
+      };
     }
   }, [contextMenu, taskbarContextMenu, networksOpen]);
 
   // Taskbar right-click handler
   const handleTaskbarContextMenu = (e) => {
     e.preventDefault();
-    if (e.target.closest('button') || e.target.closest('input')) return;
+    e.stopPropagation();
     setTaskbarContextMenu({ x: e.clientX, y: e.clientY });
   };
 
@@ -271,109 +299,260 @@ const Taskbar = ({ onOpenSpotlight }) => {
     return [...pinnedAppsInOrder, ...openUnpinnedApps];
   }, [pinnedApps, windows, apps]);
 
+
+
   return (
-    <div
-      className={`absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'
-        } h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${isMobile ? 'px-2' : 'px-4'
-        } z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95`}
-      onContextMenu={handleTaskbarContextMenu}
-    >
+    <>
+      {/* Auto-Hide Trigger Zone - Always present at bottom when auto-hide is on */}
+      {taskbarSettings.autoHide && (
+        <div
+          className="absolute bottom-0 left-0 right-0 h-6 z-[9998]"
+          onMouseEnter={() => setIsHovered(true)}
+          onContextMenu={handleTaskbarContextMenu}
+        />
+      )}
 
-      {/* Start Button / Logo */}
-      <div className="flex items-center gap-2 sm:gap-3 mr-1 sm:mr-2">
-        <button
-          onClick={() => onOpenSpotlight && onOpenSpotlight()}
-          title="Open Spotlight Search (Ctrl+Space)"
-          className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30 group"
-        >
-          <span className="font-bold text-white text-sm group-hover:rotate-12 transition-transform">DG</span>
-        </button>
+      <div
+        className={`taskbar-container absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'
+          } h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${isMobile ? 'px-2' : 'px-4'
+          } z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95
+          ${taskbarSettings.autoHide && !isHovered && !contextMenu && !taskbarContextMenu && !networksOpen ? 'translate-y-[85%]' : 'translate-y-0'}
+        `}
+        onContextMenu={handleTaskbarContextMenu}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+
+        {/* Start Button / Logo */}
+        <div className="flex items-center gap-2 sm:gap-3 mr-1 sm:mr-2">
+          <button
+            onClick={() => onOpenSpotlight && onOpenSpotlight()}
+            title="Open Spotlight Search (Ctrl+Space)"
+            className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30 group"
+          >
+            <span className="font-bold text-white text-sm group-hover:rotate-12 transition-transform">DG</span>
+          </button>
 
 
-        {/* Search Bar */}
-        {!isMobile && (
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 ${searchFocused
-            ? 'bg-white/15 border border-cyan-400/50 shadow-lg shadow-cyan-500/20'
-            : 'bg-white/5 border border-white/10 hover:bg-white/10'
-            }`}>
-            <Search size={16} className={`${searchFocused ? 'text-cyan-400' : 'text-white/50'} transition-colors`} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                const query = e.target.value;
-                setSearchQuery(query);
-                if (query.trim()) {
-                  onOpenSpotlight && onOpenSpotlight(query);
-                }
-              }}
-              onFocus={() => setSearchFocused(true)}
-              onBlur={() => {
-                setSearchFocused(false);
-                setSearchQuery(''); // Clear when focus is lost
-              }}
-              placeholder="Search apps, files..."
-              className="bg-transparent border-0 outline-none text-white text-sm placeholder-white/40 w-48 focus:w-64 transition-all duration-300"
-            />
-          </div>
-        )}
-      </div>
+          {/* Search Bar */}
+          {!isMobile && (
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 ${searchFocused
+              ? 'bg-white/15 border border-cyan-400/50 shadow-lg shadow-cyan-500/20'
+              : 'bg-white/5 border border-white/10 hover:bg-white/10'
+              }`}>
+              <Search size={16} className={`${searchFocused ? 'text-cyan-400' : 'text-white/50'} transition-colors`} />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  const query = e.target.value;
+                  setSearchQuery(query);
+                  if (query.trim()) {
+                    onOpenSpotlight && onOpenSpotlight(query);
+                  }
+                }}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => {
+                  setSearchFocused(false);
+                  setSearchQuery(''); // Clear when focus is lost
+                }}
+                placeholder="Search apps, files..."
+                className="bg-transparent border-0 outline-none text-white text-sm placeholder-white/40 w-48 focus:w-64 transition-all duration-300"
+              />
+            </div>
+          )}
+        </div>
 
-      {/* Dock Area */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-3 h-full px-2">
-        {orderedApps.map((app, index) => {
-          const isOpen = windows.find(w => w.id === app.id);
-          const isActive = activeWindowId === app.id && !isOpen?.isMinimized;
-          const isDragging = draggedIndex === index;
-          const isDragOver = dragOverIndex === index;
+        {/* Dock Area */}
+        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-1.5 h-full px-2">
+          {orderedApps.map((app, index) => {
+            const isOpen = windows.find(w => w.id === app.id);
+            const isActive = activeWindowId === app.id && !isOpen?.isMinimized;
+            const isDragging = draggedIndex === index;
+            const isDragOver = dragOverIndex === index;
 
-          return (
+            return (
+              <button
+                key={app.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={(e) => handleDragOver(e, index)}
+                onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={handleDragEnd}
+                onClick={() => handleAppClick(app)}
+                onContextMenu={(e) => handleContextMenu(e, app)}
+                className={`relative ${getButtonPadding()} rounded-xl transition-all duration-300 group flex items-center gap-2 ${isActive ? 'bg-white/15 shadow-inner' : 'hover:bg-white/10'
+                  } ${isDragging ? 'opacity-50 scale-95' : ''} ${isDragOver && draggedIndex !== index ? 'scale-110' : ''
+                  } ${taskbarSettings.showLabels ? 'px-3 min-w-[120px] max-w-[200px]' : ''}`}
+              >
+                {/* Icon */}
+                <div className={`text-white/80 group-hover:text-white transition-all transform ${isActive ? 'scale-110 text-white drop-shadow-md' : 'group-hover:-translate-y-1'}`}>
+                  {/* Clone element to override size prop if needed, or simply pass it if safe */}
+                  {React.cloneElement(app.icon, { size: getIconSize() })}
+                </div>
+
+                {/* Label (Show Labels) */}
+                {taskbarSettings.showLabels && (
+                  <span className="text-xs text-white/90 truncate font-medium flex-1 text-left">
+                    {app.title}
+                  </span>
+                )}
+
+                {/* Active Indicator */}
+                {isOpen && !taskbarSettings.showLabels && (
+                  <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 transition-all duration-300 ${isActive ? 'bg-cyan-400 w-8 h-1 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)]' : 'bg-white/30 w-1.5 h-1.5 rounded-full'}`}></div>
+                )}
+                {/* Active Indicator (Side for labels mode) */}
+                {isOpen && taskbarSettings.showLabels && (
+                  <div className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-300 ${isActive ? 'bg-cyan-400 w-1 h-6 rounded-r-full shadow-[0_0_10px_rgba(34,211,238,0.8)]' : 'bg-white/30 w-1 h-3 rounded-r-full'}`}></div>
+                )}
+
+
+                {/* Pinned Indicator (for closed pinned apps) */}
+                {!isOpen && isPinned(app.id) && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/20"></div>
+                )}
+
+                {/* Tooltip (Only if labels hidden) */}
+                {!taskbarSettings.showLabels && (
+                  <span className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-800/90 backdrop-blur-md text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap border border-white/10 shadow-xl translate-y-2 group-hover:translate-y-0">
+                    {app.title}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+
+        <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2 sm:gap-3 md:gap-4'
+          } text-white/90`}>
+          {isPlaying && (
             <button
-              key={app.id}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={handleDragEnd}
-              onClick={() => handleAppClick(app)}
-              onContextMenu={(e) => handleContextMenu(e, app)}
-              className={`relative p-2 rounded-xl transition-all duration-300 group ${isActive ? 'bg-white/15 shadow-inner' : 'hover:bg-white/10'
-                } ${isDragging ? 'opacity-50 scale-95' : ''} ${isDragOver && draggedIndex !== index ? 'scale-110' : ''
-                }`}
+              onClick={() => setPlayerOpen(true)}
+              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-white/10 rounded-full border border-white/10 hover:bg-white/20 transition-colors"
+              title={`${track?.title || 'Now Playing'} — ${track?.artist || ''}`}
+              aria-label="Music playing"
             >
-              {/* Icon */}
-              <div className={`text-white/80 group-hover:text-white transition-all transform ${isActive ? 'scale-110 text-white drop-shadow-md' : 'group-hover:-translate-y-1'}`}>
-                {app.icon}
-              </div>
-
-              {/* Active Indicator */}
-              {isOpen && (
-                <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 transition-all duration-300 ${isActive ? 'bg-cyan-400 w-8 h-1 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)]' : 'bg-white/30 w-1.5 h-1.5 rounded-full'}`}></div>
+              <Music size={14} className="sm:w-4 sm:h-4 text-pink-300" />
+              {!isMobile && (
+                <span className="text-xs text-white/80 truncate max-w-[80px] sm:max-w-[100px] md:max-w-[120px]">
+                  {track?.title || 'Now Playing'}
+                </span>
               )}
-
-              {/* Pinned Indicator (for closed pinned apps) */}
-              {!isOpen && isPinned(app.id) && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/20"></div>
-              )}
-
-              {/* Tooltip */}
-              <span className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-800/90 backdrop-blur-md text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap border border-white/10 shadow-xl translate-y-2 group-hover:translate-y-0">
-                {app.title}
-              </span>
             </button>
-          )
-        })}
+          )}
+          <div className={`flex items-center ${isMobile ? 'gap-2 px-2' : 'gap-2 sm:gap-3 px-2 sm:px-3'
+            } py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
+
+            {/* Wifi */}
+            <div
+              className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 relative ${isOnline ? 'text-white' : 'text-gray-500'
+                }`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setNetworksOpen(!networksOpen);
+              }}
+              title={isOnline ? "View Networks" : "Offline"}
+            >
+              {isOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
+            </div>
+
+            {/* Networks Dropdown */}
+            {networksOpen && isOnline && (
+              <div
+                className="context-menu-container fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 w-[90vw] sm:w-[280px] md:w-[320px] max-w-[350px] z-[10000]"
+                style={{
+                  right: isMobile ? '5vw' : 'clamp(10px, 5vw, 80px)',
+                  bottom: isMobile ? '70px' : '80px',
+                  maxHeight: 'calc(100vh - 150px)',
+                }}
+                onClick={(e) => e.stopPropagation()}
+                onContextMenu={(e) => e.preventDefault()}
+              >
+                <div className="px-4 py-2 border-b border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Wifi size={16} className="text-cyan-400" />
+                      <span className="text-white font-semibold text-sm">Networks</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-xs text-green-400">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      Connected
+                    </div>
+                  </div>
+                </div>
+
+                <div className="max-h-[400px] overflow-y-auto">
+                  {socialNetworks.map((category, idx) => (
+                    <div key={idx}>
+                      <div className="px-4 py-2 text-white/50 text-xs font-semibold uppercase tracking-wider">
+                        {category.category}
+                      </div>
+                      {category.networks.map((network, netIdx) => {
+                        const Icon = network.icon;
+                        return (
+                          <button
+                            key={netIdx}
+                            onClick={() => handleNetworkClick(network.url)}
+                            className="w-full px-4 py-2.5 hover:bg-white/10 transition-colors flex items-center justify-between group"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Icon size={18} className={network.color} />
+                              <span className="text-white text-sm group-hover:text-cyan-400 transition-colors">
+                                {network.name}
+                              </span>
+                            </div>
+                            <div className="flex items-end gap-0.5 h-4">
+                              {getSignalBars(network.signal)}
+                            </div>
+                          </button>
+                        );
+                      })}
+                      {idx < socialNetworks.length - 1 && (
+                        <div className="h-px bg-white/10 my-1"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="px-4 py-2 border-t border-white/10 text-center">
+                  <p className="text-white/40 text-xs">Click to connect</p>
+                </div>
+              </div>
+            )}
+
+            {/* Sound */}
+            <div
+              className="cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95"
+              onClick={handleSoundToggle}
+              title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+              aria-label={soundEnabled ? "Sounds on" : "Sounds off"}
+            >
+              {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+            </div>
+
+            {/* Battery */}
+            <div className="flex items-center gap-1 cursor-help hover:text-cyan-400 transition-colors" title={`${Math.round(battery.level * 100)}%${battery.charging ? ' - Charging' : ''}`} aria-label={`Battery ${Math.round(battery.level * 100)}%`}>
+              {getBatteryIcon()}
+              <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level * 100)}%</span>
+            </div>
+          </div>
+
+          {!isMobile && <SystemClock />}
+        </div>
       </div>
 
-      {/* Context Menu */}
+      {/* Context Menu (Moved outside transformed div to fix positioning) */}
       {contextMenu && (
         <div
-          className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[180px] max-w-[250px] z-[10000]"
+          className="context-menu-container fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[180px] max-w-[250px] z-[10002]"
           style={{
             left: Math.min(contextMenu.x, window.innerWidth - 200),
-            top: Math.max(10, contextMenu.y - 200),
+            bottom: window.innerHeight - contextMenu.y + 20,
           }}
           onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
         >
           {contextMenu.isOpen && (
             <>
@@ -420,15 +599,16 @@ const Taskbar = ({ onOpenSpotlight }) => {
         </div>
       )}
 
-      {/* Taskbar Settings Context Menu */}
+      {/* Taskbar Settings Context Menu (Moved outside transformed div) */}
       {taskbarContextMenu && (
         <div
-          className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[200px] max-w-[280px] z-[10000]"
+          className="context-menu-container fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[200px] max-w-[280px] z-[10002]"
           style={{
             left: Math.min(taskbarContextMenu.x, window.innerWidth - 220),
-            top: Math.max(10, taskbarContextMenu.y - 250),
+            bottom: window.innerHeight - taskbarContextMenu.y + 20,
           }}
           onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
         >
           <div className="px-4 py-2 text-white/60 text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
             <Sliders size={14} />
@@ -495,122 +675,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
           </button>
         </div>
       )}
-      <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2 sm:gap-3 md:gap-4'
-        } text-white/90`}>
-        {isPlaying && (
-          <button
-            onClick={() => setPlayerOpen(true)}
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-white/10 rounded-full border border-white/10 hover:bg-white/20 transition-colors"
-            title={`${track?.title || 'Now Playing'} — ${track?.artist || ''}`}
-            aria-label="Music playing"
-          >
-            <Music size={14} className="sm:w-4 sm:h-4 text-pink-300" />
-            {!isMobile && (
-              <span className="text-xs text-white/80 truncate max-w-[80px] sm:max-w-[100px] md:max-w-[120px]">
-                {track?.title || 'Now Playing'}
-              </span>
-            )}
-          </button>
-        )}
-        <div className={`flex items-center ${isMobile ? 'gap-2 px-2' : 'gap-2 sm:gap-3 px-2 sm:px-3'
-          } py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
-
-          {/* Wifi */}
-          <div
-            className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 relative ${isOnline ? 'text-white' : 'text-gray-500'
-              }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setNetworksOpen(!networksOpen);
-            }}
-            title={isOnline ? "View Networks" : "Offline"}
-          >
-            {isOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
-          </div>
-
-          {/* Networks Dropdown */}
-          {networksOpen && isOnline && (
-            <div
-              className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 w-[90vw] sm:w-[280px] md:w-[320px] max-w-[350px] z-[10000]"
-              style={{
-                right: isMobile ? '5vw' : 'clamp(10px, 5vw, 80px)',
-                bottom: isMobile ? '70px' : '80px',
-                maxHeight: 'calc(100vh - 150px)',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="px-4 py-2 border-b border-white/10">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Wifi size={16} className="text-cyan-400" />
-                    <span className="text-white font-semibold text-sm">Networks</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-green-400">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    Connected
-                  </div>
-                </div>
-              </div>
-
-              <div className="max-h-[400px] overflow-y-auto">
-                {socialNetworks.map((category, idx) => (
-                  <div key={idx}>
-                    <div className="px-4 py-2 text-white/50 text-xs font-semibold uppercase tracking-wider">
-                      {category.category}
-                    </div>
-                    {category.networks.map((network, netIdx) => {
-                      const Icon = network.icon;
-                      return (
-                        <button
-                          key={netIdx}
-                          onClick={() => handleNetworkClick(network.url)}
-                          className="w-full px-4 py-2.5 hover:bg-white/10 transition-colors flex items-center justify-between group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Icon size={18} className={network.color} />
-                            <span className="text-white text-sm group-hover:text-cyan-400 transition-colors">
-                              {network.name}
-                            </span>
-                          </div>
-                          <div className="flex items-end gap-0.5 h-4">
-                            {getSignalBars(network.signal)}
-                          </div>
-                        </button>
-                      );
-                    })}
-                    {idx < socialNetworks.length - 1 && (
-                      <div className="h-px bg-white/10 my-1"></div>
-                    )}
-                  </div>
-                ))}
-              </div>
-
-              <div className="px-4 py-2 border-t border-white/10 text-center">
-                <p className="text-white/40 text-xs">Click to connect</p>
-              </div>
-            </div>
-          )}
-
-          {/* Sound */}
-          <div
-            className="cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95"
-            onClick={handleSoundToggle}
-            title={soundEnabled ? "Mute sounds" : "Enable sounds"}
-            aria-label={soundEnabled ? "Sounds on" : "Sounds off"}
-          >
-            {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-          </div>
-
-          {/* Battery */}
-          <div className="flex items-center gap-1 cursor-help hover:text-cyan-400 transition-colors" title={`${Math.round(battery.level * 100)}%${battery.charging ? ' - Charging' : ''}`} aria-label={`Battery ${Math.round(battery.level * 100)}%`}>
-            {getBatteryIcon()}
-            <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level * 100)}%</span>
-          </div>
-        </div>
-
-        {!isMobile && <SystemClock />}
-      </div>
-    </div>
+    </>
   );
 };
 
