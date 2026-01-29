@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
@@ -35,6 +35,19 @@ const Taskbar = ({ onOpenSpotlight }) => {
   
   // Volume popup state
   const [volumePopupOpen, setVolumePopupOpen] = useState(false);
+  
+  // Battery popup state
+  const [batteryPopupOpen, setBatteryPopupOpen] = useState(false);
+  
+  // Brightness & Power Saver (simulated, stored in localStorage)
+  const [brightness, setBrightness] = useState(() => {
+    const saved = localStorage.getItem('webos-brightness');
+    return saved ? parseInt(saved) : 100;
+  });
+  const [batterySaver, setBatterySaver] = useState(() => {
+    const saved = localStorage.getItem('webos-battery-saver');
+    return saved === 'true';
+  });
 
   // Drag & drop state
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -116,6 +129,21 @@ const Taskbar = ({ onOpenSpotlight }) => {
     };
   }, []);
 
+  // Apply brightness overlay effect
+  useEffect(() => {
+    localStorage.setItem('webos-brightness', brightness.toString());
+    // Apply brightness as a filter to the root element
+    const effectiveBrightness = batterySaver ? Math.min(brightness, 70) : brightness;
+    document.documentElement.style.filter = effectiveBrightness < 100 
+      ? `brightness(${effectiveBrightness / 100})` 
+      : 'none';
+  }, [brightness, batterySaver]);
+
+  // Save battery saver setting
+  useEffect(() => {
+    localStorage.setItem('webos-battery-saver', batterySaver.toString());
+  }, [batterySaver]);
+
   // Defined Apps - Memoized to prevent recreation
   const apps = React.useMemo(() => [
     { id: 'vscode', title: 'VS Code', icon: <Code size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="VS Code"><VSCodeApp /></ErrorBoundary></Suspense> },
@@ -196,9 +224,10 @@ const Taskbar = ({ onOpenSpotlight }) => {
       setTaskbarContextMenu(null);
       setNetworksOpen(false);
       setVolumePopupOpen(false);
+      setBatteryPopupOpen(false);
     };
 
-    if (contextMenu || taskbarContextMenu || networksOpen || volumePopupOpen) {
+    if (contextMenu || taskbarContextMenu || networksOpen || volumePopupOpen || batteryPopupOpen) {
       document.addEventListener('click', handleClickOutside);
       // Also close on right click elsewhere
       document.addEventListener('contextmenu', handleClickOutside);
@@ -207,7 +236,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
         document.removeEventListener('contextmenu', handleClickOutside);
       };
     }
-  }, [contextMenu, taskbarContextMenu, networksOpen, volumePopupOpen]);
+  }, [contextMenu, taskbarContextMenu, networksOpen, volumePopupOpen, batteryPopupOpen]);
 
   // Taskbar right-click handler
   const handleTaskbarContextMenu = (e) => {
@@ -411,11 +440,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                   <div className={`absolute left-0 top-1/2 -translate-y-1/2 transition-all duration-300 ${isActive ? 'bg-cyan-400 w-1 h-6 rounded-r-full shadow-[0_0_10px_rgba(34,211,238,0.8)]' : 'bg-white/30 w-1 h-3 rounded-r-full'}`}></div>
                 )}
 
-
-                {/* Pinned Indicator (for closed pinned apps) */}
-                {!isOpen && isPinned(app.id) && (
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/20"></div>
-                )}
+                {/* Note: No indicator for closed pinned apps - dots only show for open apps */}
 
                 {/* Tooltip (Only if labels hidden) */}
                 {!taskbarSettings.showLabels && (
@@ -620,10 +645,140 @@ const Taskbar = ({ onOpenSpotlight }) => {
               )}
             </div>
 
-            {/* Battery */}
-            <div className="flex items-center gap-1 cursor-help hover:text-cyan-400 transition-colors" title={`${Math.round(battery.level * 100)}%${battery.charging ? ' - Charging' : ''}`} aria-label={`Battery ${Math.round(battery.level * 100)}%`}>
-              {getBatteryIcon()}
-              <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level * 100)}%</span>
+            {/* Battery Control */}
+            <div className="relative">
+              <div
+                className={`flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors ${batterySaver ? 'text-green-400' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBatteryPopupOpen(!batteryPopupOpen);
+                }}
+                title={`${Math.round(battery.level * 100)}%${battery.charging ? ' - Charging' : ''}${batterySaver ? ' - Power Saver ON' : ''}`}
+                aria-label={`Battery ${Math.round(battery.level * 100)}%`}
+              >
+                {battery.charging ? <BatteryCharging size={16} className="text-green-400" /> : 
+                 battery.level < 0.2 ? <BatteryLow size={16} className="text-red-500 animate-pulse" /> :
+                 <Battery size={16} />}
+                <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level * 100)}%</span>
+              </div>
+
+              {/* Battery Popup */}
+              {batteryPopupOpen && (
+                <div
+                  className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-72 z-[10000]"
+                  style={{
+                    right: isMobile ? '10px' : '60px',
+                    bottom: isMobile ? '70px' : '80px',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {/* Header with Battery Status */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      {battery.charging ? <BatteryCharging size={20} className="text-green-400" /> : <Battery size={20} className="text-cyan-400" />}
+                      <div>
+                        <span className="text-white font-semibold text-sm block">Battery</span>
+                        <span className="text-white/50 text-xs">{battery.charging ? 'Charging' : 'On Battery'}</span>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-2xl font-bold ${battery.level < 0.2 ? 'text-red-400' : battery.level < 0.5 ? 'text-yellow-400' : 'text-cyan-400'}`}>
+                        {Math.round(battery.level * 100)}%
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Battery Bar */}
+                  <div className="mb-4">
+                    <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          battery.level < 0.2 ? 'bg-red-500' : 
+                          battery.level < 0.5 ? 'bg-yellow-500' : 
+                          'bg-green-500'
+                        }`}
+                        style={{ width: `${battery.level * 100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-white/10 my-3" />
+
+                  {/* Brightness Control */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Sun size={16} className="text-yellow-400" />
+                        <span className="text-white text-sm">Brightness</span>
+                      </div>
+                      <span className="text-cyan-400 text-sm font-mono">{brightness}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="20"
+                      max="100"
+                      value={brightness}
+                      onChange={(e) => setBrightness(parseInt(e.target.value))}
+                      className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                        [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
+                        [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:rounded-full 
+                        [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-lg"
+                      style={{
+                        background: `linear-gradient(to right, rgb(250 204 21) 0%, rgb(250 204 21) ${(brightness - 20) / 80 * 100}%, rgba(255,255,255,0.1) ${(brightness - 20) / 80 * 100}%, rgba(255,255,255,0.1) 100%)`
+                      }}
+                    />
+                    {/* Quick Brightness Buttons */}
+                    <div className="flex gap-2 mt-2">
+                      {[20, 50, 75, 100].map(b => (
+                        <button
+                          key={b}
+                          onClick={() => setBrightness(b)}
+                          className={`flex-1 py-1 text-xs rounded-lg transition-colors ${
+                            brightness === b
+                              ? 'bg-yellow-500 text-black'
+                              : 'bg-white/10 text-white/70 hover:bg-white/20'
+                          }`}
+                        >
+                          {b === 20 ? <Moon size={12} className="mx-auto" /> : `${b}%`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="h-px bg-white/10 my-3" />
+
+                  {/* Battery Saver Toggle */}
+                  <button
+                    onClick={() => setBatterySaver(!batterySaver)}
+                    className={`w-full py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between px-4 ${
+                      batterySaver
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                        : 'bg-white/10 text-white hover:bg-white/20'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Leaf size={18} />
+                      <div className="text-left">
+                        <span className="block">Battery Saver</span>
+                        <span className="text-xs opacity-60">
+                          {batterySaver ? 'Reduces brightness & animations' : 'Extend battery life'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={`w-10 h-5 rounded-full transition-colors ${batterySaver ? 'bg-green-500' : 'bg-white/20'} relative`}>
+                      <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${batterySaver ? 'translate-x-5' : ''}`} />
+                    </div>
+                  </button>
+
+                  {/* Power Info */}
+                  {battery.charging && (
+                    <div className="mt-3 flex items-center gap-2 text-green-400 text-xs justify-center">
+                      <Zap size={14} />
+                      <span>Connected to power</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
