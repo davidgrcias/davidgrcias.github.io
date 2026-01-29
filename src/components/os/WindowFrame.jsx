@@ -76,9 +76,9 @@ const WindowFrame = ({ window }) => {
       dragElastic={0}
       dragConstraints={{
         top: 0,
-        left: 0,
-        right: width - 100,
-        bottom: height - 100,
+        left: -width * 5, // Allow extensive dragging to the left
+        right: width * 5,   // Allow extensive dragging to the right
+        bottom: height * 5 // Allow extensive dragging down
       }}
       onDragStart={() => setIsDragging(true)}
       onDragEnd={() => setIsDragging(false)}

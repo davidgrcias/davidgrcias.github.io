@@ -191,45 +191,65 @@ const Taskbar = ({ onOpenSpotlight }) => {
     localStorage.setItem('webos-taskbar-settings', JSON.stringify(newSettings));
     setTaskbarContextMenu(null);
   };
-  
-  // Social Networks Data
-  const socialNetworks = [
+
+  // Social Networks Data with Real-time Signal Simulation
+  const [socialNetworks, setSocialNetworks] = useState([
     {
       category: 'Professional',
       networks: [
-        { name: 'LinkedIn', url: 'https://www.linkedin.com/in/david-garcia-saragih/', icon: Linkedin, signal: 5, color: 'text-blue-500' },
-        { name: 'GitHub', url: 'https://github.com/davidgrcias', icon: Code, signal: 5, color: 'text-purple-400' },
+        { id: 'linkedin', name: 'LinkedIn', url: 'https://www.linkedin.com/in/david-garcia-saragih/', icon: Linkedin, signal: 5, color: 'text-blue-500' },
+        { id: 'github', name: 'GitHub', url: 'https://github.com/davidgrcias', icon: Code, signal: 5, color: 'text-purple-400' },
       ]
     },
     {
       category: 'Social Media',
       networks: [
-        { name: 'Instagram', url: 'https://instagram.com/davidgrcias', icon: Instagram, signal: 4, color: 'text-pink-500' },
-        { name: 'YouTube', url: 'https://youtube.com/@davidgrcias', icon: Youtube, signal: 4, color: 'text-red-500' },
-        { name: 'TikTok', url: 'https://tiktok.com/@davidgrcias', icon: Music, signal: 3, color: 'text-cyan-400' },
+        { id: 'instagram', name: 'Instagram', url: 'https://instagram.com/davidgrcias', icon: Instagram, signal: 4, color: 'text-pink-500' },
+        { id: 'youtube', name: 'YouTube', url: 'https://youtube.com/@davidgrcias', icon: Youtube, signal: 4, color: 'text-red-500' },
+        { id: 'tiktok', name: 'TikTok', url: 'https://tiktok.com/@davidgrcias', icon: Music, signal: 3, color: 'text-cyan-400' },
       ]
     },
     {
       category: 'Contact',
       networks: [
-        { name: 'WhatsApp', url: 'https://wa.me/6281234567890', icon: Phone, signal: 5, color: 'text-green-500' },
-        { name: 'Website', url: 'https://davidgrcias.github.io', icon: Globe, signal: 5, color: 'text-cyan-400' },
+        { id: 'whatsapp', name: 'WhatsApp', url: 'https://wa.me/6281234567890', icon: Phone, signal: 5, color: 'text-green-500' },
+        { id: 'website', name: 'Website', url: 'https://davidgrcias.github.io', icon: Globe, signal: 5, color: 'text-cyan-400' },
       ]
     }
-  ];
-  
+  ]);
+
+  // Simulate network signal fluctuation
+  useEffect(() => {
+    if (!networksOpen) return;
+
+    const interval = setInterval(() => {
+      setSocialNetworks(prev => prev.map(cat => ({
+        ...cat,
+        networks: cat.networks
+          .map(net => ({
+            ...net,
+            // Randomly fluctuate signal between 1 and 5, favoring 3-5
+            signal: Math.max(1, Math.min(5, net.signal + (Math.random() > 0.5 ? 1 : -1)))
+          }))
+          // Sort by signal strength (descending) to mimic real OS behavior
+          .sort((a, b) => b.signal - a.signal)
+      })));
+    }, 2000); // Update every 2 seconds
+
+    return () => clearInterval(interval);
+  }, [networksOpen]);
+
   const handleNetworkClick = (url) => {
     window.open(url, '_blank', 'noopener,noreferrer');
     setNetworksOpen(false);
   };
-  
+
   const getSignalBars = (strength) => {
     return Array.from({ length: 5 }, (_, i) => (
       <div
         key={i}
-        className={`w-0.5 ${
-          i < strength ? 'bg-cyan-400' : 'bg-white/20'
-        } transition-colors`}
+        className={`w-0.5 ${i < strength ? 'bg-cyan-400' : 'bg-white/20'
+          } transition-colors`}
         style={{ height: `${(i + 1) * 3}px` }}
       />
     ));
@@ -253,11 +273,9 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
   return (
     <div
-      className={`absolute ${
-        isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'
-      } h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${
-        isMobile ? 'px-2' : 'px-4'
-      } z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95`}
+      className={`absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'
+        } h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${isMobile ? 'px-2' : 'px-4'
+        } z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95`}
       onContextMenu={handleTaskbarContextMenu}
     >
 
@@ -477,9 +495,8 @@ const Taskbar = ({ onOpenSpotlight }) => {
           </button>
         </div>
       )}
-      <div className={`flex items-center ${
-        isMobile ? 'gap-1' : 'gap-2 sm:gap-3 md:gap-4'
-      } text-white/90`}>
+      <div className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2 sm:gap-3 md:gap-4'
+        } text-white/90`}>
         {isPlaying && (
           <button
             onClick={() => setPlayerOpen(true)}
@@ -495,15 +512,13 @@ const Taskbar = ({ onOpenSpotlight }) => {
             )}
           </button>
         )}
-        <div className={`flex items-center ${
-          isMobile ? 'gap-2 px-2' : 'gap-2 sm:gap-3 px-2 sm:px-3'
-        } py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
+        <div className={`flex items-center ${isMobile ? 'gap-2 px-2' : 'gap-2 sm:gap-3 px-2 sm:px-3'
+          } py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
 
           {/* Wifi */}
-          <div 
-            className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 relative ${
-              isOnline ? 'text-white' : 'text-gray-500'
-            }`}
+          <div
+            className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 relative ${isOnline ? 'text-white' : 'text-gray-500'
+              }`}
             onClick={(e) => {
               e.stopPropagation();
               setNetworksOpen(!networksOpen);
@@ -512,7 +527,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
           >
             {isOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
           </div>
-          
+
           {/* Networks Dropdown */}
           {networksOpen && isOnline && (
             <div
@@ -536,7 +551,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="max-h-[400px] overflow-y-auto">
                 {socialNetworks.map((category, idx) => (
                   <div key={idx}>
@@ -569,7 +584,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                   </div>
                 ))}
               </div>
-              
+
               <div className="px-4 py-2 border-t border-white/10 text-center">
                 <p className="text-white/40 text-xs">Click to connect</p>
               </div>
