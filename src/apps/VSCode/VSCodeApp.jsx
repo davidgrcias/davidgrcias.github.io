@@ -17,6 +17,7 @@ const VSCodeApp = () => {
     // Sidebar Resizing
     const [sidebarWidth, setSidebarWidth] = useState(250);
     const [isResizing, setIsResizing] = useState(false);
+    const appRef = React.useRef(null);
 
     const startResizing = React.useCallback(() => {
         setIsResizing(true);
@@ -27,8 +28,12 @@ const VSCodeApp = () => {
     }, []);
 
     const resize = React.useCallback((mouseMoveEvent) => {
-        if (isResizing) {
-            const newWidth = mouseMoveEvent.clientX - 48; // 48px is roughly the activity bar width
+        if (isResizing && appRef.current) {
+            const appRect = appRef.current.getBoundingClientRect();
+            // Calculate width relative to the app container's left edge
+            // Subtracting 48px for the Activity Bar width
+            const newWidth = mouseMoveEvent.clientX - appRect.left - 48;
+
             if (newWidth > 150 && newWidth < 600) {
                 setSidebarWidth(newWidth);
             }
@@ -36,13 +41,15 @@ const VSCodeApp = () => {
     }, [isResizing]);
 
     React.useEffect(() => {
-        window.addEventListener('mousemove', resize);
-        window.addEventListener('mouseup', stopResizing);
+        if (isResizing) {
+            window.addEventListener('mousemove', resize);
+            window.addEventListener('mouseup', stopResizing);
+        }
         return () => {
             window.removeEventListener('mousemove', resize);
             window.removeEventListener('mouseup', stopResizing);
         };
-    }, [resize, stopResizing]);
+    }, [isResizing, resize, stopResizing]);
 
     const handleOpenFile = (file) => {
         if (!openFiles.find(f => f.id === file.id)) {
@@ -78,7 +85,7 @@ const VSCodeApp = () => {
     const activeFile = openFiles.find(f => f.id === activeFileId);
 
     return (
-        <div className="flex h-full w-full bg-[#1e1e1e] text-white overflow-hidden font-sans">
+        <div ref={appRef} className="flex h-full w-full bg-[#1e1e1e] text-white overflow-hidden font-sans">
             {/* Left Side: Activity Bar */}
             <ActivityBar activeTab={activeTab} setActiveTab={setActiveTab} />
 
