@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare, User, StickyNote, Music, Search, Sliders } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, Volume2, VolumeX, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
@@ -40,6 +40,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
   // Context menu state
   const [contextMenu, setContextMenu] = useState(null);
   const [taskbarContextMenu, setTaskbarContextMenu] = useState(null);
+  const [networksOpen, setNetworksOpen] = useState(false);
 
   // Search bar state
   const [searchQuery, setSearchQuery] = useState('');
@@ -168,12 +169,13 @@ const Taskbar = ({ onOpenSpotlight }) => {
     const handleClickOutside = () => {
       setContextMenu(null);
       setTaskbarContextMenu(null);
+      setNetworksOpen(false);
     };
-    if (contextMenu || taskbarContextMenu) {
+    if (contextMenu || taskbarContextMenu || networksOpen) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [contextMenu, taskbarContextMenu]);
+  }, [contextMenu, taskbarContextMenu, networksOpen]);
 
   // Handle search
   const handleSearchSubmit = (e) => {
@@ -199,6 +201,49 @@ const Taskbar = ({ onOpenSpotlight }) => {
     setTaskbarSettings(newSettings);
     localStorage.setItem('webos-taskbar-settings', JSON.stringify(newSettings));
     setTaskbarContextMenu(null);
+  };
+  
+  // Social Networks Data
+  const socialNetworks = [
+    {
+      category: 'Professional',
+      networks: [
+        { name: 'LinkedIn', url: 'https://www.linkedin.com/in/david-garcia-saragih/', icon: Linkedin, signal: 5, color: 'text-blue-500' },
+        { name: 'GitHub', url: 'https://github.com/davidgrcias', icon: Code, signal: 5, color: 'text-purple-400' },
+      ]
+    },
+    {
+      category: 'Social Media',
+      networks: [
+        { name: 'Instagram', url: 'https://instagram.com/davidgrcias', icon: Instagram, signal: 4, color: 'text-pink-500' },
+        { name: 'YouTube', url: 'https://youtube.com/@davidgrcias', icon: Youtube, signal: 4, color: 'text-red-500' },
+        { name: 'TikTok', url: 'https://tiktok.com/@davidgrcias', icon: Music, signal: 3, color: 'text-cyan-400' },
+      ]
+    },
+    {
+      category: 'Contact',
+      networks: [
+        { name: 'WhatsApp', url: 'https://wa.me/6281234567890', icon: Phone, signal: 5, color: 'text-green-500' },
+        { name: 'Website', url: 'https://davidgrcias.github.io', icon: Globe, signal: 5, color: 'text-cyan-400' },
+      ]
+    }
+  ];
+  
+  const handleNetworkClick = (url) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+    setNetworksOpen(false);
+  };
+  
+  const getSignalBars = (strength) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <div
+        key={i}
+        className={`w-0.5 ${
+          i < strength ? 'bg-cyan-400' : 'bg-white/20'
+        } transition-colors`}
+        style={{ height: `${(i + 1) * 3}px` }}
+      />
+    ));
   };
 
   // Ordered apps: pinned apps + open unpinned apps (CRITICAL: prevents taskbar disappearing)
@@ -458,9 +503,80 @@ const Taskbar = ({ onOpenSpotlight }) => {
         <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-3'} px-3 py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
 
           {/* Wifi */}
-          <div title={isOnline ? "Connected" : "Offline"} className={isOnline ? "text-white" : "text-gray-500"}>
+          <div 
+            className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 relative ${
+              isOnline ? 'text-white' : 'text-gray-500'
+            }`}
+            onClick={(e) => {
+              e.stopPropagation();
+              setNetworksOpen(!networksOpen);
+            }}
+            title={isOnline ? "View Networks" : "Offline"}
+          >
             {isOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
           </div>
+          
+          {/* Networks Dropdown */}
+          {networksOpen && isOnline && (
+            <div
+              className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[280px] z-[10000]"
+              style={{
+                right: isMobile ? '10px' : '80px',
+                bottom: isMobile ? '70px' : '80px',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-4 py-2 border-b border-white/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Wifi size={16} className="text-cyan-400" />
+                    <span className="text-white font-semibold text-sm">Networks</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-green-400">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    Connected
+                  </div>
+                </div>
+              </div>
+              
+              <div className="max-h-[400px] overflow-y-auto">
+                {socialNetworks.map((category, idx) => (
+                  <div key={idx}>
+                    <div className="px-4 py-2 text-white/50 text-xs font-semibold uppercase tracking-wider">
+                      {category.category}
+                    </div>
+                    {category.networks.map((network, netIdx) => {
+                      const Icon = network.icon;
+                      return (
+                        <button
+                          key={netIdx}
+                          onClick={() => handleNetworkClick(network.url)}
+                          className="w-full px-4 py-2.5 hover:bg-white/10 transition-colors flex items-center justify-between group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon size={18} className={network.color} />
+                            <span className="text-white text-sm group-hover:text-cyan-400 transition-colors">
+                              {network.name}
+                            </span>
+                          </div>
+                          <div className="flex items-end gap-0.5 h-4">
+                            {getSignalBars(network.signal)}
+                          </div>
+                        </button>
+                      );
+                    })}
+                    {idx < socialNetworks.length - 1 && (
+                      <div className="h-px bg-white/10 my-1"></div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              <div className="px-4 py-2 border-t border-white/10 text-center">
+                <p className="text-white/40 text-xs">Click to connect</p>
+              </div>
+            </div>
+          )}
 
           {/* Sound */}
           <div
