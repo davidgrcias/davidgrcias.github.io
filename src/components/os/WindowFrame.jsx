@@ -53,10 +53,10 @@ const WindowFrame = ({ window }) => {
       };
     }
     return {
-      width: '800px',
-      height: '600px',
-      top: '80px',
-      left: '80px',
+      width: 'min(800px, 90vw)',
+      height: 'min(600px, 75vh)',
+      top: '10vh',
+      left: 'calc(50vw - min(400px, 45vw))', // Center horizontally
     };
   };
 
