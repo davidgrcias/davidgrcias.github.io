@@ -172,7 +172,7 @@ const SnakeGame = ({ isOpen, onClose }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-zinc-900 rounded-xl border border-zinc-700 shadow-2xl p-6 max-w-lg w-full mx-4"
+          className="bg-zinc-900 rounded-xl border border-zinc-700 shadow-2xl p-4 sm:p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
@@ -210,10 +210,10 @@ const SnakeGame = ({ isOpen, onClose }) => {
           {/* Game Board */}
           <div className="relative bg-zinc-950 rounded-lg p-2 mb-4 border-2 border-zinc-800">
             <div
-              className="relative mx-auto bg-black"
+              className="relative mx-auto bg-black aspect-square"
               style={{
-                width: GRID_SIZE * CELL_SIZE,
-                height: GRID_SIZE * CELL_SIZE,
+                width: 'min(100%, 400px)',
+                maxWidth: '100%',
               }}
             >
               {/* Grid lines */}
@@ -240,9 +240,8 @@ const SnakeGame = ({ isOpen, onClose }) => {
                   key={`snake-${index}`}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className={`absolute rounded-sm ${
-                    index === 0 ? 'bg-green-400' : 'bg-green-500'
-                  }`}
+                  className={`absolute rounded-sm ${index === 0 ? 'bg-green-400' : 'bg-green-500'
+                    }`}
                   style={{
                     left: x * CELL_SIZE,
                     top: y * CELL_SIZE,

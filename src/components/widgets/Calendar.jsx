@@ -35,8 +35,8 @@ const Calendar = ({ isOpen, onClose, isPopover = false, wrapperClassName = '', p
   const isToday = (date) => {
     const today = new Date();
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   };
 
   const openBooking = (date) => {
@@ -96,8 +96,8 @@ const Calendar = ({ isOpen, onClose, isPopover = false, wrapperClassName = '', p
   const wrapperClasses = isPopover
     ? `relative z-[10000] pointer-events-auto ${wrapperClassName}`
     : position === 'right'
-        ? 'fixed bottom-20 right-6 z-[9997] pointer-events-auto'
-        : 'fixed bottom-20 left-6 z-[9997] pointer-events-auto';
+      ? 'fixed bottom-20 right-6 z-[9997] pointer-events-auto'
+      : 'fixed bottom-20 left-6 z-[9997] pointer-events-auto';
 
   return (
     <AnimatePresence>
@@ -107,7 +107,7 @@ const Calendar = ({ isOpen, onClose, isPopover = false, wrapperClassName = '', p
         exit={{ y: 100, opacity: 0 }}
         className={wrapperClasses}
       >
-        <div className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-700 rounded-2xl shadow-2xl w-80 overflow-hidden">
+        <div className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-700 rounded-2xl shadow-2xl w-80 max-w-[calc(100vw-3rem)] overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-zinc-800">
             <div className="flex items-center gap-2">

@@ -66,10 +66,13 @@ export const useSoundEffects = () => {
     }
   }, []);
 
-  const toggleSounds = useCallback(() => {
-    soundsEnabledRef.current = !soundsEnabledRef.current;
-    localStorage.setItem('os-sounds-enabled', soundsEnabledRef.current);
-    return soundsEnabledRef.current;
+  // Toggle or explicitly set sound enabled state
+  const setSoundsEnabled = useCallback((enabled) => {
+    // If no argument, toggle. If argument provided, set to that value.
+    const newValue = enabled !== undefined ? enabled : !soundsEnabledRef.current;
+    soundsEnabledRef.current = newValue;
+    localStorage.setItem('os-sounds-enabled', newValue);
+    return newValue;
   }, []);
 
   const isSoundEnabled = useCallback(() => {
@@ -78,7 +81,8 @@ export const useSoundEffects = () => {
 
   return {
     playSound,
-    toggleSounds,
+    toggleSounds: setSoundsEnabled, // Backward compatible alias
+    setSoundsEnabled,
     isSoundEnabled,
   };
 };

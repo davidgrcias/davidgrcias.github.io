@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, ChevronRight, ChevronLeft, Rocket, Keyboard, Mouse, Sparkles, Trophy } from 'lucide-react';
 

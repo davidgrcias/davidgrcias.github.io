@@ -2,6 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Motion duration variable */
+:root {
+  --motion-duration: 300ms;
+}
+
+/* Reduce motion - disables animations globally */
+.reduce-motion,
+.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Performance mode - reduces visual effects for better performance */
+.performance-mode * {
+  /* Remove blur effects */
+  backdrop-filter: none !important;
+  filter: none !important;
+  /* Simplify shadows */
+  box-shadow: none !important;
+  text-shadow: none !important;
+  /* Disable will-change hints */
+  will-change: auto !important;
+}
+
+/* Hide decorative elements in performance mode */
+.performance-mode .shooting-star,
+.performance-mode .star-explosion {
+  display: none !important;
+}
+
+/* Also respect OS-level preference */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration: 0ms;
+  }
+}
+
 /* Custom Thin Scrollbar - Minimalist Style */
 .custom-scrollbar-thin {
   scrollbar-width: thin;
@@ -54,10 +93,12 @@
     transform: scale(1);
     opacity: 0.4;
   }
+
   50% {
     transform: scale(1.5);
     opacity: 0.2;
   }
+
   100% {
     transform: scale(0);
     opacity: 0;
@@ -68,6 +109,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -160,12 +202,15 @@
     transform: rotate(45deg) translateX(-500px);
     opacity: 0;
   }
+
   2% {
     opacity: 0.4;
   }
+
   60% {
     opacity: 0.4;
   }
+
   100% {
     transform: rotate(45deg) translateX(2000px);
     opacity: 0;

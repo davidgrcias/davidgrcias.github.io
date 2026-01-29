@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Volume2, VolumeX, Moon, Sun, Monitor, Palette, Sliders, Globe, Info, Zap } from 'lucide-react';
+import { Volume2, Globe, Info, Zap } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from '../../contexts/TranslationContext';
@@ -11,118 +10,161 @@ import ThemeSettings from './ThemeSettings';
  * System preferences and configurations
  */
 
+// Toggle component - defined OUTSIDE to prevent recreation on every render
+const Toggle = ({ label, description, checked, onChange }) => (
+  <div className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+    <div className="flex-1">
+      <div className="font-medium text-sm">{label}</div>
+      {description && <div className="text-xs text-white/50 mt-1">{description}</div>}
+    </div>
+    <button
+      onClick={() => onChange(!checked)}
+      type="button"
+      className={`relative w-12 h-6 rounded-full transition-colors cursor-pointer ${checked ? 'bg-cyan-500' : 'bg-white/20'
+        }`}
+    >
+      <div
+        className="absolute top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200"
+        style={{ transform: checked ? 'translateX(24px)' : 'translateX(2px)' }}
+      />
+    </button>
+  </div>
+);
+
+// SettingSection component - defined OUTSIDE
+const SettingSection = ({ icon: Icon, title, children }) => (
+  <div className="mb-6">
+    <div className="flex items-center gap-3 mb-4">
+      <div className="p-2 bg-cyan-500/20 rounded-lg">
+        <Icon size={20} className="text-cyan-400" />
+      </div>
+      <h2 className="text-lg font-semibold">{title}</h2>
+    </div>
+    <div className="space-y-3 pl-11">
+      {children}
+    </div>
+  </div>
+);
+
+// RadioGroup component - defined OUTSIDE
+const RadioGroup = ({ label, options, value, onChange }) => (
+  <div className="p-3 rounded-lg hover:bg-white/5 transition-colors">
+    <div className="font-medium text-sm mb-3">{label}</div>
+    <div className="space-y-2">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          onClick={() => onChange(option.value)}
+          type="button"
+          className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
+        >
+          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${value === option.value ? 'border-cyan-500' : 'border-white/30'
+            }`}>
+            {value === option.value && (
+              <div className="w-2 h-2 rounded-full bg-cyan-500" />
+            )}
+          </div>
+          <div className="flex-1 text-left">
+            <div className="text-sm">{option.label}</div>
+            {option.description && (
+              <div className="text-xs text-white/50">{option.description}</div>
+            )}
+          </div>
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
 const SettingsApp = () => {
-  const { toggleSounds, isSoundEnabled } = useOS();
+  const { toggleSounds } = useOS();
   const { currentTheme } = useTheme();
   const { currentLanguage, translatePage } = useTranslation();
   const [activeTab, setActiveTab] = useState('general');
-  const [settings, setSettings] = useState({
-    theme: 'dark',
-    soundEnabled: true,
-    language: 'en',
-    reducedMotion: false,
-    performanceMode: false,
+
+  // Initialize settings from localStorage
+  const [settings, setSettings] = useState(() => {
+    const defaultSettings = {
+      theme: 'dark',
+      soundEnabled: true,
+      language: 'en',
+      reducedMotion: false,
+      performanceMode: false,
+    };
+
+    try {
+      const saved = localStorage.getItem('webos-settings');
+      if (saved) {
+        return { ...defaultSettings, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.error('Failed to parse settings:', e);
+    }
+    return defaultSettings;
   });
 
-  // Load settings from localStorage
+  // Apply settings on mount
   useEffect(() => {
-    const saved = localStorage.getItem('webos-settings');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setSettings(parsed);
-      if (parsed?.language && parsed.language !== currentLanguage) {
-        translatePage(parsed.language);
-      }
+    // Apply reducedMotion
+    if (settings.reducedMotion) {
+      document.documentElement.classList.add('reduce-motion');
+    } else {
+      document.documentElement.classList.remove('reduce-motion');
     }
-    // Sync sound state
-    setSettings(prev => ({ ...prev, soundEnabled: isSoundEnabled() }));
-  }, [isSoundEnabled]);
 
-  // Save settings to localStorage
+    // Apply performanceMode
+    if (settings.performanceMode) {
+      document.documentElement.classList.add('performance-mode');
+    } else {
+      document.documentElement.classList.remove('performance-mode');
+    }
+
+    // Apply language
+    if (settings.language && settings.language !== currentLanguage) {
+      translatePage(settings.language);
+    }
+
+    // Sync sound state
+    toggleSounds(settings.soundEnabled);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update a single setting
   const updateSetting = (key, value) => {
     const newSettings = { ...settings, [key]: value };
     setSettings(newSettings);
     localStorage.setItem('webos-settings', JSON.stringify(newSettings));
 
-    // Apply settings
-    if (key === 'soundEnabled') {
-      toggleSounds();
-    }
-    if (key === 'theme') {
-      document.documentElement.setAttribute('data-theme', value);
-    }
-    if (key === 'reducedMotion') {
-      document.documentElement.style.setProperty('--motion-duration', value ? '0ms' : '300ms');
-    }
-    if (key === 'language') {
-      translatePage(value);
+    // Apply setting immediately
+    switch (key) {
+      case 'soundEnabled':
+        toggleSounds(value);
+        break;
+      case 'reducedMotion':
+        if (value) {
+          document.documentElement.classList.add('reduce-motion');
+        } else {
+          document.documentElement.classList.remove('reduce-motion');
+        }
+        document.documentElement.style.setProperty('--motion-duration', value ? '0ms' : '300ms');
+        break;
+      case 'performanceMode':
+        if (value) {
+          document.documentElement.classList.add('performance-mode');
+        } else {
+          document.documentElement.classList.remove('performance-mode');
+        }
+        break;
+      case 'language':
+        translatePage(value);
+        break;
+      case 'theme':
+        document.documentElement.setAttribute('data-theme', value);
+        break;
+      default:
+        break;
     }
   };
-
-  const SettingSection = ({ icon: Icon, title, children }) => (
-    <div className="mb-6">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-2 bg-cyan-500/20 rounded-lg">
-          <Icon size={20} className="text-cyan-400" />
-        </div>
-        <h2 className="text-lg font-semibold">{title}</h2>
-      </div>
-      <div className="space-y-3 pl-11">
-        {children}
-      </div>
-    </div>
-  );
-
-  const Toggle = ({ label, description, checked, onChange }) => (
-    <div className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
-      <div className="flex-1">
-        <div className="font-medium text-sm">{label}</div>
-        {description && <div className="text-xs text-white/50 mt-1">{description}</div>}
-      </div>
-      <button
-        onClick={() => onChange(!checked)}
-        className={`relative w-12 h-6 rounded-full transition-colors ${
-          checked ? 'bg-cyan-500' : 'bg-white/20'
-        }`}
-      >
-        <motion.div
-          animate={{ x: checked ? 24 : 2 }}
-          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-          className="absolute top-1 w-4 h-4 bg-white rounded-full"
-        />
-      </button>
-    </div>
-  );
-
-  const RadioGroup = ({ label, options, value, onChange }) => (
-    <div className="p-3 rounded-lg hover:bg-white/5 transition-colors">
-      <div className="font-medium text-sm mb-3">{label}</div>
-      <div className="space-y-2">
-        {options.map((option) => (
-          <button
-            key={option.value}
-            onClick={() => onChange(option.value)}
-            className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors"
-          >
-            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-              value === option.value ? 'border-cyan-500' : 'border-white/30'
-            }`}>
-              {value === option.value && (
-                <div className="w-2 h-2 rounded-full bg-cyan-500" />
-              )}
-            </div>
-            <div className="flex-1 text-left">
-              <div className="text-sm">{option.label}</div>
-              {option.description && (
-                <div className="text-xs text-white/50">{option.description}</div>
-              )}
-            </div>
-            {option.icon && <option.icon size={18} className="text-white/40" />}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 
   return (
     <div className="w-full h-full bg-slate-950 text-white overflow-hidden flex flex-col">
@@ -130,26 +172,24 @@ const SettingsApp = () => {
       <div className="sticky top-0 bg-slate-900/80 backdrop-blur-xl border-b border-white/10 p-6 z-10">
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-sm text-white/60 mt-1">Customize your WebOS experience</p>
-        
+
         {/* Tabs */}
         <div className="flex gap-2 mt-4">
           <button
             onClick={() => setActiveTab('general')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'general'
-                ? 'bg-cyan-500/20 text-cyan-400'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'general'
+              ? 'bg-cyan-500/20 text-cyan-400'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
           >
             General
           </button>
           <button
             onClick={() => setActiveTab('themes')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              activeTab === 'themes'
-                ? 'bg-cyan-500/20 text-cyan-400'
-                : 'text-white/60 hover:text-white hover:bg-white/5'
-            }`}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'themes'
+              ? 'bg-cyan-500/20 text-cyan-400'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
           >
             Themes
           </button>
@@ -166,13 +206,13 @@ const SettingsApp = () => {
                 label="Sound Effects"
                 description="Play sounds when opening, closing, and minimizing windows"
                 checked={settings.soundEnabled}
-                onChange={(value) => updateSetting('soundEnabled', value)}
+                onChange={(val) => updateSetting('soundEnabled', val)}
               />
               <Toggle
                 label="Reduce Motion"
                 description="Minimize animations throughout the interface"
                 checked={settings.reducedMotion}
-                onChange={(value) => updateSetting('reducedMotion', value)}
+                onChange={(val) => updateSetting('reducedMotion', val)}
               />
             </SettingSection>
 
@@ -182,7 +222,7 @@ const SettingsApp = () => {
                 label="Performance Mode"
                 description="Reduce visual effects for better performance on slower devices"
                 checked={settings.performanceMode}
-                onChange={(value) => updateSetting('performanceMode', value)}
+                onChange={(val) => updateSetting('performanceMode', val)}
               />
             </SettingSection>
 
@@ -191,7 +231,7 @@ const SettingsApp = () => {
               <RadioGroup
                 label="Language"
                 value={settings.language}
-                onChange={(value) => updateSetting('language', value)}
+                onChange={(val) => updateSetting('language', val)}
                 options={[
                   { value: 'en', label: 'English', description: 'English (United States)' },
                   { value: 'id', label: 'Bahasa Indonesia', description: 'Indonesian' },

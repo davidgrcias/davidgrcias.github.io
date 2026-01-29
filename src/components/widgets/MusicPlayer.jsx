@@ -61,14 +61,14 @@ const MusicPlayer = () => {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
-        className="fixed bottom-20 right-6 z-[9997] pointer-events-auto"
+        className="fixed bottom-20 right-4 z-[9997] pointer-events-auto max-w-[calc(100vw-2rem)] max-h-[calc(100vh-6rem)]"
       >
         <motion.div
-          animate={{ 
-            width: isExpanded ? 360 : 320,
-            height: isExpanded ? 480 : 'auto'
+          animate={{
+            width: isExpanded ? 'min(360px, 90vw)' : 'min(320px, 90vw)',
+            height: isExpanded ? 'min(480px, calc(100vh - 8rem))' : 'auto'
           }}
-          className="bg-gradient-to-br from-purple-900/95 to-pink-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden"
+          className="bg-gradient-to-br from-purple-900/95 to-pink-900/95 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden max-h-[calc(100vh-6rem)] flex flex-col"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -96,112 +96,112 @@ const MusicPlayer = () => {
             </div>
           </div>
 
-          {/* Album Art */}
-          <div className="p-6">
-            <motion.div
-              animate={{ rotate: isPlaying ? 360 : 0 }}
-              transition={{ duration: 10, repeat: isPlaying ? Infinity : 0, ease: 'linear' }}
-              className="w-full aspect-square bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-8xl shadow-lg"
-            >
-              {track.cover}
-            </motion.div>
-          </div>
-
-          {/* Track Info */}
-          <div className="px-6 pb-4 text-center">
-            <h3 className="text-white font-bold text-lg truncate">{track.title}</h3>
-            <p className="text-purple-200 text-sm truncate">{track.artist}</p>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="px-6 pb-4">
-            <div className="relative h-2 bg-white/20 rounded-full overflow-hidden mb-2">
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto">
+            {/* Album Art */}
+            <div className="p-4">
               <motion.div
-                className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-400 to-pink-400"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-xs text-purple-200">
-              <span>{currentTime}</span>
-              <span>{totalTime}</span>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="px-6 pb-4">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              {/* Shuffle */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleShuffle}
-                className={`p-2 rounded-lg transition-colors ${
-                  isShuffle ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10'
-                }`}
+                animate={{ rotate: isPlaying ? 360 : 0 }}
+                transition={{ duration: 10, repeat: isPlaying ? Infinity : 0, ease: 'linear' }}
+                className="w-full max-w-[200px] mx-auto aspect-square bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center text-6xl shadow-lg"
               >
-                <Shuffle size={18} />
-              </motion.button>
-
-              {/* Previous */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => prev(true)}
-                className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-              >
-                <SkipBack size={20} />
-              </motion.button>
-
-              {/* Play/Pause */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={togglePlay}
-                className="p-4 bg-white rounded-full text-purple-900 shadow-lg hover:shadow-xl transition-all"
-              >
-                {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-0.5" />}
-              </motion.button>
-
-              {/* Next */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => next(true)}
-                className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
-              >
-                <SkipForward size={20} />
-              </motion.button>
-
-              {/* Repeat */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleRepeat}
-                className={`p-2 rounded-lg transition-colors ${
-                  isRepeat ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10'
-                }`}
-              >
-                <Repeat size={18} />
-              </motion.button>
+                {track.cover}
+              </motion.div>
             </div>
 
-            {/* Volume */}
-            <div className="flex items-center gap-3">
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={toggleMute}
-                className="text-purple-200 hover:text-white transition-colors"
-              >
-                {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
-              </motion.button>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer
+            {/* Track Info */}
+            <div className="px-6 pb-4 text-center">
+              <h3 className="text-white font-bold text-lg truncate">{track.title}</h3>
+              <p className="text-purple-200 text-sm truncate">{track.artist}</p>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="px-6 pb-4">
+              <div className="relative h-2 bg-white/20 rounded-full overflow-hidden mb-2">
+                <motion.div
+                  className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-400 to-pink-400"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-purple-200">
+                <span>{currentTime}</span>
+                <span>{totalTime}</span>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="px-6 pb-4">
+              <div className="flex items-center justify-center gap-4 mb-4">
+                {/* Shuffle */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleShuffle}
+                  className={`p-2 rounded-lg transition-colors ${isShuffle ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10'
+                    }`}
+                >
+                  <Shuffle size={18} />
+                </motion.button>
+
+                {/* Previous */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => prev(true)}
+                  className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                >
+                  <SkipBack size={20} />
+                </motion.button>
+
+                {/* Play/Pause */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={togglePlay}
+                  className="p-4 bg-white rounded-full text-purple-900 shadow-lg hover:shadow-xl transition-all"
+                >
+                  {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-0.5" />}
+                </motion.button>
+
+                {/* Next */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => next(true)}
+                  className="p-3 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
+                >
+                  <SkipForward size={20} />
+                </motion.button>
+
+                {/* Repeat */}
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleRepeat}
+                  className={`p-2 rounded-lg transition-colors ${isRepeat ? 'bg-white/20 text-white' : 'text-purple-200 hover:bg-white/10'
+                    }`}
+                >
+                  <Repeat size={18} />
+                </motion.button>
+              </div>
+
+              {/* Volume */}
+              <div className="flex items-center gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={toggleMute}
+                  className="text-purple-200 hover:text-white transition-colors"
+                >
+                  {isMuted || volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+                </motion.button>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={isMuted ? 0 : volume}
+                  onChange={handleVolumeChange}
+                  className="flex-1 h-2 bg-white/20 rounded-full appearance-none cursor-pointer
                   [&::-webkit-slider-thumb]:appearance-none
                   [&::-webkit-slider-thumb]:w-4
                   [&::-webkit-slider-thumb]:h-4
@@ -209,40 +209,40 @@ const MusicPlayer = () => {
                   [&::-webkit-slider-thumb]:bg-white
                   [&::-webkit-slider-thumb]:shadow-lg
                   [&::-webkit-slider-thumb]:cursor-pointer"
-              />
-              <span className="text-xs text-purple-200 w-8 text-right">{isMuted ? 0 : volume}</span>
+                />
+                <span className="text-xs text-purple-200 w-8 text-right">{isMuted ? 0 : volume}</span>
+              </div>
             </div>
-          </div>
 
-          {/* Playlist (when expanded) */}
-          {isExpanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="border-t border-white/10 max-h-48 overflow-y-auto"
-            >
-              {playlist.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
-                  onClick={() => playTrackByIndex(index, true)}
-                  className={`
+            {/* Playlist (when expanded) */}
+            {isExpanded && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="border-t border-white/10 max-h-48 overflow-y-auto"
+              >
+                {playlist.map((item, index) => (
+                  <motion.div
+                    key={item.id}
+                    whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
+                    onClick={() => playTrackByIndex(index, true)}
+                    className={`
                     flex items-center gap-3 px-6 py-3 cursor-pointer transition-colors
                     ${currentTrack === index ? 'bg-white/10' : ''}
                   `}
-                >
-                  <span className="text-2xl">{item.cover}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{item.title}</p>
-                    <p className="text-purple-200 text-xs truncate">{item.artist}</p>
-                  </div>
-                  <span className="text-xs text-purple-200">{formatTime(item.duration)}</span>
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-
+                  >
+                    <span className="text-2xl">{item.cover}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate">{item.title}</p>
+                      <p className="text-purple-200 text-xs truncate">{item.artist}</p>
+                    </div>
+                    <span className="text-xs text-purple-200">{formatTime(item.duration)}</span>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </div>
           {/* Audio is managed by MusicPlayerContext */}
         </motion.div>
       </motion.div>

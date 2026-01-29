@@ -12,8 +12,25 @@ import Projects from "./pages/admin/Projects";
 import ProjectForm from "./pages/admin/ProjectForm";
 import Desktop from "./components/os/Desktop";
 
-// Import old components only if needed for migration reference
-// import PortfolioContent from "./components/PortfolioContent";
+// Initialize settings from localStorage immediately on load
+(() => {
+  try {
+    const saved = localStorage.getItem('webos-settings');
+    if (saved) {
+      const settings = JSON.parse(saved);
+      // Apply reducedMotion immediately before React renders
+      if (settings?.reducedMotion) {
+        document.documentElement.classList.add('reduce-motion');
+      }
+      // Apply performanceMode immediately  
+      if (settings?.performanceMode) {
+        document.documentElement.classList.add('performance-mode');
+      }
+    }
+  } catch (e) {
+    // Ignore parsing errors
+  }
+})();
 
 export default function App() {
   return (
@@ -21,26 +38,26 @@ export default function App() {
       <MusicPlayerProvider>
         <BrowserRouter>
           <Routes>
-          {/* Public Route: The WebOS Portfolio Experience */}
-          <Route path="/" element={<Desktop />} />
+            {/* Public Route: The WebOS Portfolio Experience */}
+            <Route path="/" element={<Desktop />} />
 
-          {/* Admin Routes: The Content Management System */}
-          <Route path="/admin" element={<AdminLayout />}>
-             {/* Default Admin Page -> Projects */}
-             <Route index element={<Navigate to="projects" replace />} />
-             <Route path="projects" element={<Projects />} />
-             <Route path="projects/new" element={<ProjectForm />} />
-             <Route path="projects/edit/:id" element={<ProjectForm />} />
-             
-             <Route path="experience" element={<div className="text-xl">Experience Management Module</div>} />
-             <Route path="settings" element={<div className="text-xl">Settings Module</div>} />
-          </Route>
+            {/* Admin Routes: The Content Management System */}
+            <Route path="/admin" element={<AdminLayout />}>
+              {/* Default Admin Page -> Projects */}
+              <Route index element={<Navigate to="projects" replace />} />
+              <Route path="projects" element={<Projects />} />
+              <Route path="projects/new" element={<ProjectForm />} />
+              <Route path="projects/edit/:id" element={<ProjectForm />} />
 
-          {/* Admin Auth */}
-          <Route path="/admin/login" element={<Login />} />
+              <Route path="experience" element={<div className="text-xl">Experience Management Module</div>} />
+              <Route path="settings" element={<div className="text-xl">Settings Module</div>} />
+            </Route>
 
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+            {/* Admin Auth */}
+            <Route path="/admin/login" element={<Login />} />
+
+            {/* Catch all */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </MusicPlayerProvider>

@@ -22,7 +22,7 @@ const StatCard = React.memo(({ icon: Icon, label, value, color, trend }) => (
 ));
 
 const PortfolioStats = ({ isOpen, onClose }) => {
-  
+
   const { windows } = useOS();
   const [stats, setStats] = useState({
     visits: 0,
@@ -149,7 +149,7 @@ const PortfolioStats = ({ isOpen, onClose }) => {
         initial={{ opacity: 0, x: 300 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 300 }}
-        className="fixed top-20 right-6 bottom-20 z-50 w-80"
+        className="fixed top-20 right-4 bottom-20 z-50 w-80 max-w-[calc(100vw-2rem)]"
       >
         <div className="bg-zinc-900 rounded-xl border border-zinc-700 shadow-2xl overflow-hidden max-h-full flex flex-col">
           {/* Header */}
@@ -177,7 +177,7 @@ const PortfolioStats = ({ isOpen, onClose }) => {
               value={stats.visits}
               color="blue"
             />
-            
+
             <StatCard
               icon={Zap}
               label="Apps Opened (Peak)"
