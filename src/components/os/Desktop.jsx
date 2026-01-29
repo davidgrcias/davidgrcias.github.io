@@ -5,7 +5,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useKonamiCode } from '../../hooks/useKonamiCode';
 import { useAchievements } from '../../hooks/useAchievements';
-import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Camera } from 'lucide-react';
+import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Camera, FileText } from 'lucide-react';
 import Taskbar from './Taskbar';
 import WindowFrame from './WindowFrame';
 import ContextMenu from './ContextMenu';
@@ -25,6 +25,7 @@ import SnakeGame from '../easter-eggs/SnakeGame';
 import KeyboardHelp from './KeyboardHelp';
 import WelcomeTutorial from './WelcomeTutorial';
 import AchievementToast from '../achievements/AchievementToast';
+import PDFViewer from '../tools/PDFViewer';
 
 // Lazy load apps for better performance
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -64,6 +65,7 @@ const DesktopContent = () => {
     const [statsOpen, setStatsOpen] = useState(false);
     const [keyboardHelpOpen, setKeyboardHelpOpen] = useState(false);
     const [welcomeTutorialOpen, setWelcomeTutorialOpen] = useState(false);
+    const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
 
     // Konami Code detection
     useKonamiCode(() => {
@@ -152,6 +154,11 @@ const DesktopContent = () => {
             title: 'Terminal',
         },
     ];
+
+    // Handle CV download/preview
+    const handleOpenCV = () => {
+        setPdfViewerOpen(true);
+    };
 
     const settingsApp = {
         id: 'settings',
@@ -323,6 +330,13 @@ const DesktopContent = () => {
                         onClick={() => openApp(shortcut)}
                     />
                 ))}
+
+                {/* CV Download Icon */}
+                <DesktopIcon
+                    icon={<FileText size={32} />}
+                    label="My CV"
+                    onClick={handleOpenCV}
+                />
             </div>
 
             {/* Windows Layer */}
@@ -414,6 +428,14 @@ const DesktopContent = () => {
 
             {/* Taskbar */}
             <Taskbar onOpenSpotlight={() => setSpotlightOpen(true)} />
+
+            {/* PDF Viewer */}
+            <PDFViewer
+                isOpen={pdfViewerOpen}
+                onClose={() => setPdfViewerOpen(false)}
+                pdfUrl="/CV_DavidGarciaSaragih.pdf"
+                title="CV - David Garcia Saragih"
+            />
         </div>
     );
 };

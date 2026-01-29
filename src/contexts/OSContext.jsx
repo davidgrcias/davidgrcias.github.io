@@ -10,6 +10,19 @@ export const OSProvider = ({ children }) => {
   const [activeWindowId, setActiveWindowId] = useState(null);
   const [maxZIndex, setMaxZIndex] = useState(100);
   
+  // Pinned apps state
+  const [pinnedApps, setPinnedApps] = useState(() => {
+    const saved = localStorage.getItem('webos-pinned-apps');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse pinned apps:', e);
+      }
+    }
+    return ['vscode', 'file-manager', 'about-me', 'terminal'];
+  });
+  
   // Sound effects system
   const { playSound, toggleSounds, isSoundEnabled } = useSoundEffects();
 
@@ -63,6 +76,32 @@ export const OSProvider = ({ children }) => {
     );
   }, [playSound]);
 
+  // Pin/Unpin app
+  const togglePinApp = useCallback((appId) => {
+    setPinnedApps((prev) => {
+      const newPinned = prev.includes(appId)
+        ? prev.filter(id => id !== appId)
+        : [...prev, appId];
+      localStorage.setItem('webos-pinned-apps', JSON.stringify(newPinned));
+      return newPinned;
+    });
+  }, []);
+
+  const isPinned = useCallback((appId) => {
+    return pinnedApps.includes(appId);
+  }, [pinnedApps]);
+
+  // Reorder pinned apps
+  const reorderPinnedApps = useCallback((fromIndex, toIndex) => {
+    setPinnedApps((prev) => {
+      const newOrder = [...prev];
+      const [removed] = newOrder.splice(fromIndex, 1);
+      newOrder.splice(toIndex, 0, removed);
+      localStorage.setItem('webos-pinned-apps', JSON.stringify(newOrder));
+      return newOrder;
+    });
+  }, []);
+
   return (
     <OSContext.Provider
       value={{
@@ -73,6 +112,11 @@ export const OSProvider = ({ children }) => {
         minimizeWindow,
         maximizeWindow,
         focusWindow,
+        // Pinned apps
+        pinnedApps,
+        togglePinApp,
+        isPinned,
+        reorderPinnedApps,
         // Sound controls
         playSound,
         toggleSounds,

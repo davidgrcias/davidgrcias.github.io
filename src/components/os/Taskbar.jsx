@@ -23,15 +23,22 @@ const AppLoadingFallback = () => (
 );
 
 const Taskbar = ({ onOpenSpotlight }) => {
-  const { windows, activeWindowId, openApp, minimizeWindow, focusWindow, toggleSounds, isSoundEnabled } = useOS();
+  const { windows, activeWindowId, openApp, minimizeWindow, closeWindow, focusWindow, toggleSounds, isSoundEnabled, pinnedApps, togglePinApp, isPinned, reorderPinnedApps } = useOS();
   const { theme } = useTheme();
   const { isMobile } = useDeviceDetection();
-    const { isPlaying, track, setPlayerOpen } = useMusicPlayer();
+  const { isPlaying, track, setPlayerOpen } = useMusicPlayer();
   
   // Real System States
   const [battery, setBattery] = useState({ level: 1, charging: false });
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  
+  // Drag & drop state
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState(null);
 
   // Update sound state from context
   useEffect(() => {
@@ -97,6 +104,67 @@ const Taskbar = ({ onOpenSpotlight }) => {
     setSoundEnabled(newState);
   };
 
+  // Drag & drop handlers
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex === null) return;
+    setDragOverIndex(index);
+  };
+
+  const handleDrop = (e, index) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    reorderPinnedApps(draggedIndex, index);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  // Context menu
+  const handleContextMenu = (e, app) => {
+    e.preventDefault();
+    const isOpen = windows.find(w => w.id === app.id);
+    setContextMenu({ x: e.clientX, y: e.clientY, app, isOpen });
+  };
+
+  // Close context menu on click outside
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu(null);
+    if (contextMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [contextMenu]);
+
+  // Ordered apps: pinned apps + open unpinned apps (CRITICAL: prevents taskbar disappearing)
+  const orderedApps = React.useMemo(() => {
+    // Get pinned apps in order
+    const pinnedAppsInOrder = pinnedApps
+      .map(id => apps.find(app => app.id === id))
+      .filter(Boolean);
+    
+    // Get open apps that are NOT pinned
+    const openUnpinnedApps = windows
+      .map(w => apps.find(app => app.id === w.id))
+      .filter(app => app && !pinnedApps.includes(app.id))
+      .filter((app, index, self) => index === self.findIndex(a => a.id === app.id));
+    
+    return [...pinnedAppsInOrder, ...openUnpinnedApps];
+  }, [pinnedApps, windows, apps]);
+
   return (
     <div className={`absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'} h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between px-4 z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95`}>
       
@@ -113,16 +181,26 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
       {/* Dock Area */}
       <div className="flex items-center gap-3 h-full px-4">
-          {apps.map((app) => {
+          {orderedApps.map((app, index) => {
               const isOpen = windows.find(w => w.id === app.id);
               const isActive = activeWindowId === app.id && !isOpen?.isMinimized;
+              const isDragging = draggedIndex === index;
+              const isDragOver = dragOverIndex === index;
 
               return (
                   <button
                     key={app.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, index)}
+                    onDragOver={(e) => handleDragOver(e, index)}
+                    onDrop={(e) => handleDrop(e, index)}
+                    onDragEnd={handleDragEnd}
                     onClick={() => handleAppClick(app)}
+                    onContextMenu={(e) => handleContextMenu(e, app)}
                     className={`relative p-2 rounded-xl transition-all duration-300 group ${
                         isActive ? 'bg-white/15 shadow-inner' : 'hover:bg-white/10'
+                    } ${isDragging ? 'opacity-50 scale-95' : ''} ${
+                        isDragOver && draggedIndex !== index ? 'scale-110' : ''
                     }`}
                   >
                       {/* Icon */}
@@ -135,6 +213,11 @@ const Taskbar = ({ onOpenSpotlight }) => {
                           <div className={`absolute -bottom-1 left-1/2 -translate-x-1/2 transition-all duration-300 ${isActive ? 'bg-cyan-400 w-8 h-1 rounded-full shadow-[0_0_10px_rgba(34,211,238,0.8)]' : 'bg-white/30 w-1.5 h-1.5 rounded-full'}`}></div>
                       )}
                       
+                      {/* Pinned Indicator (for closed pinned apps) */}
+                      {!isOpen && isPinned(app.id) && (
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-white/20"></div>
+                      )}
+
                       {/* Tooltip */}
                       <span className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-gray-800/90 backdrop-blur-md text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap border border-white/10 shadow-xl translate-y-2 group-hover:translate-y-0">
                           {app.title}
@@ -143,8 +226,61 @@ const Taskbar = ({ onOpenSpotlight }) => {
               )
           })}
       </div>
-
-      {/* System Tray */}
+      
+      {/* Context Menu */}
+      {contextMenu && (
+        <div
+          className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[180px] z-[10000]"
+          style={{
+            left: `${contextMenu.x}px`,
+            top: `${contextMenu.y - 200}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {contextMenu.isOpen && (
+            <>
+              <button
+                onClick={() => {
+                  focusWindow(contextMenu.app.id);
+                  setContextMenu(null);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors"
+              >
+                Focus Window
+              </button>
+              <button
+                onClick={() => {
+                  minimizeWindow(contextMenu.app.id);
+                  setContextMenu(null);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors"
+              >
+                Minimize
+              </button>
+              <div className="h-px bg-white/10 my-1"></div>
+              <button
+                onClick={() => {
+                  closeWindow(contextMenu.app.id);
+                  setContextMenu(null);
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-white/10 transition-colors"
+              >
+                Close
+              </button>
+              <div className="h-px bg-white/10 my-1"></div>
+            </>
+          )}
+          <button
+            onClick={() => {
+              togglePinApp(contextMenu.app.id);
+              setContextMenu(null);
+            }}
+            className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors"
+          >
+            {isPinned(contextMenu.app.id) ? 'Unpin from Taskbar' : 'Pin to Taskbar'}
+          </button>
+        </div>
+      )}
             <div className={`flex items-center ${isMobile ? 'gap-2' : 'gap-4'} text-white/90`}>
                     {isPlaying && (
                         <button
