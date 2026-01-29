@@ -363,7 +363,10 @@ const Taskbar = ({ onOpenSpotlight }) => {
         {/* Start Button / Logo */}
         <div className="flex items-center gap-2 sm:gap-3 mr-1 sm:mr-2">
           <button
-            onClick={() => onOpenSpotlight && onOpenSpotlight()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenSpotlight && onOpenSpotlight();
+            }}
             title="Open Spotlight Search (Ctrl+Space)"
             className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30 group"
           >
