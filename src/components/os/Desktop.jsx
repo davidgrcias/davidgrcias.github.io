@@ -73,9 +73,9 @@ const DesktopContent = () => {
 
     // Desktop shortcuts
     const desktopShortcuts = [
-        { 
-            id: 'vscode', 
-            label: 'Portfolio', 
+        {
+            id: 'vscode',
+            label: 'Portfolio',
             icon: <Code size={32} />,
             component: (
                 <Suspense fallback={<AppLoadingFallback />}>
@@ -86,9 +86,9 @@ const DesktopContent = () => {
             ),
             title: 'VS Code',
         },
-        { 
-            id: 'file-manager', 
-            label: 'Files', 
+        {
+            id: 'file-manager',
+            label: 'Files',
             icon: <FolderOpen size={32} />,
             component: (
                 <Suspense fallback={<AppLoadingFallback />}>
@@ -99,9 +99,9 @@ const DesktopContent = () => {
             ),
             title: 'File Manager',
         },
-        { 
-            id: 'about-me', 
-            label: 'About Me', 
+        {
+            id: 'about-me',
+            label: 'About Me',
             icon: <User size={32} />,
             component: (
                 <Suspense fallback={<AppLoadingFallback />}>
@@ -112,9 +112,9 @@ const DesktopContent = () => {
             ),
             title: 'About Me',
         },
-        { 
-            id: 'notes', 
-            label: 'Notes', 
+        {
+            id: 'notes',
+            label: 'Notes',
             icon: <StickyNote size={32} />,
             component: (
                 <Suspense fallback={<AppLoadingFallback />}>
@@ -125,9 +125,9 @@ const DesktopContent = () => {
             ),
             title: 'Quick Notes',
         },
-        { 
-            id: 'messenger', 
-            label: 'Chat', 
+        {
+            id: 'messenger',
+            label: 'Chat',
             icon: <MessageSquare size={32} />,
             component: (
                 <Suspense fallback={<AppLoadingFallback />}>
@@ -138,9 +138,9 @@ const DesktopContent = () => {
             ),
             title: 'Messages',
         },
-        { 
-            id: 'terminal', 
-            label: 'Terminal', 
+        {
+            id: 'terminal',
+            label: 'Terminal',
             icon: <Terminal size={32} />,
             component: (
                 <Suspense fallback={<AppLoadingFallback />}>
@@ -185,9 +185,9 @@ const DesktopContent = () => {
                 title: 'Welcome back! 👋',
                 message: 'Press Ctrl+/ for keyboard shortcuts.',
                 type: 'info',
-                duration: 5000,
+                duration: 2000, // Quick flash - 2 seconds
             });
-        }, 800);
+        }, 100); // Near instant - 100ms after load
 
         return () => clearTimeout(timer);
     }, [showBoot, showNotification]);
@@ -305,7 +305,7 @@ const DesktopContent = () => {
     }
 
     return (
-        <div 
+        <div
             className={`h-screen w-screen overflow-hidden bg-gradient-to-br ${theme.colors.bg} bg-cover bg-center text-white relative`}
             onContextMenu={handleContextMenu}
             onClick={() => setContextMenu(null)}
@@ -341,37 +341,37 @@ const DesktopContent = () => {
             )}
 
             {/* Command Palette */}
-            <CommandPalette 
+            <CommandPalette
                 isOpen={commandPaletteOpen}
                 onClose={() => setCommandPaletteOpen(false)}
                 onOpenSnake={() => setSnakeGameOpen(true)}
             />
 
             {/* Window Switcher */}
-            <WindowSwitcher 
+            <WindowSwitcher
                 isOpen={windowSwitcherOpen}
                 onClose={() => setWindowSwitcherOpen(false)}
             />
 
             {/* Spotlight Search */}
-            <Spotlight 
+            <Spotlight
                 isOpen={spotlightOpen}
                 onClose={() => setSpotlightOpen(false)}
             />
 
             {/* Widgets */}
             <MusicPlayer />
-            <Calendar 
+            <Calendar
                 isOpen={calendarOpen}
                 onClose={() => setCalendarOpen(false)}
             />
-            <PortfolioStats 
+            <PortfolioStats
                 isOpen={statsOpen}
                 onClose={() => setStatsOpen(false)}
             />
 
             {/* Easter Eggs */}
-            <KonamiSecret 
+            <KonamiSecret
                 isOpen={konamiSecretOpen}
                 onClose={() => setKonamiSecretOpen(false)}
             />
@@ -382,19 +382,19 @@ const DesktopContent = () => {
             )}
 
             {/* Easter Eggs & Games */}
-            <SnakeGame 
+            <SnakeGame
                 isOpen={snakeGameOpen}
                 onClose={() => setSnakeGameOpen(false)}
             />
 
             {/* Keyboard Help */}
-            <KeyboardHelp 
+            <KeyboardHelp
                 isOpen={keyboardHelpOpen}
                 onClose={() => setKeyboardHelpOpen(false)}
             />
 
             {/* Welcome Tutorial */}
-            <WelcomeTutorial 
+            <WelcomeTutorial
                 isOpen={welcomeTutorialOpen}
                 onClose={(reason) => {
                     setWelcomeTutorialOpen(false);
@@ -406,7 +406,7 @@ const DesktopContent = () => {
             />
 
             {/* Achievement Toast */}
-            <AchievementToast 
+            <AchievementToast
                 achievement={currentAchievement}
                 isVisible={!!currentAchievement}
                 onClose={clearAchievement}
@@ -419,13 +419,13 @@ const DesktopContent = () => {
 };
 
 const Desktop = () => {
-  return (
-    <OSProvider>
-      <NotificationProvider>
-        <DesktopContent />
-      </NotificationProvider>
-    </OSProvider>
-  );
+    return (
+        <OSProvider>
+            <NotificationProvider>
+                <DesktopContent />
+            </NotificationProvider>
+        </OSProvider>
+    );
 };
 
 export default Desktop;

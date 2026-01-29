@@ -48,8 +48,15 @@ const AboutMeApp = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="w-32 h-32 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-6xl shadow-xl">
-            👨‍💻
+          <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl ring-4 ring-blue-500/20">
+            <img 
+              src="/profilpict.webp" 
+              alt={personalInfo.name}
+              loading="lazy"
+              width="128"
+              height="128"
+              className="w-full h-full object-cover"
+            />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">{personalInfo.name}</h1>
           <p className="text-lg text-zinc-400">{personalInfo.title}</p>
