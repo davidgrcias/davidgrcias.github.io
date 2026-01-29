@@ -47,11 +47,12 @@ const AppLoadingFallback = () => (
 );
 
 const DesktopContent = () => {
-    const { windows, activeWindowId, closeWindow, minimizeWindow, openApp } = useOS();
+    const { windows, activeWindowId, closeWindow, minimizeWindow, openApp, pinnedApps, togglePinApp, isPinned } = useOS();
     const { showNotification } = useNotification();
     const { unlockAchievement, trackMetric, currentAchievement, clearAchievement } = useAchievements();
     const { theme } = useTheme();
     const [contextMenu, setContextMenu] = useState(null);
+    const [shortcutContextMenu, setShortcutContextMenu] = useState(null);
     const [showBoot, setShowBoot] = useState(true);
     const hasShownWelcomeRef = React.useRef(false);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -67,6 +68,14 @@ const DesktopContent = () => {
     const [keyboardHelpOpen, setKeyboardHelpOpen] = useState(false);
     const [welcomeTutorialOpen, setWelcomeTutorialOpen] = useState(false);
     const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+
+    // Icon Positioning State
+    const [iconPositions, setIconPositions] = useState(() => {
+        const saved = localStorage.getItem('webos-desktop-icons');
+        return saved ? JSON.parse(saved) : {};
+    });
+
+    const [draggingId, setDraggingId] = useState(null);
 
     // Konami Code detection
     useKonamiCode(() => {
@@ -89,77 +98,53 @@ const DesktopContent = () => {
             ),
             title: 'VS Code',
         },
+        // ... (Other shortcuts remain the same, just copied for reference in complete file context if needed, but here we assume strict replacement)
         {
             id: 'file-manager',
             label: 'Files',
             icon: <FolderOpen size={32} />,
-            component: (
-                <Suspense fallback={<AppLoadingFallback />}>
-                    <ErrorBoundary componentName="File Manager">
-                        <FileManagerApp />
-                    </ErrorBoundary>
-                </Suspense>
-            ),
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="File Manager"><FileManagerApp /></ErrorBoundary></Suspense>,
             title: 'File Manager',
         },
         {
             id: 'about-me',
             label: 'About Me',
             icon: <User size={32} />,
-            component: (
-                <Suspense fallback={<AppLoadingFallback />}>
-                    <ErrorBoundary componentName="About Me">
-                        <AboutMeApp />
-                    </ErrorBoundary>
-                </Suspense>
-            ),
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense>,
             title: 'About Me',
         },
         {
             id: 'notes',
             label: 'Notes',
             icon: <StickyNote size={32} />,
-            component: (
-                <Suspense fallback={<AppLoadingFallback />}>
-                    <ErrorBoundary componentName="Notes">
-                        <NotesApp />
-                    </ErrorBoundary>
-                </Suspense>
-            ),
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense>,
             title: 'Quick Notes',
         },
         {
             id: 'messenger',
             label: 'Chat',
             icon: <MessageSquare size={32} />,
-            component: (
-                <Suspense fallback={<AppLoadingFallback />}>
-                    <ErrorBoundary componentName="Messenger">
-                        <MessengerApp />
-                    </ErrorBoundary>
-                </Suspense>
-            ),
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense>,
             title: 'Messages',
         },
         {
             id: 'terminal',
             label: 'Terminal',
             icon: <Terminal size={32} />,
-            component: (
-                <Suspense fallback={<AppLoadingFallback />}>
-                    <ErrorBoundary componentName="Terminal">
-                        <TerminalApp />
-                    </ErrorBoundary>
-                </Suspense>
-            ),
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Terminal"><TerminalApp /></ErrorBoundary></Suspense>,
             title: 'Terminal',
         },
     ];
 
-    // Handle CV download/preview
-    const handleOpenCV = () => {
-        setPdfViewerOpen(true);
+    const cvShortcut = {
+        id: 'cv-download',
+        label: 'My CV',
+        icon: <FileText size={32} />,
+        onClick: () => setPdfViewerOpen(true),
+        title: 'My CV'
     };
+
+    const allShortcuts = [...desktopShortcuts, cvShortcut];
 
     const settingsApp = {
         id: 'settings',
@@ -211,6 +196,8 @@ const DesktopContent = () => {
                 setCommandPaletteOpen(false);
             } else if (contextMenu) {
                 setContextMenu(null);
+            } else if (shortcutContextMenu) {
+                setShortcutContextMenu(null);
             } else if (activeWindowId) {
                 closeWindow(activeWindowId);
             }
@@ -242,10 +229,43 @@ const DesktopContent = () => {
         },
     });
 
-    // Right-click context menu
+    // Right-click context menu (Desktop Background)
     const handleContextMenu = (e) => {
         e.preventDefault();
+        // Close other menus
+        setShortcutContextMenu(null);
         setContextMenu({ x: e.clientX, y: e.clientY });
+    };
+
+    // Shortcut Context Menu Handler
+    const handleShortcutContextMenu = (e, shortcut) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setContextMenu(null); // Close background menu
+        setShortcutContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            shortcut
+        });
+    };
+
+    // Drag Handler
+    const handleDragEnd = (id, info) => {
+        setDraggingId(null);
+        const newPositions = {
+            ...iconPositions,
+            [id]: {
+                x: (iconPositions[id]?.x || 0) + info.offset.x,
+                y: (iconPositions[id]?.y || 0) + info.offset.y
+            }
+        };
+
+        // Snap to grid logic (simple 100x100 grid for tidiness)
+        // newPositions[id].x = Math.round(newPositions[id].x / 100) * 100;
+        // newPositions[id].y = Math.round(newPositions[id].y / 100) * 100;
+
+        setIconPositions(newPositions);
+        localStorage.setItem('webos-desktop-icons', JSON.stringify(newPositions));
     };
 
     const contextMenuOptions = [
@@ -312,28 +332,39 @@ const DesktopContent = () => {
         <div
             className={`h-screen w-screen overflow-hidden bg-gradient-to-br ${theme.colors.bg} bg-cover bg-center text-white relative`}
             onContextMenu={handleContextMenu}
-            onClick={() => setContextMenu(null)}
+            onClick={() => {
+                setContextMenu(null);
+                setShortcutContextMenu(null);
+            }}
         >
             {/* Overlay for depth */}
             <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
 
-            {/* Desktop Icons Area (Clickable to open apps directly) */}
-            <div className="relative z-10 w-full h-full p-6 flex flex-wrap gap-4 content-start items-start">
-                {desktopShortcuts.map((shortcut) => (
-                    <DesktopIcon
-                        key={shortcut.id}
-                        icon={shortcut.icon}
-                        label={shortcut.label}
-                        onClick={() => openApp(shortcut)}
-                    />
-                ))}
+            {/* Desktop Icons Area */}
+            <div className="relative z-10 w-full h-full">
+                {allShortcuts.map((shortcut, index) => {
+                    // Calculate initial grid position if no saved position exists
+                    // Grid: 6 columns, spacing 110px x 110px, starting at 24px, 24px
+                    const savedPos = iconPositions[shortcut.id];
+                    const defaultX = 24 + (index % 6) * 110;
+                    const defaultY = 24 + Math.floor(index / 6) * 110;
 
-                {/* CV Download Icon */}
-                <DesktopIcon
-                    icon={<FileText size={32} />}
-                    label="My CV"
-                    onClick={handleOpenCV}
-                />
+                    const x = savedPos ? savedPos.x : defaultX;
+                    const y = savedPos ? savedPos.y : defaultY;
+
+                    return (
+                        <DesktopIcon
+                            key={shortcut.id}
+                            icon={shortcut.icon}
+                            label={shortcut.label}
+                            onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
+                            onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
+                            onDragEnd={(e, info) => handleDragEnd(shortcut.id, info)}
+                            isDragging={draggingId === shortcut.id}
+                            style={{ left: x, top: y }}
+                        />
+                    );
+                })}
             </div>
 
             {/* Windows Layer */}
@@ -341,7 +372,7 @@ const DesktopContent = () => {
                 <WindowFrame key={window.id} window={window} />
             ))}
 
-            {/* Context Menu */}
+            {/* Desktop Background Context Menu */}
             {contextMenu && (
                 <ContextMenu
                     x={contextMenu.x}
@@ -349,6 +380,57 @@ const DesktopContent = () => {
                     options={contextMenuOptions}
                     onClose={() => setContextMenu(null)}
                 />
+            )}
+
+            {/* Shortcut Context Menu */}
+            {shortcutContextMenu && (
+                <div
+                    className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[180px] z-[10005]"
+                    style={{
+                        left: Math.min(shortcutContextMenu.x, window.innerWidth - 180),
+                        top: Math.min(shortcutContextMenu.y, window.innerHeight - 150),
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onContextMenu={(e) => e.preventDefault()}
+                >
+                    <div className="px-4 py-2 border-b border-white/10 mb-1">
+                        <span className="text-xs text-white/50 font-semibold uppercase tracking-wider">{shortcutContextMenu.shortcut.label}</span>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            shortcutContextMenu.shortcut.onClick ? shortcutContextMenu.shortcut.onClick() : openApp(shortcutContextMenu.shortcut);
+                            setShortcutContextMenu(null);
+                        }}
+                        className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                    >
+                        <FolderOpen size={16} />
+                        Open
+                    </button>
+
+                    {/* Only show Pin option if it's an app (has id that's not special like 'cv-download') */}
+                    {!['cv-download'].includes(shortcutContextMenu.shortcut.id) && (
+                        <button
+                            onClick={() => {
+                                togglePinApp(shortcutContextMenu.shortcut.id);
+                                setShortcutContextMenu(null);
+                            }}
+                            className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                        >
+                            {isPinned(shortcutContextMenu.shortcut.id) ? (
+                                <>
+                                    <span className="text-red-400 flex items-center gap-2">
+                                        <div className="rotate-45">📌</div> Unpin from Taskbar
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>📌</span> Pin to Taskbar
+                                </>
+                            )}
+                        </button>
+                    )}
+                </div>
             )}
 
             {/* Command Palette */}
