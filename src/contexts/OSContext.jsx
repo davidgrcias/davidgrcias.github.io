@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useCallback } from 'react';
-import { useSoundEffects } from '../hooks/useSoundEffects';
+import { useSound } from './SoundContext';
 
 const OSContext = createContext();
 
@@ -10,6 +10,48 @@ export const OSProvider = ({ children }) => {
   const [activeWindowId, setActiveWindowId] = useState(null);
   const [maxZIndex, setMaxZIndex] = useState(100);
   
+  
+  // Power State: 'booting' | 'active' | 'locked' | 'off'
+  const [powerState, setPowerState] = useState(() => {
+    // Check if we just rebooted or it's a fresh load
+    // For now default to 'booting' so boot sequence always runs on refresh
+    return 'booting';
+  });
+
+  const sleep = useCallback(() => {
+    // sound is played by component or here? Desktop handles lock screen so maybe here is better
+    setPowerState('locked');
+  }, []);
+
+  const wake = useCallback(() => {
+    setPowerState('active');
+  }, []);
+
+  const restart = useCallback(() => {
+    // 1. Set transitional state
+    setPowerState('restarting');
+    
+    // 2. Wait for animation (e.g., 2 seconds)
+    setTimeout(() => {
+      // 3. Factory Reset: Clear ALL data
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // 4. Hard Reload
+      window.location.reload();
+    }, 2000);
+  }, []);
+
+  const shutdown = useCallback(() => {
+    // 1. Set transitional state
+    setPowerState('shutting_down');
+
+    // 2. Wait for animation
+    setTimeout(() => {
+      setPowerState('off');
+    }, 2000);
+  }, []);
+
   // Pinned apps state
   const [pinnedApps, setPinnedApps] = useState(() => {
     const saved = localStorage.getItem('webos-pinned-apps');
@@ -24,10 +66,21 @@ export const OSProvider = ({ children }) => {
   });
   
   // Sound effects system
-  const { playSound, toggleSounds, isSoundEnabled } = useSoundEffects();
+  const { playOpen, playClose, playClick, setSoundEnabled, soundEnabled } = useSound();
+
+  const playSound = (type, volume) => {
+    // Adapter function to match old API if needed, or just map direct calls
+    switch(type) {
+        case 'open': playOpen(); break;
+        case 'close': playClose(); break;
+        case 'click': playClick(); break;
+        case 'minimize': playClick(); break; // reuse click for minimize
+        default: break;
+    }
+  };
 
   const openApp = useCallback((app) => {
-    playSound('open', 0.2);
+    playOpen();
     setWindows((prev) => {
       const existing = prev.find((w) => w.id === app.id);
       if (existing) {
@@ -40,41 +93,41 @@ export const OSProvider = ({ children }) => {
     });
     setActiveWindowId(app.id);
     setMaxZIndex(prev => prev + 1);
-  }, [maxZIndex, playSound]);
+  }, [maxZIndex, playOpen]);
 
   const closeWindow = useCallback((id) => {
-    playSound('close', 0.2);
+    playClose();
     setWindows((prev) => prev.filter((w) => w.id !== id));
     if (activeWindowId === id) {
       setActiveWindowId(null);
     }
-  }, [activeWindowId, playSound]);
+  }, [activeWindowId, playClose]);
 
   const minimizeWindow = useCallback((id) => {
-    playSound('minimize', 0.2);
+    playClick(); // Reuse click/minimize sound
     setWindows((prev) =>
       prev.map((w) => (w.id === id ? { ...w, isMinimized: true } : w))
     );
     if (activeWindowId === id) {
       setActiveWindowId(null);
     }
-  }, [activeWindowId, playSound]);
+  }, [activeWindowId, playClick]);
 
   const focusWindow = useCallback((id) => {
-    playSound('click', 0.1);
+    playClick();
     setWindows((prev) =>
       prev.map((w) => (w.id === id ? { ...w, zIndex: maxZIndex + 1, isMinimized: false } : w))
     );
     setActiveWindowId(id);
     setMaxZIndex(prev => prev + 1);
-  }, [maxZIndex, playSound]);
+  }, [maxZIndex, playClick]);
 
   const maximizeWindow = useCallback((id) => {
-    playSound('click', 0.15);
+    playClick();
     setWindows((prev) =>
       prev.map((w) => (w.id === id ? { ...w, isMaximized: !w.isMaximized } : w))
     );
-  }, [playSound]);
+  }, [playClick]);
 
   // Pin/Unpin app
   const togglePinApp = useCallback((appId) => {
@@ -119,8 +172,15 @@ export const OSProvider = ({ children }) => {
         reorderPinnedApps,
         // Sound controls
         playSound,
-        toggleSounds,
-        isSoundEnabled,
+        toggleSounds: setSoundEnabled,
+        isSoundEnabled: soundEnabled,
+        // Power controls
+        powerState,
+        setPowerState,
+        sleep,
+        wake,
+        restart,
+        shutdown,
       }}
     >
       {children}

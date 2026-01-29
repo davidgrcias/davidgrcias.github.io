@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf, Power, RotateCcw } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
@@ -23,7 +23,7 @@ const AppLoadingFallback = () => (
 );
 
 const Taskbar = ({ onOpenSpotlight }) => {
-  const { windows, activeWindowId, openApp, minimizeWindow, closeWindow, focusWindow, toggleSounds, isSoundEnabled, pinnedApps, togglePinApp, isPinned, reorderPinnedApps } = useOS();
+  const { windows, activeWindowId, openApp, minimizeWindow, closeWindow, focusWindow, toggleSounds, isSoundEnabled, pinnedApps, togglePinApp, isPinned, reorderPinnedApps, sleep, restart, shutdown } = useOS();
   const { theme } = useTheme();
   const { isMobile } = useDeviceDetection();
   const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
@@ -38,6 +38,9 @@ const Taskbar = ({ onOpenSpotlight }) => {
   
   // Battery popup state
   const [batteryPopupOpen, setBatteryPopupOpen] = useState(false);
+
+  // Power popup state
+  const [powerPopupOpen, setPowerPopupOpen] = useState(false);
   
   // Brightness & Power Saver (simulated, stored in localStorage)
   const [brightness, setBrightness] = useState(() => {
@@ -102,7 +105,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
   // Update sound state from context
   useEffect(() => {
-    setSoundEnabled(isSoundEnabled());
+    setSoundEnabled(isSoundEnabled);
   }, [isSoundEnabled]);
 
   // Battery API
@@ -225,9 +228,10 @@ const Taskbar = ({ onOpenSpotlight }) => {
       setNetworksOpen(false);
       setVolumePopupOpen(false);
       setBatteryPopupOpen(false);
+      setPowerPopupOpen(false);
     };
 
-    if (contextMenu || taskbarContextMenu || networksOpen || volumePopupOpen || batteryPopupOpen) {
+    if (contextMenu || taskbarContextMenu || networksOpen || volumePopupOpen || batteryPopupOpen || powerPopupOpen) {
       document.addEventListener('click', handleClickOutside);
       // Also close on right click elsewhere
       document.addEventListener('contextmenu', handleClickOutside);
@@ -236,7 +240,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
         document.removeEventListener('contextmenu', handleClickOutside);
       };
     }
-  }, [contextMenu, taskbarContextMenu, networksOpen, volumePopupOpen, batteryPopupOpen]);
+  }, [contextMenu, taskbarContextMenu, networksOpen, volumePopupOpen, batteryPopupOpen, powerPopupOpen]);
 
   // Taskbar right-click handler
   const handleTaskbarContextMenu = (e) => {
@@ -783,6 +787,72 @@ const Taskbar = ({ onOpenSpotlight }) => {
           </div>
 
           {!isMobile && <SystemClock />}
+
+          {/* Power Menu */}
+          <div className="relative ml-2">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setPowerPopupOpen(!powerPopupOpen);
+              }}
+              className={`p-2 rounded-lg transition-colors ${powerPopupOpen ? 'bg-red-500/20 text-red-400' : 'hover:bg-white/10 text-white/80 hover:text-white'}`}
+              title="Power"
+            >
+              <Power size={20} />
+            </button>
+
+            {powerPopupOpen && (
+              <div
+                className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 w-48 z-[10000]"
+                style={{
+                    right: isMobile ? '10px' : '10px',
+                    bottom: isMobile ? '70px' : '80px',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  onClick={() => { setPowerPopupOpen(false); sleep(); }}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors text-left group"
+                >
+                  <div className="p-2 rounded-full bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400">
+                      <Moon size={18} />
+                  </div>
+                  <div>
+                      <div className="font-medium text-sm">Sleep</div>
+                      <div className="text-xs text-white/50">Lock screen</div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => { setPowerPopupOpen(false); restart(); }}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors text-left group"
+                >
+                  <div className="p-2 rounded-full bg-yellow-500/10 group-hover:bg-yellow-500/20 text-yellow-400">
+                      <RotateCcw size={18} />
+                  </div>
+                  <div>
+                      <div className="font-medium text-sm">Restart</div>
+                      <div className="text-xs text-white/50">Reboot system</div>
+                  </div>
+                </button>
+
+                <div className="h-px bg-white/10 my-1"></div>
+
+                <button
+                  onClick={() => { setPowerPopupOpen(false); shutdown(); }}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-red-500/10 transition-colors text-left group"
+                >
+                  <div className="p-2 rounded-full bg-red-500/10 group-hover:bg-red-500/20 text-red-400">
+                      <Power size={18} />
+                  </div>
+                  <div>
+                      <div className="font-medium text-sm text-red-400">Shut Down</div>
+                      <div className="text-xs text-white/50">Power off</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

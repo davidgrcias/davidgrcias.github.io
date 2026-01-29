@@ -5,11 +5,13 @@ import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import { useTouchGestures } from '../../hooks/useTouchGestures';
+import { useSound } from '../../contexts/SoundContext';
 
 const WindowFrame = ({ window }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
   const { theme } = useTheme();
   const { isMobile, isTablet, width, height } = useDeviceDetection();
+  const { playClose, playClick } = useSound();
   const dragControls = useDragControls();
   const [isDragging, setIsDragging] = useState(false);
 
@@ -133,7 +135,7 @@ const WindowFrame = ({ window }) => {
           onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking buttons
         >
           <motion.button
-            onClick={(e) => { e.stopPropagation(); minimizeWindow(window.id); }}
+            onClick={(e) => { e.stopPropagation(); playClick(); minimizeWindow(window.id); }}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-yellow-500/20 rounded-full transition-colors group"
@@ -143,7 +145,7 @@ const WindowFrame = ({ window }) => {
             <Minus size={14} className="text-yellow-400" />
           </motion.button>
           <motion.button
-            onClick={(e) => { e.stopPropagation(); maximizeWindow(window.id); }}
+            onClick={(e) => { e.stopPropagation(); playClick(); maximizeWindow(window.id); }}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-green-500/20 rounded-full transition-colors group"
@@ -153,7 +155,7 @@ const WindowFrame = ({ window }) => {
             <Maximize2 size={13} className="text-green-400" />
           </motion.button>
           <motion.button
-            onClick={(e) => { e.stopPropagation(); closeWindow(window.id); }}
+            onClick={(e) => { e.stopPropagation(); playClose(); closeWindow(window.id); }}
             whileHover={{ scale: 1.15, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-red-500/20 rounded-full transition-colors group"

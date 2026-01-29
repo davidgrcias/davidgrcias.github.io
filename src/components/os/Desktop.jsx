@@ -10,6 +10,9 @@ import Taskbar from './Taskbar';
 import WindowFrame from './WindowFrame';
 import ContextMenu from './ContextMenu';
 import BootSequence from './BootSequence';
+import LockScreen from './LockScreen';
+import Wallpaper from './Wallpaper';
+import PowerTransition from './PowerTransition';
 import DesktopIcon from './DesktopIcon';
 import CommandPalette from './CommandPalette';
 import WindowSwitcher from './WindowSwitcher';
@@ -17,8 +20,11 @@ import Spotlight from './Spotlight';
 import ErrorBoundary from '../ErrorBoundary';
 import MusicPlayer from '../widgets/MusicPlayer';
 import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
+import { useSound } from '../../contexts/SoundContext';
 import Calendar from '../widgets/Calendar';
 import PortfolioStats from '../widgets/PortfolioStats';
+import WeatherWidget from '../widgets/WeatherWidget';
+import SystemMonitorWidget from '../widgets/SystemMonitorWidget';
 import KonamiSecret from '../easter-eggs/KonamiSecret';
 import ScreenshotTool from '../tools/ScreenshotTool';
 import SnakeGame from '../easter-eggs/SnakeGame';
@@ -47,13 +53,14 @@ const AppLoadingFallback = () => (
 );
 
 const DesktopContent = () => {
-    const { windows, activeWindowId, closeWindow, minimizeWindow, openApp, pinnedApps, togglePinApp, isPinned } = useOS();
+    const { windows, activeWindowId, closeWindow, minimizeWindow, openApp, pinnedApps, togglePinApp, isPinned, powerState, setPowerState, wake } = useOS();
     const { showNotification } = useNotification();
     const { unlockAchievement, trackMetric, currentAchievement, clearAchievement } = useAchievements();
     const { theme } = useTheme();
+    const { playUnlock, playOpen, playClose } = useSound();
     const [contextMenu, setContextMenu] = useState(null);
     const [shortcutContextMenu, setShortcutContextMenu] = useState(null);
-    const [showBoot, setShowBoot] = useState(true);
+    // Removed local boot/lock states
     const hasShownWelcomeRef = React.useRef(false);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const [windowSwitcherOpen, setWindowSwitcherOpen] = useState(false);
@@ -68,6 +75,12 @@ const DesktopContent = () => {
     const [keyboardHelpOpen, setKeyboardHelpOpen] = useState(false);
     const [welcomeTutorialOpen, setWelcomeTutorialOpen] = useState(false);
     const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+    
+    // Desktop widgets state
+    const [showWidgets, setShowWidgets] = useState(() => {
+        const saved = localStorage.getItem('webos-show-widgets');
+        return saved !== 'false'; // Default true
+    });
 
     // Grid configuration constants - CENTERED with equal margins
     const GRID_SIZE = 120; // pixels per cell (bigger for more visible icons)
@@ -204,7 +217,7 @@ const DesktopContent = () => {
 
     // Show welcome flow after boot (mutually exclusive)
     useEffect(() => {
-        if (showBoot || hasShownWelcomeRef.current) return;
+        if (powerState === 'booting' || hasShownWelcomeRef.current) return;
         hasShownWelcomeRef.current = true;
 
         const tutorialCompleted = localStorage.getItem('webos-tutorial-completed');
@@ -226,7 +239,7 @@ const DesktopContent = () => {
         }, 100); // Near instant - 100ms after load
 
         return () => clearTimeout(timer);
-    }, [showBoot, showNotification]);
+    }, [powerState, showNotification]);
 
     // Keyboard shortcuts
     useKeyboardShortcuts({
@@ -419,27 +432,41 @@ const DesktopContent = () => {
     // Skip boot on subsequent visits (use sessionStorage)
     useEffect(() => {
         const hasBooted = sessionStorage.getItem('webos-booted');
-        if (hasBooted) {
-            setShowBoot(false);
+        if (hasBooted && powerState === 'booting') {
+            setPowerState('active');
         }
-    }, []);
+    }, [powerState, setPowerState]);
 
-    const handleBootComplete = () => {
-        sessionStorage.setItem('webos-booted', 'true');
-        setShowBoot(false);
-    };
+    // Boot Sequence Logic
+    if (powerState === 'off') {
+        return <div className="h-screen w-screen bg-black" />;
+    }
 
-    if (showBoot) {
-        return <BootSequence onComplete={handleBootComplete} />;
+    if (powerState === 'restarting' || powerState === 'shutting_down') {
+        return <PowerTransition type={powerState} />;
+    }
+
+    if (powerState === 'booting') {
+        return <BootSequence onComplete={() => {
+            sessionStorage.setItem('webos-booted', 'true');
+            setPowerState('active');
+        }} />;
     }
 
     return (
-        <div
-            className={`h-screen w-screen overflow-hidden bg-gradient-to-br ${theme.colors.bg} bg-cover bg-center text-white relative`}
+        <Wallpaper 
             onContextMenu={handleContextMenu}
             onClick={() => {
                 setContextMenu(null);
                 setShortcutContextMenu(null);
+                setCommandPaletteOpen(false);
+                setWindowSwitcherOpen(false);
+                setSpotlightOpen(false);
+                setCalendarOpen(false);
+                setPlayerOpen(false);
+                setStatsOpen(false);
+                setKeyboardHelpOpen(false);
+                // Close other widgets if needed
             }}
         >
             {/* Overlay for depth */}
@@ -661,7 +688,25 @@ const DesktopContent = () => {
                 pdfUrl="/CV_DavidGarciaSaragih.pdf"
                 title="CV - David Garcia Saragih"
             />
-        </div>
+
+            {/* Desktop Widgets - Weather & System Monitor */}
+            {showWidgets && powerState === 'active' && (
+                <div className="fixed right-4 sm:right-6 top-4 sm:top-6 z-20 flex flex-col gap-4 pointer-events-auto">
+                    <WeatherWidget className="w-56 sm:w-64 md:w-72" />
+                    <SystemMonitorWidget className="w-56 sm:w-64 md:w-72" />
+                </div>
+            )}
+
+            {/* Lock Screen - Show only when locked */}
+            {powerState === 'locked' && (
+                <LockScreen 
+                    onUnlock={() => {
+                        playUnlock();
+                        wake();
+                    }} 
+                />
+            )}
+        </Wallpaper>
     );
 };
 
