@@ -57,6 +57,7 @@ const DesktopContent = () => {
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const [windowSwitcherOpen, setWindowSwitcherOpen] = useState(false);
     const [spotlightOpen, setSpotlightOpen] = useState(false);
+    const [spotlightQuery, setSpotlightQuery] = useState('');
     const { isPlayerOpen, setPlayerOpen } = useMusicPlayer();
     const [calendarOpen, setCalendarOpen] = useState(false);
     const [konamiSecretOpen, setKonamiSecretOpen] = useState(false);
@@ -233,10 +234,6 @@ const DesktopContent = () => {
                 minimizeWindow(activeWindowId);
             }
         },
-        'Ctrl+Shift+s': () => {
-            setScreenshotToolOpen(true);
-            trackMetric('screenshot');
-        },
         'Ctrl+/': () => {
             setKeyboardHelpOpen(true);
         },
@@ -370,7 +367,11 @@ const DesktopContent = () => {
             {/* Spotlight Search */}
             <Spotlight
                 isOpen={spotlightOpen}
-                onClose={() => setSpotlightOpen(false)}
+                onClose={() => {
+                    setSpotlightOpen(false);
+                    setSpotlightQuery('');
+                }}
+                initialQuery={spotlightQuery}
             />
 
             {/* Widgets */}
@@ -427,7 +428,10 @@ const DesktopContent = () => {
             />
 
             {/* Taskbar */}
-            <Taskbar onOpenSpotlight={() => setSpotlightOpen(true)} />
+            <Taskbar onOpenSpotlight={(query) => {
+                setSpotlightOpen(true);
+                setSpotlightQuery(query || '');
+            }} />
 
             {/* PDF Viewer */}
             <PDFViewer

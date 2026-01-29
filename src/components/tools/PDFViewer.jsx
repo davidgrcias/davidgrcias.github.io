@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download, ExternalLink, FileText } from 'lucide-react';
+import { X, Download, ExternalLink, FileText, Loader2 } from 'lucide-react';
 
 /**
  * PDF Preview Modal - Responsive CV/PDF Viewer
  */
 const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document' }) => {
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Reset loading state when modal opens/closes or URL changes
+    React.useEffect(() => {
+        if (isOpen) {
+            setIsLoading(true);
+        }
+    }, [isOpen, pdfUrl]);
+
     if (!isOpen) return null;
 
     const handleDownload = () => {
@@ -80,11 +89,20 @@ const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document' }) => {
 
                         {/* PDF Embed */}
                         <div className="flex-1 bg-zinc-800 relative">
+                            {/* Loading Spinner */}
+                            {isLoading && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-zinc-800 z-10 transition-opacity duration-300">
+                                    <Loader2 size={48} className="text-cyan-400 animate-spin mb-4" />
+                                    <p className="text-white/60 text-sm">Loading document...</p>
+                                </div>
+                            )}
+
                             {/* Desktop/Tablet: Use iframe embed */}
                             <iframe
                                 src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
                                 className="w-full h-full border-0 hidden sm:block"
                                 title={title}
+                                onLoad={() => setIsLoading(false)}
                             />
 
                             {/* Mobile: Show preview image/placeholder with download option */}

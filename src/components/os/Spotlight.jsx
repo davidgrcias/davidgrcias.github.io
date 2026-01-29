@@ -1,40 +1,190 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, File, Folder, User, Code, Terminal, MessageSquare, StickyNote, Settings, Clock, Sparkles } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
+import ErrorBoundary from '../ErrorBoundary';
+
+// Lazy load apps
+const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
+const TerminalApp = lazy(() => import('../../apps/Terminal/TerminalApp'));
+const MessengerApp = lazy(() => import('../../apps/Messenger/MessengerApp'));
+const FileManagerApp = lazy(() => import('../../apps/FileManager/FileManagerApp'));
+const SettingsApp = lazy(() => import('../../apps/Settings/SettingsApp'));
+const AboutMeApp = lazy(() => import('../../apps/AboutMe/AboutMeApp'));
+const NotesApp = lazy(() => import('../../apps/Notes/NotesApp'));
+
+const AppLoadingFallback = () => (
+  <div className="w-full h-full flex items-center justify-center bg-zinc-900">
+    <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+  </div>
+);
 
 /**
  * Spotlight - Global search feature (Cmd+Space or Ctrl+Space)
  * Search across apps, files, settings, and execute actions
  */
-const Spotlight = ({ isOpen, onClose }) => {
+const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
   const { openApp } = useOS();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [results, setResults] = useState([]);
 
+  // Set initial query when provided
+  useEffect(() => {
+    if (isOpen && initialQuery) {
+      setQuery(initialQuery);
+    }
+  }, [isOpen, initialQuery]);
+
   // Searchable content database
   const searchableItems = [
     // Apps
-    { type: 'app', id: 'vscode', title: 'VS Code Portfolio', icon: Code, keywords: ['portfolio', 'code', 'vscode', 'projects'], color: 'text-blue-400', action: () => openApp({ id: 'vscode', title: 'VS Code' }) },
-    { type: 'app', id: 'file-manager', title: 'File Manager', icon: Folder, keywords: ['files', 'explorer', 'folder'], color: 'text-yellow-400', action: () => openApp({ id: 'file-manager', title: 'File Manager' }) },
-    { type: 'app', id: 'about-me', title: 'About Me', icon: User, keywords: ['about', 'bio', 'profile', 'info'], color: 'text-cyan-400', action: () => openApp({ id: 'about-me', title: 'About Me' }) },
-    { type: 'app', id: 'notes', title: 'Quick Notes', icon: StickyNote, keywords: ['notes', 'memo', 'write'], color: 'text-yellow-300', action: () => openApp({ id: 'notes', title: 'Quick Notes' }) },
-    { type: 'app', id: 'terminal', title: 'Terminal', icon: Terminal, keywords: ['terminal', 'cli', 'command'], color: 'text-green-400', action: () => openApp({ id: 'terminal', title: 'Terminal' }) },
-    { type: 'app', id: 'messenger', title: 'Messages', icon: MessageSquare, keywords: ['chat', 'messenger', 'ai'], color: 'text-purple-400', action: () => openApp({ id: 'messenger', title: 'Messages' }) },
-    { type: 'app', id: 'settings', title: 'Settings', icon: Settings, keywords: ['settings', 'preferences', 'config'], color: 'text-gray-400', action: () => openApp({ id: 'settings', title: 'Settings' }) },
-    
+    {
+      type: 'app',
+      id: 'vscode',
+      title: 'VS Code Portfolio',
+      icon: Code,
+      keywords: ['portfolio', 'code', 'vscode', 'projects'],
+      color: 'text-blue-400',
+      action: () => openApp({
+        id: 'vscode',
+        title: 'VS Code',
+        icon: <Code size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="VS Code"><VSCodeApp /></ErrorBoundary></Suspense>
+      })
+    },
+    {
+      type: 'app',
+      id: 'file-manager',
+      title: 'File Manager',
+      icon: Folder,
+      keywords: ['files', 'explorer', 'folder'],
+      color: 'text-yellow-400',
+      action: () => openApp({
+        id: 'file-manager',
+        title: 'File Manager',
+        icon: <Folder size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="File Manager"><FileManagerApp /></ErrorBoundary></Suspense>
+      })
+    },
+    {
+      type: 'app',
+      id: 'about-me',
+      title: 'About Me',
+      icon: User,
+      keywords: ['about', 'bio', 'profile', 'info'],
+      color: 'text-cyan-400',
+      action: () => openApp({
+        id: 'about-me',
+        title: 'About Me',
+        icon: <User size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense>
+      })
+    },
+    {
+      type: 'app',
+      id: 'notes',
+      title: 'Quick Notes',
+      icon: StickyNote,
+      keywords: ['notes', 'memo', 'write'],
+      color: 'text-yellow-300',
+      action: () => openApp({
+        id: 'notes',
+        title: 'Quick Notes',
+        icon: <StickyNote size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense>
+      })
+    },
+    {
+      type: 'app',
+      id: 'terminal',
+      title: 'Terminal',
+      icon: Terminal,
+      keywords: ['terminal', 'cli', 'command'],
+      color: 'text-green-400',
+      action: () => openApp({
+        id: 'terminal',
+        title: 'Terminal',
+        icon: <Terminal size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Terminal"><TerminalApp /></ErrorBoundary></Suspense>
+      })
+    },
+    {
+      type: 'app',
+      id: 'messenger',
+      title: 'Messages',
+      icon: MessageSquare,
+      keywords: ['chat', 'messenger', 'ai'],
+      color: 'text-purple-400',
+      action: () => openApp({
+        id: 'messenger',
+        title: 'Messages',
+        icon: <MessageSquare size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense>
+      })
+    },
+    {
+      type: 'app',
+      id: 'settings',
+      title: 'Settings',
+      icon: Settings,
+      keywords: ['settings', 'preferences', 'config'],
+      color: 'text-gray-400',
+      action: () => openApp({
+        id: 'settings',
+        title: 'Settings',
+        icon: <Settings size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Settings"><SettingsApp /></ErrorBoundary></Suspense>
+      })
+    },
+
     // Skills
     { type: 'skill', title: 'React.js Development', icon: Code, keywords: ['react', 'frontend', 'javascript'], color: 'text-blue-400', description: 'Modern React development with hooks' },
     { type: 'skill', title: 'Laravel & PHP', icon: Code, keywords: ['laravel', 'php', 'backend'], color: 'text-red-400', description: 'Full-stack Laravel applications' },
     { type: 'skill', title: 'UI/UX Design', icon: Sparkles, keywords: ['design', 'ui', 'ux', 'figma'], color: 'text-pink-400', description: 'User interface and experience design' },
     { type: 'skill', title: 'MySQL Database', icon: File, keywords: ['mysql', 'database', 'sql'], color: 'text-orange-400', description: 'Database design and optimization' },
-    
+
     // Quick Actions
-    { type: 'action', title: 'View Projects', icon: Folder, keywords: ['projects', 'work', 'portfolio'], color: 'text-blue-400', action: () => openApp({ id: 'vscode', title: 'VS Code' }) },
-    { type: 'action', title: 'Contact Me', icon: MessageSquare, keywords: ['contact', 'email', 'reach'], color: 'text-purple-400', action: () => openApp({ id: 'about-me', title: 'About Me' }) },
-    { type: 'action', title: 'View Experience', icon: Clock, keywords: ['experience', 'work', 'career'], color: 'text-green-400', action: () => openApp({ id: 'vscode', title: 'VS Code' }) },
-    
+    {
+      type: 'action',
+      title: 'View Projects',
+      icon: Folder,
+      keywords: ['projects', 'work', 'portfolio'],
+      color: 'text-blue-400',
+      action: () => openApp({
+        id: 'vscode',
+        title: 'VS Code',
+        icon: <Code size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="VS Code"><VSCodeApp /></ErrorBoundary></Suspense>
+      })
+    },
+    {
+      type: 'action',
+      title: 'Contact Me',
+      icon: MessageSquare,
+      keywords: ['contact', 'email', 'reach'],
+      color: 'text-purple-400',
+      action: () => openApp({
+        id: 'about-me',
+        title: 'About Me',
+        icon: <User size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense>
+      })
+    },
+    {
+      type: 'action',
+      title: 'View Experience',
+      icon: Clock,
+      keywords: ['experience', 'work', 'career'],
+      color: 'text-green-400',
+      action: () => openApp({
+        id: 'vscode',
+        title: 'VS Code',
+        icon: <Code size={24} />,
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="VS Code"><VSCodeApp /></ErrorBoundary></Suspense>
+      })
+    },
+
     // Personal Info
     { type: 'info', title: 'David Garcia Saragih', icon: User, keywords: ['name', 'david', 'garcia'], color: 'text-cyan-400', description: 'Full-Stack Developer' },
     { type: 'info', title: 'Jakarta, Indonesia', icon: User, keywords: ['location', 'jakarta', 'indonesia'], color: 'text-cyan-400', description: 'Current location' },
@@ -160,8 +310,8 @@ const Spotlight = ({ isOpen, onClose }) => {
                       onClick={() => executeAction(item)}
                       className={`
                         flex items-center gap-4 px-6 py-4 cursor-pointer transition-all
-                        ${selectedIndex === index 
-                          ? 'bg-blue-600/20 border-l-4 border-blue-500' 
+                        ${selectedIndex === index
+                          ? 'bg-blue-600/20 border-l-4 border-blue-500'
                           : 'hover:bg-zinc-800/50 border-l-4 border-transparent'
                         }
                       `}
