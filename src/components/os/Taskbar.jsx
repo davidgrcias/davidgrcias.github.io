@@ -29,16 +29,21 @@ const Taskbar = ({ onOpenSpotlight }) => {
   const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
 
   // Real System States (Simulated for realism as requested)
-  // Battery: Random start between 20-80%, always charging, increments slowly
-  const [battery, setBattery] = useState({ 
-    level: Math.random() * 0.6 + 0.2, // 20% to 80%
-    charging: true 
+  // Battery: Persisted random start, always charging, increments slowly
+  const [battery, setBattery] = useState(() => {
+    const savedLevel = localStorage.getItem('webos-battery-level');
+    return { 
+      level: savedLevel ? parseFloat(savedLevel) : Math.random() * 0.6 + 0.2, // Load saved or random 20-80%
+      charging: true 
+    };
   });
   
   // Wifi: Random fluctuation 1-3 bars (simulated)
   const [wifiSignal, setWifiSignal] = useState(3); // 0-3 scale
   const [isOnline, setIsOnline] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  
+  // ... (other states remain the same)
 
   // Volume popup state
   const [volumePopupOpen, setVolumePopupOpen] = useState(false);
@@ -116,10 +121,16 @@ const Taskbar = ({ onOpenSpotlight }) => {
       setBattery(prev => {
         // Stop at 100%
         if (prev.level >= 1) return { level: 1, charging: true };
+        
         // Increment by very small fixed amount (0.5%) for stability
         const increment = 0.005; 
+        const newLevel = Math.min(1, prev.level + increment);
+        
+        // Save to localStorage
+        localStorage.setItem('webos-battery-level', newLevel.toString());
+        
         return {
-          level: Math.min(1, prev.level + increment),
+          level: newLevel,
           charging: true
         };
       });
@@ -541,7 +552,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                   </div>
 
                   {isOnline ? (
-                    <div className="max-h-[400px] overflow-y-auto pr-1">
+                    <div className="max-h-[400px] overflow-y-auto pr-1 custom-scrollbar-thin">
                       {/* Connected Network */}
                       <div className="flex items-center justify-between p-2 rounded-lg bg-cyan-500/20 border border-cyan-400/30 mb-2">
                         <div className="flex items-center gap-3">
