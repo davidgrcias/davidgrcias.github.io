@@ -92,12 +92,12 @@ const WelcomeTutorial = ({ isOpen, onClose }) => {
   };
 
   const handleFinish = () => {
-    localStorage.setItem('webos-tutorial-completed', 'true');
+    localStorage.setItem('webos-has-seen-welcome', 'true');
     onClose('completed');
   };
 
   const handleSkip = () => {
-    localStorage.setItem('webos-tutorial-skipped', 'true');
+    localStorage.setItem('webos-has-seen-welcome', 'true');
     onClose('skipped');
   };
 
@@ -225,6 +225,13 @@ const WelcomeTutorial = ({ isOpen, onClose }) => {
 
             {/* Navigation Buttons */}
             <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                onClick={handleSkip}
+                className="px-2.5 py-1.5 sm:px-4 sm:py-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors text-xs sm:text-sm font-medium"
+              >
+                Skip Intro
+              </button>
+              
               {!isFirst && (
                 <button
                   onClick={handlePrev}

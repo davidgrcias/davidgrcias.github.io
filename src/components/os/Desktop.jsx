@@ -241,23 +241,30 @@ const DesktopContent = () => {
         if (powerState === 'booting' || hasShownWelcomeRef.current) return;
         hasShownWelcomeRef.current = true;
 
-        const tutorialCompleted = localStorage.getItem('webos-tutorial-completed');
-        const tutorialSkipped = localStorage.getItem('webos-tutorial-skipped');
-        const hasTutorialFlag = Boolean(tutorialCompleted || tutorialSkipped);
+        const hasSeenWelcome = localStorage.getItem('webos-has-seen-welcome');
 
         const timer = setTimeout(() => {
-            if (!hasTutorialFlag) {
+            if (!hasSeenWelcome) {
                 setWelcomeTutorialOpen(true);
                 return;
             }
 
-            showNotification({
-                title: 'Welcome back! 👋',
-                message: 'Press Ctrl+/ for keyboard shortcuts.',
-                type: 'info',
-                duration: 2000, // Quick flash - 2 seconds
-            });
-        }, 100); // Near instant - 100ms after load
+            // Only show welcome back notification ONCE per session
+            // Only show welcome back notification ONCE per session
+            // DISABLED temporarily as per user request
+            /*
+            const hasShownWelcomeSession = sessionStorage.getItem('webos-welcome-shown');
+            if (!hasShownWelcomeSession) {
+                showNotification({
+                    title: 'Welcome back! 👋',
+                    message: 'Press Ctrl+/ for keyboard shortcuts.',
+                    type: 'info',
+                    duration: 3000,
+                });
+                sessionStorage.setItem('webos-welcome-shown', 'true');
+            }
+            */
+        }, 800); // Slight delay for smoother entrance
 
         return () => clearTimeout(timer);
     }, [powerState, showNotification]);
@@ -657,9 +664,8 @@ const DesktopContent = () => {
                 onClose={(reason) => {
                     setWelcomeTutorialOpen(false);
                     unlockAchievement('firstBoot');
-                    if (!reason) {
-                        localStorage.setItem('webos-tutorial-skipped', 'true');
-                    }
+                    // Force save just in case
+                    localStorage.setItem('webos-has-seen-welcome', 'true');
                 }}
             />
 

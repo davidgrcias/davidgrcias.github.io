@@ -32,12 +32,9 @@ export const NotificationProvider = ({ children }) => {
     };
 
     setNotifications(prev => {
-      // Max 3 notifications at once - remove oldest if limit exceeded
-      const updated = [...prev, notification];
-      if (updated.length > 3) {
-        return updated.slice(-3);
-      }
-      return updated;
+      // Dynamic Island style: Only show ONE notification at a time (replace current)
+      // This prevents the "stacking" look which doesn't fit the island aesthetic
+      return [notification];
     });
 
     // Add to recent notifications for deduplication
@@ -70,17 +67,16 @@ export const NotificationProvider = ({ children }) => {
 
 /**
  * Notification Container
- * Renders all active notifications
+ * Renders notifications in a stack at top-center (Dynamic Island style)
  */
 const NotificationContainer = ({ notifications, onRemove }) => {
   return (
-    <div className="fixed top-4 right-4 z-[10001] pointer-events-none">
-      <AnimatePresence>
-        {notifications.map((notification, index) => (
+    <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[10001] pointer-events-none flex flex-col items-center gap-2">
+      <AnimatePresence mode="popLayout">
+        {notifications.map((notification) => (
           <Notification
             key={notification.id}
             notification={notification}
-            index={index}
             onClose={() => onRemove(notification.id)}
           />
         ))}
@@ -91,72 +87,51 @@ const NotificationContainer = ({ notifications, onRemove }) => {
 
 /**
  * Individual Notification
+ * dynamic-island pill style
  */
-const Notification = ({ notification, index, onClose }) => {
+const Notification = ({ notification, onClose }) => {
   const icons = {
-    success: <CheckCircle size={20} className="text-green-400" />,
-    error: <AlertCircle size={20} className="text-red-400" />,
-    warning: <AlertTriangle size={20} className="text-yellow-400" />,
-    info: <Info size={20} className="text-blue-400" />,
-  };
-
-  const colors = {
-    success: 'border-green-500/30 bg-green-950/30',
-    error: 'border-red-500/30 bg-red-950/30',
-    warning: 'border-yellow-500/30 bg-yellow-950/30',
-    info: 'border-blue-500/30 bg-blue-950/30',
+    success: <CheckCircle size={14} className="text-green-400" />,
+    error: <AlertCircle size={14} className="text-red-400" />,
+    warning: <AlertTriangle size={14} className="text-yellow-400" />,
+    info: <Info size={14} className="text-blue-400" />,
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 300, scale: 0.8 }}
-      animate={{ 
-        opacity: 1, 
-        x: 0, 
-        scale: 1,
-        y: index * 110 // Stack notifications with 110px spacing
-      }}
-      exit={{ opacity: 0, x: 300, scale: 0.8 }}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-      className={`absolute top-0 right-0 pointer-events-auto min-w-[300px] max-w-[400px] bg-gray-900/95 backdrop-blur-xl border rounded-xl shadow-2xl overflow-hidden ${colors[notification.type]}`}
+      layout
+      initial={{ opacity: 0, y: -50, scale: 0.8 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.2 } }}
+      transition={{ type: 'spring', damping: 25, stiffness: 400 }}
+      onClick={onClose}
+      className="pointer-events-auto flex items-center gap-3 pl-3 pr-4 py-2 bg-black/80 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl hover:bg-black/90 transition-colors cursor-pointer group min-w-[200px] max-w-[90vw]"
     >
-      <div className="p-4 flex items-start gap-3">
-        {/* Icon */}
-        <div className="flex-shrink-0 mt-0.5">
-          {icons[notification.type]}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-white mb-1">
-            {notification.title}
-          </h4>
-          {notification.message && (
-            <p className="text-xs text-white/70 leading-relaxed">
-              {notification.message}
-            </p>
-          )}
-        </div>
-
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="flex-shrink-0 p-1 hover:bg-white/10 rounded-lg transition-colors"
-          aria-label="Close notification"
-        >
-          <X size={16} className="text-white/60 hover:text-white" />
-        </button>
+      {/* Icon Bubble */}
+      <div className={`flex items-center justify-center w-6 h-6 rounded-full bg-white/10 ${
+        notification.type === 'success' ? 'text-green-400' : 
+        notification.type === 'error' ? 'text-red-400' : 
+        notification.type === 'warning' ? 'text-yellow-400' : 'text-blue-400'
+      }`}>
+        {icons[notification.type]}
       </div>
 
-      {/* Progress bar */}
-      {notification.duration > 0 && (
-        <motion.div
-          initial={{ width: '100%' }}
-          animate={{ width: '0%' }}
-          transition={{ duration: notification.duration / 1000, ease: 'linear' }}
-          className={`h-1 ${notification.type === 'success' ? 'bg-green-500' : notification.type === 'error' ? 'bg-red-500' : notification.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'}`}
-        />
-      )}
+      {/* Content */}
+      <div className="flex flex-col flex-1 min-w-0 mr-2">
+        <span className="text-sm font-medium text-white leading-none mb-0.5">
+          {notification.title}
+        </span>
+        {notification.message && (
+          <span className="text-[11px] text-white/50 leading-tight truncate max-w-[200px]">
+            {notification.message}
+          </span>
+        )}
+      </div>
+
+      {/* Close Hint (Visible on hover) */}
+      <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <X size={10} className="text-white/70" />
+      </div>
     </motion.div>
   );
 };
