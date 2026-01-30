@@ -112,7 +112,18 @@ const DesktopContent = () => {
     // Validates saved positions and removes invalid ones
     const [iconGridPositions, setIconGridPositions] = useState(() => {
         const saved = localStorage.getItem('webos-desktop-grid');
-        if (!saved) return {};
+        // Default layout if no saved data matches user request
+        const defaultLayout = {
+            'vscode': { row: 0, col: 0 },      // Portfolio
+            'messenger': { row: 0, col: 1 },   // Chat
+            'terminal': { row: 0, col: 2 },    // Terminal
+            'about-me': { row: 1, col: 0 },    // About Me
+            'cv-download': { row: 1, col: 1 }, // My CV
+            'file-manager': { row: 2, col: 0 },// Files
+            'notes': { row: 3, col: 0 },       // Notes
+        };
+
+        if (!saved) return defaultLayout;
         
         try {
             const parsed = JSON.parse(saved);
@@ -129,11 +140,12 @@ const DesktopContent = () => {
                     validated[id] = pos;
                 }
             }
-            return validated;
+            // Merge defaults if validation results in empty object (fallback)
+            return Object.keys(validated).length > 0 ? validated : defaultLayout;
         } catch {
             // Invalid JSON, clear it
             localStorage.removeItem('webos-desktop-grid');
-            return {};
+            return defaultLayout;
         }
     });
 

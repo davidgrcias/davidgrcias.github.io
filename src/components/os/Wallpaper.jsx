@@ -49,27 +49,27 @@ const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
     >
       {/* Animated Particles Layer */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Floating Orbs */}
-        {[...Array(6)].map((_, i) => (
+        {/* Floating Orbs - Optimized count: 3 */}
+        {[...Array(3)].map((_, i) => (
           <motion.div
             key={`orb-${i}`}
             className="absolute rounded-full blur-3xl opacity-30 mix-blend-overlay"
             style={{
               background: i % 2 === 0 ? 'rgba(255, 255, 255, 0.4)' : 'rgba(34, 211, 238, 0.4)', // White or Cyan
-              width: Math.random() * 400 + 200,
-              height: Math.random() * 400 + 200,
+              width: Math.random() * 300 + 200, // Max 500px
+              height: Math.random() * 300 + 200,
             }}
             initial={{
               x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
               y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
             }}
             animate={{
-              x: [null, Math.random() * 100 - 50],
-              y: [null, Math.random() * 100 - 50],
-              scale: [1, 1.1, 0.9, 1],
+              x: [null, Math.random() * 60 - 30], // Reduced movement range
+              y: [null, Math.random() * 60 - 30],
+              scale: [1, 1.05, 0.95, 1], // Reduced scaling
             }}
             transition={{
-              duration: 10 + Math.random() * 20,
+              duration: 15 + Math.random() * 30, // Slower animation (15-45s)
               repeat: Infinity,
               repeatType: "reverse",
               ease: "easeInOut",

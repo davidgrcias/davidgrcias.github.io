@@ -59,8 +59,8 @@ const DesktopIcon = ({ icon, label, onClick, onContextMenu, onDragEnd, style, is
       onDrag={handleDrag}
       onDragEnd={handleDragEnd}
       onContextMenu={onContextMenu}
-      whileHover={{ scale: 1.02, backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.1, y: -5, filter: 'brightness(1.2)' }}
+      whileTap={{ scale: 0.95 }}
       onClick={handleClick}
       onDoubleClick={handleClick}
       style={{ 
@@ -69,15 +69,15 @@ const DesktopIcon = ({ icon, label, onClick, onContextMenu, onDragEnd, style, is
         height: gridSize,
         ...style 
       }}
-      className={`flex flex-col items-center justify-center gap-2 rounded-xl transition-colors duration-200 cursor-pointer select-none group ${isDragging ? 'z-50 cursor-grabbing bg-white/10' : 'z-10 cursor-pointer'}`}
+      className={`flex flex-col items-center justify-center gap-1 rounded-xl transition-all duration-300 cursor-pointer select-none group ${isDragging ? 'z-50 cursor-grabbing opacity-80 scale-110' : 'z-10 cursor-pointer'}`}
     >
-      {/* Icon */}
-      <div className="w-14 h-14 flex items-center justify-center text-white/90 group-hover:text-white transition-colors pointer-events-none">
+      {/* Icon - Floating Effect */}
+      <div className="w-16 h-16 flex items-center justify-center text-white transition-all pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
         {icon}
       </div>
 
-      {/* Label */}
-      <span className="text-xs text-white text-center font-medium drop-shadow-md px-2 py-1 bg-black/30 backdrop-blur-sm rounded group-hover:bg-black/50 transition-all pointer-events-none line-clamp-2 leading-tight max-w-[95%]">
+      {/* Label - No box, just strong shadow */}
+      <span className="text-[13px] text-white text-center font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] px-1 rounded transition-all pointer-events-none line-clamp-2 leading-tight max-w-[100%] group-hover:text-white">
         {label}
       </span>
     </motion.button>

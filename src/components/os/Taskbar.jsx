@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf, Power, RotateCcw } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf, Power, RotateCcw, Check, Lock } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
@@ -28,11 +28,18 @@ const Taskbar = ({ onOpenSpotlight }) => {
   const { isMobile } = useDeviceDetection();
   const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
 
-  // Real System States
-  const [battery, setBattery] = useState({ level: 1, charging: false });
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  // Real System States (Simulated for realism as requested)
+  // Battery: Random start between 20-80%, always charging, increments slowly
+  const [battery, setBattery] = useState({ 
+    level: Math.random() * 0.6 + 0.2, // 20% to 80%
+    charging: true 
+  });
   
+  // Wifi: Random fluctuation 1-3 bars (simulated)
+  const [wifiSignal, setWifiSignal] = useState(3); // 0-3 scale
+  const [isOnline, setIsOnline] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+
   // Volume popup state
   const [volumePopupOpen, setVolumePopupOpen] = useState(false);
   
@@ -103,33 +110,39 @@ const Taskbar = ({ onOpenSpotlight }) => {
     }
   };
 
-  // Update sound state from context
+  // Simulated Battery Charging Logic
   useEffect(() => {
-    setSoundEnabled(isSoundEnabled);
-  }, [isSoundEnabled]);
-
-  // Battery API
-  useEffect(() => {
-    if ('getBattery' in navigator) {
-      navigator.getBattery().then((bat) => {
-        const updateBat = () => setBattery({ level: bat.level, charging: bat.charging });
-        updateBat();
-        bat.addEventListener('levelchange', updateBat);
-        bat.addEventListener('chargingchange', updateBat);
+    const chargeInterval = setInterval(() => {
+      setBattery(prev => {
+        // Stop at 100%
+        if (prev.level >= 1) return { level: 1, charging: true };
+        // Increment by very small fixed amount (0.5%) for stability
+        const increment = 0.005; 
+        return {
+          level: Math.min(1, prev.level + increment),
+          charging: true
+        };
       });
-    }
+    }, 5000); // Update every 5 seconds (Slow & Stable)
+
+    return () => clearInterval(chargeInterval);
   }, []);
 
-  // Network API
+  // Simulated Wifi Fluctuation
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
-    };
+    const signalInterval = setInterval(() => {
+        // Randomly change signal strength (heavily weighted towards 3 bars/full)
+        // 0: Offline, 1: Weak, 2: Good, 3: Excellent
+        const rand = Math.random();
+        let newSignal = 3;
+        if (rand < 0.05) newSignal = 1;      // 5% chance of weak signal
+        else if (rand < 0.2) newSignal = 2;  // 15% chance of good signal
+        // 80% chance of excellent signal
+        
+        setWifiSignal(newSignal);
+    }, 5000); // Fluctuate every 5 seconds
+
+    return () => clearInterval(signalInterval);
   }, []);
 
   // Apply brightness overlay effect
@@ -481,83 +494,110 @@ const Taskbar = ({ onOpenSpotlight }) => {
           <div className={`flex items-center ${isMobile ? 'gap-2 px-2' : 'gap-2 sm:gap-3 px-2 sm:px-3'
             } py-1.5 bg-white/5 rounded-full border border-white/5 hover:bg-white/10 transition-colors`}>
 
-            {/* Wifi */}
-            <div
-              className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 relative ${isOnline ? 'text-white' : 'text-gray-500'
-                }`}
-              onClick={(e) => {
-                e.stopPropagation();
-                setNetworksOpen(!networksOpen);
-              }}
-              title={isOnline ? "View Networks" : "Offline"}
-            >
-              {isOnline ? <Wifi size={16} /> : <WifiOff size={16} />}
-            </div>
-
-            {/* Networks Dropdown */}
-            {networksOpen && isOnline && (
+            {/* Network Status */}
+            <div className="relative">
               <div
-                className="context-menu-container fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 w-[90vw] sm:w-[280px] md:w-[320px] max-w-[350px] z-[10000]"
-                style={{
-                  right: isMobile ? '5vw' : 'clamp(10px, 5vw, 80px)',
-                  bottom: isMobile ? '70px' : '80px',
-                  maxHeight: 'calc(100vh - 150px)',
+                className={`cursor-pointer hover:text-cyan-400 transition-colors ${!isOnline ? 'text-red-400' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNetworksOpen(!networksOpen);
                 }}
-                onClick={(e) => e.stopPropagation()}
-                onContextMenu={(e) => e.preventDefault()}
+                title={!isOnline ? "Offline" : `Connected (Signal: ${wifiSignal === 3 ? 'Strong' : wifiSignal === 2 ? 'Good' : 'Weak'})`}
               >
-                <div className="px-4 py-2 border-b border-white/10">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Wifi size={16} className="text-cyan-400" />
-                      <span className="text-white font-semibold text-sm">Networks</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-green-400">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      Connected
+                {!isOnline ? <WifiOff size={18} /> : 
+                 wifiSignal >= 3 ? <Wifi size={18} /> : 
+                 wifiSignal === 2 ? <Wifi size={18} className="opacity-80" /> : 
+                 <div className="relative"><Wifi size={18} className="opacity-40" /><span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-yellow-400 rounded-full"></span></div>
+                }
+              </div>
+
+              {/* Network Popup */}
+              {networksOpen && (
+                <div
+                  className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-64 z-[10000]"
+                  style={{
+                    right: isMobile ? '10px' : '100px',
+                    bottom: isMobile ? '70px' : '80px',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
+                    <span className="text-white font-semibold text-sm">Wi-Fi</span>
+                    <div className="relative">
+                      <input 
+                        type="checkbox" 
+                        checked={isOnline} 
+                        onChange={() => setIsOnline(!isOnline)}
+                        className="peer sr-only" 
+                        id="wifi-toggle-popup"
+                      />
+                      <label 
+                        htmlFor="wifi-toggle-popup" 
+                        className={`block w-9 h-5 rounded-full cursor-pointer transition-colors ${isOnline ? 'bg-cyan-500' : 'bg-white/20'}`}
+                      >
+                        <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${isOnline ? 'translate-x-4' : ''}`}></div>
+                      </label>
                     </div>
                   </div>
-                </div>
 
-                <div className="max-h-[400px] overflow-y-auto">
-                  {socialNetworks.map((category, idx) => (
-                    <div key={idx}>
-                      <div className="px-4 py-2 text-white/50 text-xs font-semibold uppercase tracking-wider">
-                        {category.category}
+                  {isOnline ? (
+                    <div className="max-h-[400px] overflow-y-auto pr-1">
+                      {/* Connected Network */}
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-cyan-500/20 border border-cyan-400/30 mb-2">
+                        <div className="flex items-center gap-3">
+                          {wifiSignal >= 3 ? <Wifi size={16} className="text-cyan-400" /> : <Wifi size={16} className="text-yellow-400" />}
+                          <div>
+                            <span className="text-white text-sm block font-medium">David's Wi-Fi</span>
+                            <span className="text-cyan-400 text-xs">Connected</span>
+                          </div>
+                        </div>
+                        <Check size={14} className="text-cyan-400" />
                       </div>
-                      {category.networks.map((network, netIdx) => {
-                        const Icon = network.icon;
-                        return (
-                          <button
-                            key={netIdx}
-                            onClick={() => handleNetworkClick(network.url)}
-                            className="w-full px-4 py-2.5 hover:bg-white/10 transition-colors flex items-center justify-between group"
-                          >
-                            <div className="flex items-center gap-3">
-                              <Icon size={18} className={network.color} />
-                              <span className="text-white text-sm group-hover:text-cyan-400 transition-colors">
-                                {network.name}
-                              </span>
-                            </div>
-                            <div className="flex items-end gap-0.5 h-4">
-                              {getSignalBars(network.signal)}
-                            </div>
-                          </button>
-                        );
-                      })}
-                      {idx < socialNetworks.length - 1 && (
-                        <div className="h-px bg-white/10 my-1"></div>
-                      )}
+                      
+                      {/* Social Networks as Wifi */}
+                      {socialNetworks.map((category, idx) => (
+                        <div key={idx} className="mb-2">
+                          <div className="px-2 py-1 text-white/40 text-[10px] font-bold uppercase tracking-wider">
+                            {category.category}
+                          </div>
+                          {category.networks.map((network, netIdx) => {
+                            const Icon = network.icon;
+                            return (
+                              <button
+                                key={netIdx}
+                                onClick={() => handleNetworkClick(network.url)}
+                                className="w-full px-2 py-2 hover:bg-white/10 rounded-lg transition-colors flex items-center justify-between group"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <Icon size={16} className={`${network.color} opacity-80 group-hover:opacity-100`} />
+                                  <span className="text-white/80 text-sm group-hover:text-white transition-colors">
+                                    {network.name}
+                                  </span>
+                                </div>
+                                <div className="flex items-end gap-0.5 h-3">
+                                  {getSignalBars(network.signal)}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  ) : (
+                    <div className="py-4 text-center">
+                      <WifiOff size={24} className="mx-auto text-white/20 mb-2" />
+                      <p className="text-white/50 text-sm">Wi-Fi is turned off</p>
+                      <button 
+                        onClick={() => setIsOnline(true)}
+                        className="mt-3 px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs text-white transition-colors"
+                      >
+                        Turn On
+                      </button>
+                    </div>
+                  )}
                 </div>
-
-                <div className="px-4 py-2 border-t border-white/10 text-center">
-                  <p className="text-white/40 text-xs">Click to connect</p>
-                </div>
-              </div>
-            )}
-
+              )}
+            </div>
             {/* Volume Control */}
             <div className="relative">
               <div
