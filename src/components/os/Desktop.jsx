@@ -14,6 +14,7 @@ import LockScreen from './LockScreen';
 import Wallpaper from './Wallpaper';
 import PowerTransition from './PowerTransition';
 import DesktopIcon from './DesktopIcon';
+import { useWindowSize } from '../../hooks/useWindowSize';
 import CommandPalette from './CommandPalette';
 import WindowSwitcher from './WindowSwitcher';
 import Spotlight from './Spotlight';
@@ -83,21 +84,29 @@ const DesktopContent = () => {
     });
 
     // Grid configuration constants - CENTERED with equal margins
+    const { width, height } = useWindowSize();
     const GRID_SIZE = 120; // pixels per cell (bigger for more visible icons)
     const TASKBAR_HEIGHT = 48;
     const MIN_MARGIN = 24; // minimum margin on all sides
     
-    // Calculate how many cells fit with equal margins
-    const availableWidth = window.innerWidth - (MIN_MARGIN * 2);
-    const availableHeight = window.innerHeight - TASKBAR_HEIGHT - (MIN_MARGIN * 2);
-    const GRID_COLS = Math.floor(availableWidth / GRID_SIZE);
-    const GRID_ROWS = Math.floor(availableHeight / GRID_SIZE);
+    // Reserve space for widgets if they are visible (approx 320px + margins)
+    const WIDGET_SIDEBAR_WIDTH = (showWidgets && powerState === 'active' && width > 768) ? 320 : 0; 
     
-    // Calculate actual margins to center the grid perfectly
+    // Calculate how many cells fit with equal margins
+    const availableWidth = width - (MIN_MARGIN * 2) - WIDGET_SIDEBAR_WIDTH;
+    const availableHeight = height - TASKBAR_HEIGHT - (MIN_MARGIN * 2);
+    const GRID_COLS = Math.max(1, Math.floor(availableWidth / GRID_SIZE));
+    const GRID_ROWS = Math.max(1, Math.floor(availableHeight / GRID_SIZE));
+    
+    // Calculate actual margins to center the grid perfectly in the available space
     const GRID_WIDTH = GRID_COLS * GRID_SIZE;
     const GRID_HEIGHT = GRID_ROWS * GRID_SIZE;
-    const MARGIN_X = Math.floor((window.innerWidth - GRID_WIDTH) / 2);
-    const MARGIN_Y = Math.floor((window.innerHeight - TASKBAR_HEIGHT - GRID_HEIGHT) / 2);
+    
+    // Center logic: (AvailableSpace - GridWidth) / 2
+    // We treat the "AvailableSpace" as the full width minus the widget sidebar.
+    // So the grid centers in the "empty" area on the left.
+    const MARGIN_X = Math.floor((width - WIDGET_SIDEBAR_WIDTH - GRID_WIDTH) / 2);
+    const MARGIN_Y = Math.floor((height - TASKBAR_HEIGHT - GRID_HEIGHT) / 2);
 
     // Icon Grid Positions State (stored as {row, col} indices)
     // Validates saved positions and removes invalid ones
@@ -472,37 +481,6 @@ const DesktopContent = () => {
             {/* Overlay for depth */}
             <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
 
-            {/* DEBUG: Visible Grid Overlay - CENTERED - Remove in production */}
-            <div 
-                className="absolute pointer-events-none z-[5] flex items-center justify-center"
-                style={{ 
-                    top: MARGIN_Y,
-                    left: MARGIN_X,
-                    width: GRID_WIDTH,
-                    height: GRID_HEIGHT,
-                }}
-            >
-                <div 
-                    className="w-full h-full"
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: `repeat(${GRID_COLS}, ${GRID_SIZE}px)`,
-                        gridTemplateRows: `repeat(${GRID_ROWS}, ${GRID_SIZE}px)`,
-                        gap: 0,
-                    }}
-                >
-                    {/* Generate grid cells for entire grid area */}
-                    {Array.from({ length: GRID_COLS * GRID_ROWS }).map((_, i) => (
-                        <div 
-                            key={i}
-                            className="border border-dashed border-cyan-500/40 flex items-center justify-center text-cyan-400/30 text-[10px] font-mono"
-                        >
-                            {Math.floor(i / GRID_COLS)},{i % GRID_COLS}
-                        </div>
-                    ))}
-                </div>
-            </div>
-
             {/* Desktop Icons Area */}
             <div className="relative z-10 w-full h-full">
                 {allShortcuts.map((shortcut, index) => {
@@ -512,9 +490,14 @@ const DesktopContent = () => {
                         col: index % GRID_COLS
                     };
                     
+                    // CLAMP position to ensure it fits within current grid (responsiveness)
+                    // This prevents icons from overlapping with the widget area or going off-screen
+                    const validCol = Math.min(gridPos.col, GRID_COLS - 1);
+                    const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
+
                     // Convert grid position to pixel coordinates (using centered margins)
-                    const x = MARGIN_X + gridPos.col * GRID_SIZE;
-                    const y = MARGIN_Y + gridPos.row * GRID_SIZE;
+                    const x = MARGIN_X + validCol * GRID_SIZE;
+                    const y = MARGIN_Y + validRow * GRID_SIZE;
 
                     return (
                         <DesktopIcon
