@@ -94,13 +94,22 @@ export const themes = {
 
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState('dark');
+  const [wallpaperMode, setWallpaperMode] = useState('dynamic');
+  const [wallpaperImage, setWallpaperImage] = useState('');
 
-  // Load theme from localStorage
+  // Load theme and wallpaper from localStorage
   useEffect(() => {
     const savedTheme = localStorage.getItem('webos-theme');
     if (savedTheme && themes[savedTheme]) {
       setCurrentTheme(savedTheme);
     }
+    
+    // Load wallpaper settings
+    const savedMode = localStorage.getItem('webos-wallpaper-mode');
+    if (savedMode) setWallpaperMode(savedMode);
+    
+    const savedImage = localStorage.getItem('webos-wallpaper-image');
+    if (savedImage) setWallpaperImage(savedImage);
   }, []);
 
   // Save theme to localStorage
@@ -110,6 +119,15 @@ export const ThemeProvider = ({ children }) => {
     // Apply theme to document
     document.documentElement.setAttribute('data-theme', currentTheme);
   }, [currentTheme]);
+
+  // Save wallpaper settings
+  useEffect(() => {
+    localStorage.setItem('webos-wallpaper-mode', wallpaperMode);
+  }, [wallpaperMode]);
+  
+  useEffect(() => {
+    localStorage.setItem('webos-wallpaper-image', wallpaperImage);
+  }, [wallpaperImage]);
 
   const changeTheme = (themeId) => {
     if (themes[themeId]) {
@@ -124,6 +142,10 @@ export const ThemeProvider = ({ children }) => {
     currentTheme,
     changeTheme,
     themes,
+    wallpaperMode,
+    setWallpaperMode,
+    wallpaperImage,
+    setWallpaperImage,
   };
 
   return (

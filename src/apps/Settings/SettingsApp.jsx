@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, Globe, Info, Zap } from 'lucide-react';
+import { Volume2, Globe, Info, Zap, Image } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from '../../contexts/TranslationContext';
 import ThemeSettings from './ThemeSettings';
+import WallpaperPicker from './WallpaperPicker';
 
 /**
  * Settings App
@@ -185,6 +186,15 @@ const SettingsApp = () => {
             General
           </button>
           <button
+            onClick={() => setActiveTab('wallpaper')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'wallpaper'
+              ? 'bg-cyan-500/20 text-cyan-400'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+          >
+            Wallpaper
+          </button>
+          <button
             onClick={() => setActiveTab('themes')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'themes'
               ? 'bg-cyan-500/20 text-cyan-400'
@@ -200,6 +210,7 @@ const SettingsApp = () => {
       <div className="flex-1 overflow-auto">
         {activeTab === 'general' && (
           <div className="p-6 max-w-3xl">
+            {/* ... (existing general settings) ... */}
             {/* Sound & Effects */}
             <SettingSection icon={Volume2} title="Sound & Effects">
               <Toggle
@@ -275,6 +286,13 @@ const SettingsApp = () => {
                 Reset to Defaults
               </button>
             </div>
+          </div>
+        )}
+
+        {activeTab === 'wallpaper' && (
+          <div className="p-6 max-w-3xl">
+            <h2 className="text-xl font-semibold mb-6">Wallpaper</h2>
+            <WallpaperPicker />
           </div>
         )}
 
