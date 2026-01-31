@@ -436,8 +436,21 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
             isOpen={startMenuOpen} 
             onClose={() => setStartMenuOpen(false)}
             shortcuts={shortcuts}
-            onOpenApp={(app) => {
-              handleAppClick(app);
+            onOpenApp={(appOrId) => {
+              // Handle both full app object (from shortcuts) and simple ID string/object (from internal buttons)
+              const appId = appOrId.id || appOrId;
+              let fullApp = shortcuts.find(s => s.id === appId);
+              
+              if (!fullApp) {
+                // If not in shortcuts, look in registered apps
+                fullApp = apps.find(a => a.id === appId);
+              }
+              
+              if (fullApp) {
+                handleAppClick(fullApp);
+              } else {
+                console.warn(`App not found: ${appId}`);
+              }
               setStartMenuOpen(false);
             }}
             profile={userProfile}

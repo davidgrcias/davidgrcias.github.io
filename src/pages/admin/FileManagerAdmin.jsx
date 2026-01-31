@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Loader2, FolderTree, Save, Folder, File, FileText, Image, Link2, FileCode, X, ChevronRight, ChevronDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, FolderTree, Save, Folder, File, FileText, Image, Link2, FileCode, X, ChevronRight, ChevronDown, Wand2 } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
 import { defaultFileSystem } from '../../data/fileManagerData';
 
@@ -15,6 +15,7 @@ const FileManager = () => {
   const [fileSystem, setFileSystem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [expandedFolders, setExpandedFolders] = useState({ '/': true });
   
   // Edit states
@@ -182,6 +183,297 @@ const FileManager = () => {
     setIsAddingFolder(false);
     setIsAddingFile(false);
     setAddingToPath('/');
+  };
+
+  // ============================================
+  // AUTO-GENERATE FROM EXISTING DATA
+  // ============================================
+  const generateFromData = async () => {
+    if (!confirm('This will generate a complete file structure from your existing data (Profile, Skills, Projects, Experiences, Education, Certifications). Continue?')) return;
+
+    setGenerating(true);
+    try {
+      // Fetch all data
+      const [profile, skills, projects, experiences, education, certifications] = await Promise.all([
+        firestoreService.getDocument('profile', 'main'),
+        firestoreService.getDocument('skills', 'main'),
+        firestoreService.getCollection('projects', { orderByField: 'order' }),
+        firestoreService.getCollection('experiences', { orderByField: 'order' }),
+        firestoreService.getCollection('education', { orderByField: 'order' }),
+        firestoreService.getCollection('certifications', { orderByField: 'order' }),
+      ]);
+
+      const iconTypes = ['text', 'code'];
+      const getRandomIcon = () => iconTypes[Math.floor(Math.random() * iconTypes.length)];
+      const getFileExt = (icon) => icon === 'code' ? ['js', 'json', 'xml'][Math.floor(Math.random() * 3)] : ['md', 'txt'][Math.floor(Math.random() * 2)];
+
+      // Build the file structure
+      const generatedStructure = {
+        '/': {
+          name: 'Home',
+          type: 'folder',
+          children: {}
+        }
+      };
+
+      // 1. ABOUT FOLDER
+      if (profile) {
+        const aboutIcon = getRandomIcon();
+        const contactIcon = getRandomIcon();
+        
+        generatedStructure['/'].children['About'] = {
+          type: 'folder',
+          children: {
+            [`Bio.${getFileExt(aboutIcon)}`]: {
+              type: 'file',
+              icon: aboutIcon,
+              content: generateBioContent(profile, aboutIcon),
+              size: '3 KB'
+            },
+            [`Contact.${getFileExt(contactIcon)}`]: {
+              type: 'file',
+              icon: contactIcon,
+              content: generateContactContent(profile, contactIcon),
+              size: '2 KB'
+            }
+          }
+        };
+
+        if (skills) {
+          const skillsIcon = getRandomIcon();
+          generatedStructure['/'].children['About'].children[`Skills.${getFileExt(skillsIcon)}`] = {
+            type: 'file',
+            icon: skillsIcon,
+            content: generateSkillsContent(skills, skillsIcon),
+            size: '4 KB'
+          };
+        }
+      }
+
+      // 2. PROJECTS FOLDER
+      if (projects && projects.length > 0) {
+        generatedStructure['/'].children['Projects'] = {
+          type: 'folder',
+          children: {}
+        };
+
+        projects.forEach(project => {
+          const projectName = (project.name || project.title || 'Project').replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '-');
+          const readmeIcon = getRandomIcon();
+          
+          generatedStructure['/'].children['Projects'].children[projectName] = {
+            type: 'folder',
+            children: {
+              [`README.${getFileExt(readmeIcon)}`]: {
+                type: 'file',
+                icon: readmeIcon,
+                content: generateProjectContent(project, readmeIcon),
+                size: '5 KB'
+              }
+            }
+          };
+
+          // Add demo link if exists
+          if (project.link || project.demo) {
+            generatedStructure['/'].children['Projects'].children[projectName].children['demo.url'] = {
+              type: 'file',
+              icon: 'link',
+              url: project.link || project.demo,
+              size: '1 KB'
+            };
+          }
+
+          // Add image if exists
+          if (project.image) {
+            generatedStructure['/'].children['Projects'].children[projectName].children['screenshot.png'] = {
+              type: 'file',
+              icon: 'image',
+              imageUrl: project.image,
+              size: '500 KB'
+            };
+          }
+        });
+      }
+
+      // 3. EXPERIENCE FOLDER
+      if (experiences && experiences.length > 0) {
+        generatedStructure['/'].children['Experience'] = {
+          type: 'folder',
+          children: {}
+        };
+
+        experiences.forEach(exp => {
+          const companyName = (exp.company || 'Company').replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '-');
+          const expIcon = getRandomIcon();
+          
+          generatedStructure['/'].children['Experience'].children[`${companyName}.${getFileExt(expIcon)}`] = {
+            type: 'file',
+            icon: expIcon,
+            content: generateExpContent(exp, expIcon),
+            size: '3 KB'
+          };
+        });
+      }
+
+      // 4. EDUCATION FOLDER
+      if (education && education.length > 0) {
+        generatedStructure['/'].children['Education'] = {
+          type: 'folder',
+          children: {}
+        };
+
+        education.forEach(edu => {
+          const schoolName = (edu.institution || 'School').replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '-');
+          const eduIcon = getRandomIcon();
+          
+          generatedStructure['/'].children['Education'].children[`${schoolName}.${getFileExt(eduIcon)}`] = {
+            type: 'file',
+            icon: eduIcon,
+            content: generateEduContent(edu, eduIcon),
+            size: '2 KB'
+          };
+        });
+      }
+
+      // 5. CERTIFICATIONS FOLDER
+      if (certifications && certifications.length > 0) {
+        generatedStructure['/'].children['Certifications'] = {
+          type: 'folder',
+          children: {}
+        };
+
+        certifications.forEach(cert => {
+          const certName = (cert.name || 'Certificate').replace(/[^a-zA-Z0-9\s-]/g, '').replace(/\s+/g, '-').substring(0, 30);
+          
+          if (cert.credentialUrl) {
+            generatedStructure['/'].children['Certifications'].children[`${certName}.url`] = {
+              type: 'file',
+              icon: 'link',
+              url: cert.credentialUrl,
+              size: '1 KB'
+            };
+          } else {
+            const certIcon = getRandomIcon();
+            generatedStructure['/'].children['Certifications'].children[`${certName}.${getFileExt(certIcon)}`] = {
+              type: 'file',
+              icon: certIcon,
+              content: `${cert.name}\nIssued by: ${cert.issuer || 'N/A'}\nDate: ${cert.date || 'N/A'}`,
+              size: '1 KB'
+            };
+          }
+        });
+      }
+
+      // 6. CONTACT FOLDER (Social Links)
+      if (profile?.socials) {
+        generatedStructure['/'].children['Contact'] = {
+          type: 'folder',
+          children: {}
+        };
+
+        if (profile.contact?.email) {
+          generatedStructure['/'].children['Contact'].children['Email.txt'] = {
+            type: 'file',
+            icon: 'text',
+            content: profile.contact.email,
+            size: '1 KB'
+          };
+        }
+
+        Object.entries(profile.socials).forEach(([platform, data]) => {
+          const url = data?.url || data;
+          if (url) {
+            generatedStructure['/'].children['Contact'].children[`${platform.charAt(0).toUpperCase() + platform.slice(1)}.url`] = {
+              type: 'file',
+              icon: 'link',
+              url: url,
+              size: '1 KB'
+            };
+          }
+        });
+      }
+
+      // Save to Firestore
+      await saveFileSystem(generatedStructure);
+      
+      // Expand all generated folders
+      const allPaths = { '/': true };
+      Object.keys(generatedStructure['/'].children).forEach(folder => {
+        allPaths[`/${folder}`] = true;
+      });
+      setExpandedFolders(allPaths);
+
+      alert(`✅ Generated file structure from your data!`);
+    } catch (error) {
+      console.error('Error generating file structure:', error);
+      alert('Failed to generate file structure');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Content generators
+  const generateBioContent = (profile, icon) => {
+    const { name, headline, aboutText } = profile;
+    if (icon === 'code') {
+      return `// ${name || 'Developer'}\n\nconst profile = {\n  name: "${name || ''}",\n  headline: "${headline || ''}",\n  about: \`${aboutText || ''}\`\n};\n\nexport default profile;`;
+    }
+    return `# ${name || 'Developer'}\n\n> ${headline || ''}\n\n## About Me\n\n${aboutText || ''}`;
+  };
+
+  const generateContactContent = (profile, icon) => {
+    const { contact, socials } = profile;
+    if (icon === 'code') {
+      return JSON.stringify({ contact, socials }, null, 2);
+    }
+    return `# Contact\n\n- Email: ${contact?.email || ''}\n- Phone: ${contact?.phone || contact?.whatsapp || ''}\n- Location: ${contact?.location || ''}\n\n## Social Links\n${Object.entries(socials || {}).map(([k, v]) => `- ${k}: ${v?.url || v}`).join('\n')}`;
+  };
+
+  const generateSkillsContent = (skills, icon) => {
+    const { technical, soft } = skills;
+    if (icon === 'code') {
+      return JSON.stringify({ technical, soft }, null, 2);
+    }
+    return `# Skills\n\n## Technical\n${(technical || []).map(cat => `### ${cat.category}\n${(cat.skills || []).map(s => `- ${s}`).join('\n')}`).join('\n\n')}\n\n## Soft Skills\n${(soft || []).map(s => `- ${s}`).join('\n')}`;
+  };
+
+  const generateProjectContent = (project, icon) => {
+    if (icon === 'code') {
+      return JSON.stringify({
+        name: project.name || project.title,
+        role: project.role,
+        description: project.description,
+        tech: project.tech,
+        highlights: project.highlights
+      }, null, 2);
+    }
+    return `# ${project.name || project.title}\n\n**Role:** ${project.role || ''}\n\n## Description\n${project.description || ''}\n\n## Tech Stack\n${(project.tech || []).map(t => `- ${t}`).join('\n')}\n\n## Highlights\n${(project.highlights || []).map(h => `- ${h}`).join('\n')}`;
+  };
+
+  const generateExpContent = (exp, icon) => {
+    if (icon === 'code') {
+      return JSON.stringify({
+        company: exp.company,
+        role: exp.role,
+        period: exp.period,
+        description: exp.description,
+        highlights: exp.highlights
+      }, null, 2);
+    }
+    return `# ${exp.role || 'Role'}\n\n**${exp.company || 'Company'}** | ${exp.period || ''}\n\n${exp.description || ''}\n\n## Highlights\n${(exp.highlights || []).map(h => `- ${h}`).join('\n')}`;
+  };
+
+  const generateEduContent = (edu, icon) => {
+    if (icon === 'code') {
+      return JSON.stringify({
+        institution: edu.institution,
+        degree: edu.degree,
+        field: edu.field,
+        period: edu.period,
+        gpa: edu.gpa
+      }, null, 2);
+    }
+    return `# ${edu.institution || 'Institution'}\n\n- **Degree:** ${edu.degree || ''} in ${edu.field || ''}\n- **Period:** ${edu.period || ''}\n${edu.gpa ? `- **GPA:** ${edu.gpa}` : ''}`;
   };
 
   const toggleFolder = (path) => {
@@ -452,6 +744,14 @@ const FileManager = () => {
         </div>
         <div className="flex gap-3">
           <button
+            onClick={generateFromData}
+            disabled={generating}
+            className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded-lg transition-all font-medium disabled:opacity-50"
+          >
+            {generating ? <Loader2 size={16} className="animate-spin" /> : <Wand2 size={16} />}
+            {generating ? 'Generating...' : 'Generate from Data'}
+          </button>
+          <button
             onClick={() => handleAddFolder('/')}
             className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors"
           >
@@ -464,8 +764,8 @@ const FileManager = () => {
       {/* Info Box */}
       <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
         <p className="text-purple-400 text-sm">
-          💡 Hover over folders/files to see action buttons. 
-          Click folders to expand/collapse. Changes are saved to Firestore automatically.
+          💡 Click <strong>"Generate from Data"</strong> to auto-create the entire folder structure from your existing data!
+          You can still add custom folders/files manually.
         </p>
       </div>
 

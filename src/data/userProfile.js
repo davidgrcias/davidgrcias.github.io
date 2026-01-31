@@ -59,6 +59,8 @@ const normalizeProfile = (data) => {
     // Ensure bio/aboutText aliases work both ways
     bio: data.bio || data.aboutText,
     aboutText: data.aboutText || data.bio,
+    // Map title to role if role missing
+    role: data.role || data.title || data.headline,
     // Ensure avatar/photoUrl aliases work both ways
     avatar: data.avatar || data.photoUrl,
     photoUrl: data.photoUrl || data.avatar,
