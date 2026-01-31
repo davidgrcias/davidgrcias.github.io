@@ -9,8 +9,18 @@ import "./config/firebase"; // Initialize Firebase
 // Layouts & Pages
 import AdminLayout from "./layouts/AdminLayout";
 import Login from "./pages/admin/Login";
+import Dashboard from "./pages/admin/Dashboard";
 import Projects from "./pages/admin/Projects";
 import ProjectForm from "./pages/admin/ProjectForm";
+import Experiences from "./pages/admin/Experiences";
+import ExperienceForm from "./pages/admin/ExperienceForm";
+import Education from "./pages/admin/Education";
+import EducationForm from "./pages/admin/EducationForm";
+import Certifications from "./pages/admin/Certifications";
+import CertificationForm from "./pages/admin/CertificationForm";
+import Skills from "./pages/admin/Skills";
+import Profile from "./pages/admin/Profile";
+import Content from "./pages/admin/Content";
 import Desktop from "./components/os/Desktop";
 
 // Initialize settings from localStorage immediately on load
@@ -45,14 +55,35 @@ export default function App() {
 
               {/* Admin Routes: The Content Management System */}
               <Route path="/admin" element={<AdminLayout />}>
-                {/* Default Admin Page -> Projects */}
-                <Route index element={<Navigate to="projects" replace />} />
+                {/* Dashboard */}
+                <Route index element={<Dashboard />} />
+                
+                {/* Projects CRUD */}
                 <Route path="projects" element={<Projects />} />
                 <Route path="projects/new" element={<ProjectForm />} />
-                <Route path="projects/edit/:id" element={<ProjectForm />} />
+                <Route path="projects/:id" element={<ProjectForm />} />
 
-                <Route path="experience" element={<div className="text-xl">Experience Management Module</div>} />
-                <Route path="settings" element={<div className="text-xl">Settings Module</div>} />
+                {/* Experiences CRUD */}
+                <Route path="experiences" element={<Experiences />} />
+                <Route path="experiences/new" element={<ExperienceForm />} />
+                <Route path="experiences/:id" element={<ExperienceForm />} />
+
+                {/* Education CRUD */}
+                <Route path="education" element={<Education />} />
+                <Route path="education/new" element={<EducationForm />} />
+                <Route path="education/:id" element={<EducationForm />} />
+
+                {/* Certifications CRUD */}
+                <Route path="certifications" element={<Certifications />} />
+                <Route path="certifications/new" element={<CertificationForm />} />
+                <Route path="certifications/:id" element={<CertificationForm />} />
+
+                {/* Skills & Profile (singleton editors) */}
+                <Route path="skills" element={<Skills />} />
+                <Route path="profile" element={<Profile />} />
+
+                {/* Content (funFacts + insights) */}
+                <Route path="content" element={<Content />} />
               </Route>
 
               {/* Admin Auth */}

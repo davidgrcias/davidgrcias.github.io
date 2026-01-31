@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,3 +14,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
+
+// Whitelist of allowed admin emails
+export const ADMIN_EMAILS = [
+    'davidgarciasaragih7@gmail.com'
+];
+
+export const isAdminEmail = (email) => ADMIN_EMAILS.includes(email?.toLowerCase());
+

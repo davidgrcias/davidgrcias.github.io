@@ -49,14 +49,9 @@ const Taskbar = ({ onOpenSpotlight }) => {
   
   // ... (other states remain the same)
 
-  // Volume popup state
-  const [volumePopupOpen, setVolumePopupOpen] = useState(false);
-  
-  // Battery popup state
-  const [batteryPopupOpen, setBatteryPopupOpen] = useState(false);
-
-  // Power popup state
-  const [powerPopupOpen, setPowerPopupOpen] = useState(false);
+  // Single popup state - only one can be open at a time
+  // Values: null | 'wifi' | 'volume' | 'battery' | 'power'
+  const [activePopup, setActivePopup] = useState(null);
   
   // Brightness & Power Saver (simulated, stored in localStorage)
   const [brightness, setBrightness] = useState(() => {
@@ -75,7 +70,6 @@ const Taskbar = ({ onOpenSpotlight }) => {
   // Context menu state
   const [contextMenu, setContextMenu] = useState(null);
   const [taskbarContextMenu, setTaskbarContextMenu] = useState(null);
-  const [networksOpen, setNetworksOpen] = useState(false);
 
   // Search bar state
   const [searchQuery, setSearchQuery] = useState('');
@@ -253,13 +247,10 @@ const Taskbar = ({ onOpenSpotlight }) => {
     const handleClickOutside = () => {
       setContextMenu(null);
       setTaskbarContextMenu(null);
-      setNetworksOpen(false);
-      setVolumePopupOpen(false);
-      setBatteryPopupOpen(false);
-      setPowerPopupOpen(false);
+      setActivePopup(null);
     };
 
-    if (contextMenu || taskbarContextMenu || networksOpen || volumePopupOpen || batteryPopupOpen || powerPopupOpen) {
+    if (contextMenu || taskbarContextMenu || activePopup) {
       document.addEventListener('click', handleClickOutside);
       // Also close on right click elsewhere
       document.addEventListener('contextmenu', handleClickOutside);
@@ -268,7 +259,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
         document.removeEventListener('contextmenu', handleClickOutside);
       };
     }
-  }, [contextMenu, taskbarContextMenu, networksOpen, volumePopupOpen, batteryPopupOpen, powerPopupOpen]);
+  }, [contextMenu, taskbarContextMenu, activePopup]);
 
   // Taskbar right-click handler
   const handleTaskbarContextMenu = (e) => {
@@ -313,7 +304,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
   // Simulate network signal fluctuation
   useEffect(() => {
-    if (!networksOpen) return;
+    if (activePopup !== 'wifi') return;
 
     const interval = setInterval(() => {
       setSocialNetworks(prev => prev.map(cat => ({
@@ -330,7 +321,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
     }, 2000); // Update every 2 seconds
 
     return () => clearInterval(interval);
-  }, [networksOpen]);
+  }, [activePopup]);
   
   // Voice Control Keyboard Shortcut (Ctrl+Shift+Space)
   useEffect(() => {
@@ -575,7 +566,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                 className={`cursor-pointer hover:text-cyan-400 transition-colors ${!isOnline ? 'text-red-400' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setNetworksOpen(!networksOpen);
+                  setActivePopup(activePopup === 'wifi' ? null : 'wifi');
                 }}
                 title={!isOnline ? "Offline" : `Connected (Signal: ${wifiSignal === 3 ? 'Strong' : wifiSignal === 2 ? 'Good' : 'Weak'})`}
               >
@@ -587,7 +578,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
               </div>
 
               {/* Network Popup */}
-              {networksOpen && (
+              {activePopup === 'wifi' && (
                 <div
                   className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-64 z-[10000]"
                   style={{
@@ -679,7 +670,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                 className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 ${isMuted ? 'text-red-400' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setVolumePopupOpen(!volumePopupOpen);
+                  setActivePopup(activePopup === 'volume' ? null : 'volume');
                 }}
                 title={isMuted ? "Unmute" : `Volume: ${volume}%`}
                 aria-label={isMuted ? "Muted" : `Volume ${volume}%`}
@@ -688,7 +679,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
               </div>
 
               {/* Volume Popup */}
-              {volumePopupOpen && (
+              {activePopup === 'volume' && (
                 <div
                   className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-64 z-[10000]"
                   style={{
@@ -773,7 +764,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                 className={`flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors ${batterySaver ? 'text-green-400' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setBatteryPopupOpen(!batteryPopupOpen);
+                  setActivePopup(activePopup === 'battery' ? null : 'battery');
                 }}
                 title={`${Math.round(battery.level * 100)}%${battery.charging ? ' - Charging' : ''}${batterySaver ? ' - Power Saver ON' : ''}`}
                 aria-label={`Battery ${Math.round(battery.level * 100)}%`}
@@ -785,7 +776,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
               </div>
 
               {/* Battery Popup */}
-              {batteryPopupOpen && (
+              {activePopup === 'battery' && (
                 <div
                   className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-72 z-[10000]"
                   style={{
@@ -911,15 +902,15 @@ const Taskbar = ({ onOpenSpotlight }) => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setPowerPopupOpen(!powerPopupOpen);
+                setActivePopup(activePopup === 'power' ? null : 'power');
               }}
-              className={`p-2 rounded-lg transition-colors ${powerPopupOpen ? 'bg-red-500/20 text-red-400' : 'hover:bg-white/10 text-white/80 hover:text-white'}`}
+              className={`p-2 rounded-lg transition-colors ${activePopup === 'power' ? 'bg-red-500/20 text-red-400' : 'hover:bg-white/10 text-white/80 hover:text-white'}`}
               title="Power"
             >
               <Power size={20} />
             </button>
 
-            {powerPopupOpen && (
+            {activePopup === 'power' && (
               <div
                 className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 w-48 z-[10000]"
                 style={{
@@ -929,7 +920,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                 onClick={(e) => e.stopPropagation()}
               >
                 <button
-                  onClick={() => { setPowerPopupOpen(false); sleep(); }}
+                  onClick={() => { setActivePopup(null); sleep(); }}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors text-left group"
                 >
                   <div className="p-2 rounded-full bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400">
@@ -942,7 +933,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                 </button>
 
                 <button
-                  onClick={() => { setPowerPopupOpen(false); restart(); }}
+                  onClick={() => { setActivePopup(null); restart(); }}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors text-left group"
                 >
                   <div className="p-2 rounded-full bg-yellow-500/10 group-hover:bg-yellow-500/20 text-yellow-400">
@@ -957,7 +948,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
                 <div className="h-px bg-white/10 my-1"></div>
 
                 <button
-                  onClick={() => { setPowerPopupOpen(false); shutdown(); }}
+                  onClick={() => { setActivePopup(null); shutdown(); }}
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-red-500/10 transition-colors text-left group"
                 >
                   <div className="p-2 rounded-full bg-red-500/10 group-hover:bg-red-500/20 text-red-400">
