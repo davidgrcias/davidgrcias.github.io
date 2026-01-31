@@ -7,7 +7,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useKonamiCode } from '../../hooks/useKonamiCode';
 import { useAchievements } from '../../hooks/useAchievements';
-import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Camera, FileText } from 'lucide-react';
+import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Camera, FileText, BookOpen } from 'lucide-react';
 import Taskbar from './Taskbar';
 import WindowFrame from './WindowFrame';
 import ContextMenu from './ContextMenu';
@@ -28,6 +28,7 @@ import Calendar from '../widgets/Calendar';
 import PortfolioStats from '../widgets/PortfolioStats';
 import StatusCardWidget from '../widgets/StatusCardWidget';
 import SystemMonitorWidget from '../widgets/SystemMonitorWidget';
+import FeaturedPostWidget from '../widgets/FeaturedPostWidget';
 import KonamiSecret from '../easter-eggs/KonamiSecret';
 import ScreenshotTool from '../tools/ScreenshotTool';
 import SnakeGame from '../easter-eggs/SnakeGame';
@@ -44,6 +45,7 @@ const FileManagerApp = lazy(() => import('../../apps/FileManager/FileManagerApp'
 const SettingsApp = lazy(() => import('../../apps/Settings/SettingsApp'));
 const AboutMeApp = lazy(() => import('../../apps/AboutMe/AboutMeApp'));
 const NotesApp = lazy(() => import('../../apps/Notes/NotesApp'));
+const BlogApp = lazy(() => import('../../apps/Blog/BlogApp'));
 
 // Loading fallback for lazy-loaded apps
 const AppLoadingFallback = () => (
@@ -121,6 +123,7 @@ const DesktopContent = () => {
             'terminal': { row: 0, col: 2 },    // Terminal
             'about-me': { row: 1, col: 0 },    // About Me
             'cv-download': { row: 1, col: 1 }, // My CV
+            'blog': { row: 1, col: 2 },        // Blog
             'file-manager': { row: 2, col: 0 },// Files
             'notes': { row: 3, col: 0 },       // Notes
         };
@@ -212,6 +215,13 @@ const DesktopContent = () => {
             icon: <Terminal size={32} />,
             component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Terminal"><TerminalApp /></ErrorBoundary></Suspense>,
             title: 'Terminal',
+        },
+        {
+            id: 'blog',
+            label: 'Blog',
+            icon: <BookOpen size={32} />,
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Blog"><BlogApp /></ErrorBoundary></Suspense>,
+            title: 'Blog',
         },
     ];
 
@@ -724,10 +734,25 @@ const DesktopContent = () => {
                 title="CV - David Garcia Saragih"
             />
 
-            {/* Desktop Widgets - Status Card & System Monitor */}
+            {/* Desktop Widgets - Status Card, System Monitor & Featured Post */}
             {showWidgets && powerState === 'active' && (
                 <div className="fixed right-4 sm:right-6 top-4 sm:top-6 z-20 flex flex-col gap-4 pointer-events-auto">
                     <StatusCardWidget className="w-56 sm:w-64 md:w-72" />
+                    <FeaturedPostWidget 
+                        className="w-56 sm:w-64 md:w-72" 
+                        onOpenBlog={() => {
+                            // Find the blog shortcut and open it
+                            const blogShortcut = desktopShortcuts.find(s => s.id === 'blog');
+                            if (blogShortcut) {
+                                openApp({
+                                    id: blogShortcut.id,
+                                    title: blogShortcut.title,
+                                    icon: blogShortcut.icon,
+                                    component: blogShortcut.component
+                                });
+                            }
+                        }}
+                    />
                     <SystemMonitorWidget className="w-56 sm:w-64 md:w-72" />
                 </div>
             )}

@@ -396,7 +396,7 @@ const Taskbar = ({ onOpenSpotlight }) => {
         className={`taskbar-container absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'
           } h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${isMobile ? 'px-2' : 'px-4'
           } z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95
-          ${taskbarSettings.autoHide && !isHovered && !contextMenu && !taskbarContextMenu && !networksOpen ? 'translate-y-[85%]' : 'translate-y-0'}
+          ${taskbarSettings.autoHide && !isHovered && !contextMenu && !taskbarContextMenu && !activePopup ? 'translate-y-[85%]' : 'translate-y-0'}
         `}
         onContextMenu={handleTaskbarContextMenu}
         onMouseEnter={() => setIsHovered(true)}

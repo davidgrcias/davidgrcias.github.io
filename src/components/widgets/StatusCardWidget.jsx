@@ -1,26 +1,57 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Briefcase, Mail, Linkedin, Github, ExternalLink, Sparkles, Coffee } from 'lucide-react';
+import { MapPin, Briefcase, Mail, Linkedin, Github, ExternalLink, Sparkles, Coffee, Loader2 } from 'lucide-react';
+import { getUserProfile } from '../../data/userProfile';
 
 /**
  * Professional Status Card Widget
  * Displays professional status, availability, and quick contact links
- * Replaces the Weather Widget with more relevant portfolio info
+ * NOW SYNCS WITH ADMIN PANEL via Firestore
  */
 const StatusCardWidget = ({ className = '' }) => {
-  // Professional data - can be moved to config file later
-  const profile = {
-    name: 'David Garcia',
-    role: 'Software Developer',
-    location: 'Jakarta, Indonesia',
-    status: 'open', // 'open' | 'employed' | 'busy'
-    availableFor: ['Full-time', 'Freelance'],
-    links: {
-      email: 'davidgrcia@gmail.com',
-      linkedin: 'https://linkedin.com/in/davidgrcias',
-      github: 'https://github.com/davidgrcias',
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+
+  // Fetch profile from Firestore
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const profileData = await getUserProfile('en');
+        
+        // Transform profile data for this component
+        setProfile({
+          name: profileData.name,
+          role: profileData.title,
+          location: profileData.location,
+          status: profileData.status || 'open', // 'open' | 'employed' | 'busy'
+          availableFor: profileData.availableFor || ['Full-time', 'Freelance'],
+          links: {
+            email: profileData.email,
+            linkedin: profileData.socials?.linkedin?.url,
+            github: profileData.socials?.github?.url,
+          }
+        });
+      } catch (error) {
+        console.error('Error loading profile:', error);
+        // Fallback data
+        setProfile({
+          name: 'David Garcia',
+          role: 'Software Developer',
+          location: 'Jakarta, Indonesia',
+          status: 'open',
+          availableFor: ['Full-time', 'Freelance'],
+          links: {
+            email: 'davidgarciasaragih7@gmail.com',
+            linkedin: 'https://linkedin.com/in/david-garcia-saragih',
+            github: 'https://github.com/davidgrcias',
+          }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProfile();
+  }, []);
 
   const statusConfig = {
     open: {
@@ -49,7 +80,20 @@ const StatusCardWidget = ({ className = '' }) => {
     }
   };
 
-  const currentStatus = statusConfig[profile.status];
+  // Loading state
+  if (loading || !profile) {
+    return (
+      <div className={`relative overflow-hidden rounded-2xl border border-white/10 ${className}`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 opacity-20" />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" />
+        <div className="relative p-3.5 text-white flex items-center justify-center h-full min-h-[180px]">
+          <Loader2 className="w-6 h-6 animate-spin text-white/50" />
+        </div>
+      </div>
+    );
+  }
+
+  const currentStatus = statusConfig[profile.status] || statusConfig.open;
 
   const handleEmailClick = () => {
     window.location.href = `mailto:${profile.links.email}?subject=Hello from your Portfolio!`;
@@ -120,36 +164,36 @@ const StatusCardWidget = ({ className = '' }) => {
           ))}
         </div>
 
-        {/* Quick Links */}
-        <div className="grid grid-cols-3 gap-1.5 pt-2.5 border-t border-white/10">
+        {/* Quick Links - Compact inline icons */}
+        <div className="flex items-center justify-center gap-2 pt-2.5 border-t border-white/10">
           <motion.button
             onClick={handleEmailClick}
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/30 transition-colors group"
+            whileHover={{ scale: 1.15, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-2 rounded-lg bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/30 transition-all group"
+            title="Email"
           >
             <Mail size={16} className="text-white/60 group-hover:text-cyan-400 transition-colors" />
-            <span className="text-[10px] text-white/50 group-hover:text-white/80">Email</span>
           </motion.button>
           
           <motion.button
             onClick={() => handleLinkClick(profile.links.linkedin)}
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg bg-white/5 hover:bg-blue-500/20 border border-white/5 hover:border-blue-500/30 transition-colors group"
+            whileHover={{ scale: 1.15, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-2 rounded-lg bg-white/5 hover:bg-blue-500/20 border border-white/5 hover:border-blue-500/30 transition-all group"
+            title="LinkedIn"
           >
             <Linkedin size={16} className="text-white/60 group-hover:text-blue-400 transition-colors" />
-            <span className="text-[10px] text-white/50 group-hover:text-white/80">LinkedIn</span>
           </motion.button>
           
           <motion.button
             onClick={() => handleLinkClick(profile.links.github)}
-            whileHover={{ scale: 1.05, y: -1 }}
-            whileTap={{ scale: 0.95 }}
-            className="flex flex-col items-center gap-1 p-2 rounded-lg bg-white/5 hover:bg-purple-500/20 border border-white/5 hover:border-purple-500/30 transition-colors group"
+            whileHover={{ scale: 1.15, y: -2 }}
+            whileTap={{ scale: 0.9 }}
+            className="p-2 rounded-lg bg-white/5 hover:bg-purple-500/20 border border-white/5 hover:border-purple-500/30 transition-all group"
+            title="GitHub"
           >
             <Github size={16} className="text-white/60 group-hover:text-purple-400 transition-colors" />
-            <span className="text-[10px] text-white/50 group-hover:text-white/80">GitHub</span>
           </motion.button>
         </div>
       </div>

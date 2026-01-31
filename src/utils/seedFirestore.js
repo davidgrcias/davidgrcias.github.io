@@ -20,6 +20,9 @@ const defaultProfile = {
   headline: "Full-Stack Web & Systems Engineer · Content Creator",
   photoUrl: "/profilpict.webp",
   aboutText: "I'm driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity",
+  // Status card settings
+  status: "open",
+  availableFor: ["Full-time", "Freelance", "Contract"],
   contact: {
     email: "davidgarciasaragih7@gmail.com",
     location: "Jakarta, Indonesia",

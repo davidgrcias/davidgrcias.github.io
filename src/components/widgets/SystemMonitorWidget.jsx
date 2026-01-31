@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Cpu, HardDrive, Activity, Wifi, Zap, Database, Terminal, Layers } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Cpu, HardDrive, Activity, Wifi, Zap, Database, Terminal, Layers, ChevronDown } from 'lucide-react';
 
 /**
  * DevTools Monitor Widget
@@ -17,6 +17,17 @@ const SystemMonitorWidget = ({ className = '' }) => {
   const [memHistory, setMemHistory] = useState(Array(20).fill(0));
   const [latencyHistory, setLatencyHistory] = useState(Array(20).fill(0));
   const [activeTab, setActiveTab] = useState('perf'); // 'perf' | 'stack'
+  
+  // Collapsed state - default to collapsed, persist in localStorage
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = localStorage.getItem('webos-devmonitor-expanded');
+    return saved === 'true'; // Default collapsed (false)
+  });
+  
+  // Save expanded state
+  useEffect(() => {
+    localStorage.setItem('webos-devmonitor-expanded', isExpanded.toString());
+  }, [isExpanded]);
 
   useEffect(() => {
     let lastTime = performance.now();
@@ -117,30 +128,56 @@ const SystemMonitorWidget = ({ className = '' }) => {
       animate={{ opacity: 1, scale: 1 }}
       className={`bg-black/80 backdrop-blur-md rounded-2xl border border-white/10 overflow-hidden flex flex-col ${className}`}
     >
-      {/* Header */}
-      <div className="px-3 py-2.5 border-b border-white/10 flex items-center justify-between bg-white/5">
+      {/* Header - Clickable to expand/collapse */}
+      <div 
+        className="px-3 py-2.5 border-b border-white/10 flex items-center justify-between bg-white/5 cursor-pointer hover:bg-white/10 transition-colors"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
         <div className="flex items-center gap-2">
           <Terminal size={14} className="text-emerald-400" />
           <span className="text-white/90 font-mono text-xs tracking-wider">DEV.MONITOR</span>
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown size={12} className="text-white/40" />
+          </motion.div>
         </div>
-        <div className="flex gap-1">
-           <button 
-             onClick={() => setActiveTab('perf')} 
-             className={`px-2 py-0.5 text-[10px] rounded hover:bg-white/10 transition-colors ${activeTab === 'perf' ? 'text-white' : 'text-white/40'}`}
-           >
-             PERF
-           </button>
-           <button 
-             onClick={() => setActiveTab('stack')} 
-             className={`px-2 py-0.5 text-[10px] rounded hover:bg-white/10 transition-colors ${activeTab === 'stack' ? 'text-white' : 'text-white/40'}`}
-           >
-             STACK
-           </button>
-        </div>
+        {isExpanded && (
+          <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+             <button 
+               onClick={() => setActiveTab('perf')} 
+               className={`px-2 py-0.5 text-[10px] rounded hover:bg-white/10 transition-colors ${activeTab === 'perf' ? 'text-white' : 'text-white/40'}`}
+             >
+               PERF
+             </button>
+             <button 
+               onClick={() => setActiveTab('stack')} 
+               className={`px-2 py-0.5 text-[10px] rounded hover:bg-white/10 transition-colors ${activeTab === 'stack' ? 'text-white' : 'text-white/40'}`}
+             >
+               STACK
+             </button>
+          </div>
+        )}
+        {!isExpanded && (
+          <div className="flex items-center gap-2 text-[10px] text-white/40">
+            <span className="text-emerald-400">{metrics.memory.used}MB</span>
+            <span className="text-white/20">|</span>
+            <span className="text-cyan-400">{metrics.network.latency}ms</span>
+          </div>
+        )}
       </div>
 
-      {/* Tabs Content */}
-      <div className="p-3 flex-1">
+      {/* Tabs Content - Collapsible */}
+      <AnimatePresence>
+        {isExpanded && (
+          <motion.div 
+            className="p-3 flex-1"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
         {activeTab === 'perf' ? (
           <div className="space-y-3">
             
@@ -238,7 +275,9 @@ const SystemMonitorWidget = ({ className = '' }) => {
              </div>
           </div>
         )}
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

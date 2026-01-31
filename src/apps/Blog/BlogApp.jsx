@@ -1,0 +1,367 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  BookOpen, Clock, Calendar, Search, Filter, ArrowLeft, 
+  ExternalLink, Loader2, Tag, ChevronRight, Sparkles,
+  Grid3X3, List, X
+} from 'lucide-react';
+import { getPosts, getCategories, getPostById } from '../../data/posts';
+
+/**
+ * Blog App
+ * Full blog viewer with posts grid, category filter, and post detail view
+ */
+const BlogApp = () => {
+  const [posts, setPosts] = useState([]);
+  const [categories, setCategories] = useState(['All']);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [loading, setLoading] = useState(true);
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [postsData, categoriesData] = await Promise.all([
+          getPosts(),
+          getCategories()
+        ]);
+        setPosts(postsData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error loading posts:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
+
+  const filteredPosts = posts.filter(post => {
+    const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  };
+
+  const handlePostClick = (post) => {
+    if (post.externalLink) {
+      window.open(post.externalLink, '_blank', 'noopener,noreferrer');
+    } else {
+      setSelectedPost(post);
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-zinc-900">
+        <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+      </div>
+    );
+  }
+
+  // Post Detail View
+  if (selectedPost) {
+    return (
+      <div className="h-full flex flex-col bg-zinc-900 text-white overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-zinc-900/80 backdrop-blur-sm">
+          <motion.button
+            onClick={() => setSelectedPost(null)}
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <ArrowLeft size={20} />
+          </motion.button>
+          <div className="flex-1">
+            <h2 className="font-semibold text-sm truncate">{selectedPost.title}</h2>
+            <div className="flex items-center gap-3 text-xs text-white/50 mt-0.5">
+              <span className="flex items-center gap-1">
+                <Calendar size={12} />
+                {formatDate(selectedPost.date)}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock size={12} />
+                {selectedPost.readTime} min read
+              </span>
+            </div>
+          </div>
+          {selectedPost.externalLink && (
+            <motion.button
+              onClick={() => window.open(selectedPost.externalLink, '_blank')}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors text-cyan-400"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <ExternalLink size={18} />
+            </motion.button>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Hero Image */}
+          {selectedPost.image && (
+            <div className="relative h-48 sm:h-64">
+              <img 
+                src={selectedPost.image} 
+                alt={selectedPost.title}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+              
+              {/* Category Badge */}
+              <div className="absolute bottom-4 left-4">
+                <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-medium">
+                  {selectedPost.category}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Article Content */}
+          <div className="p-6">
+            <h1 className="text-xl sm:text-2xl font-bold mb-4">{selectedPost.title}</h1>
+            
+            {/* Render markdown-like content */}
+            <div className="prose prose-invert prose-sm max-w-none">
+              {selectedPost.content.split('\n').map((line, idx) => {
+                if (line.startsWith('# ')) {
+                  return <h1 key={idx} className="text-xl font-bold mt-6 mb-3 text-white">{line.slice(2)}</h1>;
+                }
+                if (line.startsWith('## ')) {
+                  return <h2 key={idx} className="text-lg font-semibold mt-5 mb-2 text-cyan-400">{line.slice(3)}</h2>;
+                }
+                if (line.startsWith('### ')) {
+                  return <h3 key={idx} className="text-base font-medium mt-4 mb-2 text-white/90">{line.slice(4)}</h3>;
+                }
+                if (line.startsWith('- ')) {
+                  return <li key={idx} className="text-white/70 ml-4 mb-1">{line.slice(2)}</li>;
+                }
+                if (line.match(/^\d+\. /)) {
+                  return <li key={idx} className="text-white/70 ml-4 mb-1 list-decimal">{line.replace(/^\d+\. /, '')}</li>;
+                }
+                if (line.startsWith('```')) {
+                  return null; // Skip code fence markers
+                }
+                if (line.trim() === '') {
+                  return <div key={idx} className="h-3" />;
+                }
+                // Handle **bold** text
+                const formattedLine = line.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white">$1</strong>');
+                return (
+                  <p 
+                    key={idx} 
+                    className="text-white/70 mb-2 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: formattedLine }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Posts Grid View
+  return (
+    <div className="h-full flex flex-col bg-zinc-900 text-white overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-white/10 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <BookOpen size={20} className="text-purple-400" />
+            <h1 className="font-bold text-lg">Blog</h1>
+            <span className="text-xs text-white/40 ml-2">{posts.length} posts</span>
+          </div>
+          
+          {/* View Toggle */}
+          <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-white/10 text-cyan-400' : 'text-white/50 hover:text-white'}`}
+            >
+              <Grid3X3 size={16} />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-white/10 text-cyan-400' : 'text-white/50 hover:text-white'}`}
+            >
+              <List size={16} />
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+          <input
+            type="text"
+            placeholder="Search posts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50"
+          />
+          {searchQuery && (
+            <button 
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+
+        {/* Category Filter */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+          {categories.map(cat => (
+            <motion.button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                selectedCategory === cat 
+                  ? 'bg-cyan-500 text-white' 
+                  : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+              }`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {cat}
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
+      {/* Posts Grid/List */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {filteredPosts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-white/40">
+            <Search size={48} className="mb-4 opacity-50" />
+            <p>No posts found</p>
+          </div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {filteredPosts.map((post, idx) => (
+              <motion.div
+                key={post.id}
+                onClick={() => handlePostClick(post)}
+                className="group cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                whileHover={{ scale: 1.02, y: -2 }}
+              >
+                {/* Thumbnail */}
+                {post.image && (
+                  <div className="relative h-32 overflow-hidden">
+                    <img 
+                      src={post.image} 
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
+                    
+                    {/* Featured Badge */}
+                    {post.featured && (
+                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30">
+                        <Sparkles size={10} className="text-yellow-400" />
+                        <span className="text-[9px] font-medium text-yellow-400">FEATURED</span>
+                      </div>
+                    )}
+                    
+                    {/* Category */}
+                    <div className="absolute bottom-2 left-2">
+                      <span className="px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-300 text-[10px] font-medium">
+                        {post.category}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Content */}
+                <div className="p-3">
+                  <h3 className="font-semibold text-sm mb-1 group-hover:text-cyan-400 transition-colors line-clamp-2">
+                    {post.title}
+                  </h3>
+                  <p className="text-xs text-white/50 line-clamp-2 mb-2">{post.excerpt}</p>
+                  <div className="flex items-center justify-between text-[10px] text-white/40">
+                    <span className="flex items-center gap-1">
+                      <Calendar size={10} />
+                      {formatDate(post.date)}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock size={10} />
+                      {post.readTime} min
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          // List View
+          <div className="space-y-2">
+            {filteredPosts.map((post, idx) => (
+              <motion.div
+                key={post.id}
+                onClick={() => handlePostClick(post)}
+                className="group flex gap-4 p-3 cursor-pointer rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition-all"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.03 }}
+                whileHover={{ x: 4 }}
+              >
+                {/* Thumbnail */}
+                {post.image && (
+                  <div className="relative w-24 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                    <img 
+                      src={post.image} 
+                      alt={post.title}
+                      className="w-full h-full object-cover"
+                    />
+                    {post.featured && (
+                      <div className="absolute top-1 right-1">
+                        <Sparkles size={12} className="text-yellow-400" />
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-300 text-[10px] font-medium">
+                      {post.category}
+                    </span>
+                    <span className="text-[10px] text-white/40 flex items-center gap-1">
+                      <Clock size={10} />
+                      {post.readTime} min
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-sm group-hover:text-cyan-400 transition-colors line-clamp-1">
+                    {post.title}
+                  </h3>
+                  <p className="text-xs text-white/50 line-clamp-1">{post.excerpt}</p>
+                  <span className="text-[10px] text-white/30 mt-1 block">{formatDate(post.date)}</span>
+                </div>
+                
+                <ChevronRight size={16} className="text-white/30 group-hover:text-cyan-400 self-center transition-colors" />
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default BlogApp;

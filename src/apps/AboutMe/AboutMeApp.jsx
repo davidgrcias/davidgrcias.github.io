@@ -1,43 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles } from 'lucide-react';
+import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles, Youtube, Loader2 } from 'lucide-react';
+import { getUserProfile } from '../../data/userProfile';
+import { getSkills } from '../../data/skills';
 
 /**
  * AboutMeApp - Personal information and bio in a beautiful card layout
  * Displays comprehensive personal details, skills, and social links
+ * Now fetches data from Firestore for synchronization with Admin Panel
  */
 const AboutMeApp = () => {
   const [activeTab, setActiveTab] = useState('personal');
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [skills, setSkills] = useState(null);
 
-  // Personal Information
-  const personalInfo = {
-    name: "David Garcia Saragih",
-    title: "Full-Stack Developer & UI/UX Enthusiast",
-    location: "Jakarta",
-    email: "davidgarciasaragih7@gmail.com",
-    portfolio: "davidgrcias.github.io",
-    summary: "Full-stack developer focused on crafting fast, accessible, and delightful web experiences. I enjoy turning complex ideas into clean, scalable products.",
-  };
+  // Fetch data from Firestore
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [profileData, skillsData] = await Promise.all([
+          getUserProfile('en'),
+          getSkills('en')
+        ]);
+        setProfile(profileData);
+        setSkills(skillsData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, []);
 
-  // Skills
-  const skills = {
-    frontend: ["React.js", "Next.js", "Tailwind CSS", "TypeScript", "Framer Motion", "Responsive Design"],
-    backend: ["Laravel", "PHP", "MySQL", "REST API", "Python", "Firebase"],
-    tools: ["Git & GitHub", "VS Code", "Vite", "Vercel", "Postman", "Figma"],
-    soft: ["Problem Solving", "Team Collaboration", "Quick Learner", "Creative Thinking", "Time Management"],
-  };
+  // Loading state
+  if (loading || !profile) {
+    return (
+      <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+      </div>
+    );
+  }
 
-  // Social Links
+  // Social Links from profile
   const socials = [
-    { name: "GitHub", icon: <Github size={20} />, link: "https://github.com/davidgrcias", color: "hover:text-purple-400" },
-    { name: "LinkedIn", icon: <Linkedin size={20} />, link: "https://linkedin.com/in/david-garcia-saragih", color: "hover:text-blue-400" },
-  ];
+    { name: "GitHub", icon: <Github size={20} />, link: profile.socials?.github?.url, color: "hover:text-purple-400" },
+    { name: "LinkedIn", icon: <Linkedin size={20} />, link: profile.socials?.linkedin?.url, color: "hover:text-blue-400" },
+    { name: "YouTube", icon: <Youtube size={20} />, link: profile.socials?.youtube?.url, color: "hover:text-red-400" },
+  ].filter(s => s.link);
 
   const tabs = [
     { id: 'personal', label: 'Personal', icon: <User size={16} /> },
     { id: 'skills', label: 'Skills', icon: <Code size={16} /> },
     { id: 'contact', label: 'Contact', icon: <Mail size={16} /> },
   ];
+
+  // Format skills for display
+  const formattedSkills = skills ? {
+    frontend: skills.technical?.find(t => t.category === 'Front-End')?.skills || [],
+    backend: skills.technical?.find(t => t.category === 'Back-End')?.skills || [],
+    tools: skills.technical?.find(t => t.category === 'DevOps & Deployment')?.skills || [],
+    soft: skills.soft || [],
+  } : { frontend: [], backend: [], tools: [], soft: [] };
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 overflow-auto">
@@ -50,19 +75,19 @@ const AboutMeApp = () => {
         >
           <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl ring-4 ring-blue-500/20">
             <img 
-              src="/profilpict.webp" 
-              alt={personalInfo.name}
+              src={profile.avatar || "/profilpict.webp"}
+              alt={profile.name}
               loading="lazy"
               width="128"
               height="128"
               className="w-full h-full object-cover"
             />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">{personalInfo.name}</h1>
-          <p className="text-lg text-zinc-400">{personalInfo.title}</p>
+          <h1 className="text-4xl font-bold text-white mb-2">{profile.name}</h1>
+          <p className="text-lg text-zinc-400">{profile.title}</p>
           <div className="flex items-center justify-center gap-2 mt-2 text-zinc-500">
             <MapPin size={16} />
-            <span>{personalInfo.location}</span>
+            <span>{profile.location}</span>
           </div>
         </motion.div>
 
@@ -102,15 +127,15 @@ const AboutMeApp = () => {
                   <Sparkles size={20} />
                   <h3 className="font-semibold">Life Philosophy</h3>
                 </div>
-                <p className="text-zinc-300 leading-relaxed">{personalInfo.summary}</p>
+                <p className="text-zinc-300 leading-relaxed">{profile.bio}</p>
               </div>
 
               {/* Info Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <InfoCard icon={<User />} label="Name" value={personalInfo.name} />
-                <InfoCard icon={<Code />} label="Role" value={personalInfo.title} />
-                <InfoCard icon={<MapPin />} label="Location" value={personalInfo.location} />
-                <InfoCard icon={<Globe />} label="Portfolio" value={personalInfo.portfolio} />
+                <InfoCard icon={<User />} label="Name" value={profile.name} />
+                <InfoCard icon={<Code />} label="Role" value={profile.title} />
+                <InfoCard icon={<MapPin />} label="Location" value={profile.location} />
+                <InfoCard icon={<Globe />} label="Portfolio" value="davidgrcias.github.io" />
               </div>
             </div>
           )}
@@ -118,10 +143,10 @@ const AboutMeApp = () => {
           {/* Skills Tab */}
           {activeTab === 'skills' && (
             <div className="space-y-4">
-              <SkillSection title="Frontend Development" skills={skills.frontend} color="blue" />
-              <SkillSection title="Backend Development" skills={skills.backend} color="green" />
-              <SkillSection title="Tools & Technologies" skills={skills.tools} color="purple" />
-              <SkillSection title="Soft Skills" skills={skills.soft} color="orange" />
+              <SkillSection title="Frontend Development" skills={formattedSkills.frontend} color="blue" />
+              <SkillSection title="Backend Development" skills={formattedSkills.backend} color="green" />
+              <SkillSection title="Tools & Technologies" skills={formattedSkills.tools} color="purple" />
+              <SkillSection title="Soft Skills" skills={formattedSkills.soft} color="orange" />
             </div>
           )}
 
@@ -133,14 +158,14 @@ const AboutMeApp = () => {
                 <ContactCard 
                   icon={<Mail />} 
                   label="Email" 
-                  value={personalInfo.email}
-                  link={`mailto:${personalInfo.email}`}
+                  value={profile.email}
+                  link={`mailto:${profile.email}`}
                 />
                 <ContactCard 
                   icon={<Globe />} 
                   label="Portfolio" 
-                  value={personalInfo.portfolio}
-                  link={`https://${personalInfo.portfolio}`}
+                  value="davidgrcias.github.io"
+                  link="https://davidgrcias.github.io"
                 />
               </div>
 
@@ -176,7 +201,7 @@ const AboutMeApp = () => {
                 <h3 className="text-white font-bold text-xl mb-2">Let's Build Something Amazing!</h3>
                 <p className="text-blue-100 mb-4">I'm always open to discussing new projects, creative ideas, or opportunities.</p>
                 <a
-                  href={`mailto:${personalInfo.email}`}
+                  href={`mailto:${profile.email}`}
                   className="inline-block px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors"
                 >
                   Get In Touch
