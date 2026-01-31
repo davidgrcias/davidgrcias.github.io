@@ -82,5 +82,3 @@ const translateData = (data, language) => {
 };
 
 getSkills().catch(() => {});
-
-export default skillsBase;

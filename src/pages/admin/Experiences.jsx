@@ -16,23 +16,11 @@ const Experiences = () => {
   const fetchExperiences = async () => {
     try {
       setLoading(true);
-      const data = await firestoreService.getCollection('experiences', { orderBy: 'startDate', direction: 'desc' });
-      
-      if (data && data.length > 0) {
-        setExperiences(data);
-      } else {
-        // Fallback to static
-        const { default: staticData } = await import('../../data/experiences');
-        setExperiences(staticData.map((e, i) => ({ ...e, id: `static-${i}`, isStatic: true })));
-      }
+      const data = await firestoreService.getCollection('experiences', { orderByField: 'startDate', orderDirection: 'desc' });
+      setExperiences(data || []);
     } catch (error) {
       console.error("Error fetching experiences:", error);
-      try {
-        const { default: staticData } = await import('../../data/experiences');
-        setExperiences(staticData.map((e, i) => ({ ...e, id: `static-${i}`, isStatic: true })));
-      } catch (e) {
-        setExperiences([]);
-      }
+      setExperiences([]);
     } finally {
       setLoading(false);
     }

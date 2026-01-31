@@ -16,24 +16,11 @@ const Projects = () => {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const data = await firestoreService.getCollection('projects', { orderBy: 'order' });
-      
-      if (data && data.length > 0) {
-        setProjects(data);
-      } else {
-        // Load from static data as fallback
-        const { default: staticProjects } = await import('../../data/projects');
-        setProjects(staticProjects.map((p, i) => ({ ...p, id: `static-${i}`, isStatic: true })));
-      }
+      const data = await firestoreService.getCollection('projects', { orderByField: 'order' });
+      setProjects(data || []);
     } catch (error) {
       console.error("Error fetching projects:", error);
-      // Fallback to static
-      try {
-        const { default: staticProjects } = await import('../../data/projects');
-        setProjects(staticProjects.map((p, i) => ({ ...p, id: `static-${i}`, isStatic: true })));
-      } catch (e) {
-        setProjects([]);
-      }
+      setProjects([]);
     } finally {
       setLoading(false);
     }

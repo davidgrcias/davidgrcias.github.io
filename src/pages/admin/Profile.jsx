@@ -33,7 +33,7 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const data = await firestoreService.getDocument('settings', 'profile');
+      const data = await firestoreService.getDocument('profile', 'main');
       
       if (data && data.name) {
         setProfile(prev => ({
@@ -42,29 +42,9 @@ const Profile = () => {
           contact: { ...prev.contact, ...data.contact },
           socials: { ...prev.socials, ...data.socials }
         }));
-      } else {
-        // Fallback to static
-        const { default: staticData } = await import('../../data/userProfile');
-        setProfile(prev => ({
-          ...prev,
-          ...staticData,
-          contact: { ...prev.contact, ...staticData.contact },
-          socials: { ...prev.socials, ...staticData.socials }
-        }));
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
-      try {
-        const { default: staticData } = await import('../../data/userProfile');
-        setProfile(prev => ({
-          ...prev,
-          ...staticData,
-          contact: { ...prev.contact, ...staticData.contact },
-          socials: { ...prev.socials, ...staticData.socials }
-        }));
-      } catch (e) {
-        // Keep defaults
-      }
     } finally {
       setLoading(false);
     }
@@ -97,7 +77,7 @@ const Profile = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await firestoreService.setDocument('settings', 'profile', {
+      await firestoreService.setDocument('profile', 'main', {
         ...profile,
         updatedAt: new Date().toISOString()
       });

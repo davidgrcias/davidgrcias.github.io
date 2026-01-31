@@ -10,14 +10,36 @@ import ProjectCarousel from "./ProjectCarousel";
 
 const ProjectsSection = () => {
   const { currentLanguage, translateText } = useTranslation();
-  const projects = getProjects(currentLanguage);
-  const userProfile = getUserProfile(currentLanguage);
+  const [projects, setProjects] = useState([]);
+  const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState("All");
-  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [filteredProjects, setFilteredProjects] = useState([]);
   const [sortOrder, setSortOrder] = useState("newest");
   const [showAll, setShowAll] = useState(false);
   const PROJECTS_PER_PAGE = 6; // 3 rows × 2 columns
+
+  // Load data from Firestore
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [projectsData, profileData] = await Promise.all([
+          getProjects(currentLanguage),
+          getUserProfile(currentLanguage)
+        ]);
+        setProjects(projectsData);
+        setUserProfile(profileData);
+        setFilteredProjects(projectsData);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [currentLanguage]);
 
   const tabs = [
     {
@@ -95,6 +117,26 @@ const ProjectsSection = () => {
       <IconComponent className={className} size={20} />
     ) : null;
   };
+
+  // Calculate dynamic stats
+  const totalProjects = projects.length;
+  const openSourceCount = projects.filter(p => p.link && !p.link.includes('#')).length;
+  const tierCounts = projects.reduce((acc, project) => {
+    project.tiers?.forEach(tier => {
+      acc[tier] = (acc[tier] || 0) + 1;
+    });
+    return acc;
+  }, {});
+
+  if (loading) {
+    return (
+      <div className="w-full text-center py-12">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+        <p className="mt-4 text-slate-600 dark:text-slate-400">{translateText("Loading projects...", currentLanguage)}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       <SectionTitle>{translateText("Projects", currentLanguage)}</SectionTitle>
@@ -104,6 +146,26 @@ const ProjectsSection = () => {
           currentLanguage
         )}
       </p>
+
+      {/* Dynamic Stats Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 dark:from-cyan-500/20 dark:to-blue-500/20 rounded-lg p-4 text-center">
+          <div className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">{totalProjects}</div>
+          <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">{translateText("Total Projects", currentLanguage)}</div>
+        </div>
+        <div className="bg-gradient-to-br from-teal-500/10 to-green-500/10 dark:from-teal-500/20 dark:to-green-500/20 rounded-lg p-4 text-center">
+          <div className="text-3xl font-bold text-teal-600 dark:text-teal-400">{openSourceCount}</div>
+          <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">{translateText("Open Source", currentLanguage)}</div>
+        </div>
+        <div className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 dark:from-violet-500/20 dark:to-purple-500/20 rounded-lg p-4 text-center">
+          <div className="text-3xl font-bold text-violet-600 dark:text-violet-400">{tierCounts['Real-World'] || 0}</div>
+          <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">{translateText("Real-World", currentLanguage)}</div>
+        </div>
+        <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20 rounded-lg p-4 text-center">
+          <div className="text-3xl font-bold text-amber-600 dark:text-amber-400">{tierCounts['Advanced'] || 0}</div>
+          <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">{translateText("Advanced", currentLanguage)}</div>
+        </div>
+      </div>
 
       {/* 3D Carousel Showcase - Featured Projects - Very Compact */}
       <div className="mb-8">
@@ -256,7 +318,7 @@ const ProjectsSection = () => {
           <p className="text-slate-600 dark:text-gray-400 mb-8">
             👉 {translateText("Check out more on", currentLanguage)}{" "}
             <a
-              href={userProfile.socials.github.url}
+              href={userProfile?.socials?.github?.url || '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#333] dark:text-white hover:text-[#2b3137] dark:hover:text-gray-300 font-semibold transition-colors hover:underline underline-offset-4"
@@ -265,7 +327,7 @@ const ProjectsSection = () => {
             </a>
             ,{" "}
             <a
-              href={userProfile.socials.youtube.url}
+              href={userProfile?.socials?.youtube?.url || '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#FF0000] hover:text-[#FF0000]/80 font-semibold transition-colors hover:underline underline-offset-4"
@@ -274,7 +336,7 @@ const ProjectsSection = () => {
             </a>
             {translateText(", or", currentLanguage)}{" "}
             <a
-              href={userProfile.socials.tiktok.url}
+              href={userProfile?.socials?.tiktok?.url || '#'}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#000000] dark:text-white hover:text-[#00f2ea] dark:hover:text-[#00f2ea] font-semibold transition-colors hover:underline underline-offset-4"

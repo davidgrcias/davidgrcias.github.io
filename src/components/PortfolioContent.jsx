@@ -48,15 +48,18 @@ const PortfolioContent = () => {
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
-  const EXPERIENCES_PER_PAGE = 6; // Get translated data based on current language
-  const userProfile = getUserProfile(currentLanguage);
-  const insights = getInsights(currentLanguage);
-  const funFacts = getFunFacts(currentLanguage);
-  const experiences = getExperiences(currentLanguage);
-  const projects = getProjects(currentLanguage);
-  const skills = getSkills(currentLanguage);
-  const education = getEducation(currentLanguage);
-  const certifications = getCertifications(currentLanguage);
+  const EXPERIENCES_PER_PAGE = 6;
+  
+  // State for async data from Firestore
+  const [userProfile, setUserProfile] = useState(null);
+  const [insights, setInsights] = useState([]);
+  const [funFacts, setFunFacts] = useState([]);
+  const [experiences, setExperiences] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [skills, setSkills] = useState({ technical: [], soft: [] });
+  const [education, setEducation] = useState([]);
+  const [certifications, setCertifications] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   // Detect mobile
   useEffect(() => {
@@ -67,6 +70,49 @@ const PortfolioContent = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Load data from Firestore when component mounts or language changes
+  useEffect(() => {
+    const loadData = async () => {
+      setDataLoading(true);
+      try {
+        const [
+          profileData,
+          insightsData,
+          funFactsData,
+          experiencesData,
+          projectsData,
+          skillsData,
+          educationData,
+          certificationsData
+        ] = await Promise.all([
+          getUserProfile(currentLanguage),
+          getInsights(currentLanguage),
+          getFunFacts(currentLanguage),
+          getExperiences(currentLanguage),
+          getProjects(currentLanguage),
+          getSkills(currentLanguage),
+          getEducation(currentLanguage),
+          getCertifications(currentLanguage)
+        ]);
+
+        setUserProfile(profileData);
+        setInsights(insightsData);
+        setFunFacts(funFactsData);
+        setExperiences(experiencesData);
+        setProjects(projectsData);
+        setSkills(skillsData);
+        setEducation(educationData);
+        setCertifications(certificationsData);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    loadData();
+  }, [currentLanguage]);
 
   // Command Palette keyboard shortcut (Cmd+K or Ctrl+K)
   useEffect(() => {

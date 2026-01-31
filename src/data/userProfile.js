@@ -70,5 +70,3 @@ const translateData = (data, language) => {
 };
 
 getUserProfile().catch(() => {});
-
-export default userProfileBase;

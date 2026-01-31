@@ -16,7 +16,7 @@ const Education = () => {
   const fetchEducation = async () => {
     try {
       setLoading(true);
-      const data = await firestoreService.getCollection('education', { orderBy: 'order' });
+      const data = await firestoreService.getCollection('education', { orderByField: 'order' });
       
       if (data && data.length > 0) {
         setEducation(data);

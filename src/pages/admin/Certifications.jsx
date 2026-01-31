@@ -16,7 +16,7 @@ const Certifications = () => {
   const fetchCertifications = async () => {
     try {
       setLoading(true);
-      const data = await firestoreService.getCollection('certifications', { orderBy: 'order' });
+      const data = await firestoreService.getCollection('certifications', { orderByField: 'order' });
       
       if (data && data.length > 0) {
         setCertifications(data);

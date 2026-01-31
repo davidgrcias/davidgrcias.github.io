@@ -24,32 +24,16 @@ const Skills = () => {
   const fetchSkills = async () => {
     try {
       setLoading(true);
-      const data = await firestoreService.getDocument('settings', 'skills');
+      const data = await firestoreService.getDocument('skills', 'main');
       
       if (data && (data.technical || data.soft)) {
         setSkills({
           technical: data.technical || [],
           soft: data.soft || []
         });
-      } else {
-        // Fallback to static
-        const { default: staticData } = await import('../../data/skills');
-        setSkills({
-          technical: staticData.technical || [],
-          soft: staticData.soft || []
-        });
       }
     } catch (error) {
       console.error("Error fetching skills:", error);
-      try {
-        const { default: staticData } = await import('../../data/skills');
-        setSkills({
-          technical: staticData.technical || [],
-          soft: staticData.soft || []
-        });
-      } catch (e) {
-        setSkills({ technical: [], soft: [] });
-      }
     } finally {
       setLoading(false);
     }
@@ -58,7 +42,7 @@ const Skills = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await firestoreService.setDocument('settings', 'skills', {
+      await firestoreService.setDocument('skills', 'main', {
         ...skills,
         updatedAt: new Date().toISOString()
       });

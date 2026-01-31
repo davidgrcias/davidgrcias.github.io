@@ -223,3 +223,17 @@ export const updateOrder = async (collectionName, items) => {
     throw error;
   }
 };
+
+// Default export sebagai object untuk kemudahan import
+export const firestoreService = {
+  getCollection,
+  getDocument,
+  addDocument,
+  updateDocument,
+  deleteDocument,
+  setDocument,
+  getPublishedCollection,
+  invalidateCache,
+  clearCache,
+  updateOrder
+};

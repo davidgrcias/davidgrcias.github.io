@@ -98,5 +98,3 @@ const translateData = (data, language) => {
 
 // Initialize cache on module load
 getProjects().catch(() => {});
-
-export default projectsBase;
