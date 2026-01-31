@@ -1,0 +1,374 @@
+// Seed Firestore with all default data
+// Run this ONCE to populate your database
+
+import { 
+  collection, 
+  doc, 
+  setDoc, 
+  addDoc,
+  getDocs,
+  serverTimestamp 
+} from 'firebase/firestore';
+import { db } from '../config/firebase';
+
+// ========================================
+// DEFAULT DATA - SEMUA DATA PORTFOLIO
+// ========================================
+
+const defaultProfile = {
+  name: "David Garcia Saragih",
+  headline: "Full-Stack Web & Systems Engineer · Content Creator",
+  photoUrl: "/profilpict.webp",
+  aboutText: "I'm driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity",
+  contact: {
+    email: "davidgarciasaragih7@gmail.com",
+    location: "Jakarta, Indonesia",
+    whatsapp: "+6287776803957",
+    phone: ""
+  },
+  socials: {
+    youtube: { url: "https://www.youtube.com/c/DavidGTech", handle: "@DavidGTech" },
+    tiktok: { url: "https://www.tiktok.com/@davidgtech", handle: "@davidgtech" },
+    github: { url: "https://github.com/davidgrcias", handle: "davidgrcias" },
+    linkedin: { url: "https://www.linkedin.com/in/davidgrcias/", handle: "davidgrcias" },
+    instagram: { url: "https://www.instagram.com/davidgrcias/", handle: "@davidgrcias" }
+  }
+};
+
+const defaultSkills = {
+  technical: [
+    { category: "Front-End", skills: ["HTML", "CSS", "Tailwind CSS", "JavaScript & TypeScript", "React.js", "UI/UX Implementation"], icon: "Layout" },
+    { category: "Back-End", skills: ["PHP", "Laravel", "Node.js (TypeScript)", "PostgreSQL", "Prisma ORM", "MySQL", "REST API", "Auth & Session", "MVC", "Python", "Kotlin", "Java"], icon: "Database" },
+    { category: "DevOps & Deployment", skills: ["Git & GitHub", "Firebase", "Vercel", "cPanel Hosting", "Chrome DevTools", "Nginx"], icon: "Server" },
+    { category: "AI & Optimization Tools", skills: ["Google Analytics", "Google Search Console", "SEO Optimization", "Prompt Engineering"], icon: "Brain" },
+    { category: "Others", skills: ["Docs Writing", "Canva", "Figma", "Mobile-First Development", "Continually learning new technologies"], icon: "Lightbulb" }
+  ],
+  soft: ["Problem Solving", "Critical Thinking", "Fast Learning", "Adaptability", "Creativity", "Digital Communication", "Initiative", "Strong Work Ethic", "Team Collaboration", "Curiosity-Driven", "Branding", "Resilience"]
+};
+
+const defaultProjects = [
+  {
+    name: "Komilet (JakLingko Management System)",
+    role: "Full-Stack Web & Systems Engineer",
+    description: "Architected a comprehensive fleet management system for JakLingko operators using Next.js 16 and PostgreSQL. Designed a dual-panel architecture (Admin/Home) handling 42+ database entities, featuring soft-delete patterns, granular RBAC permissions, and automated approval workflows for financial integrity.",
+    tech: ["Next.js 16", "TypeScript", "PostgreSQL", "Prisma", "Tailwind CSS v4", "Redux Toolkit"],
+    highlights: [
+      "Engineered a secure App Router structure with Middleware-based JWT authentication and Role-Based Access Control (RBAC).",
+      "Optimized 42+ table database schema using Composite Indexing and React Window virtualization for large datasets.",
+      "Implemented a 'LogApproval' pattern to ensure strict audit trails for sensitive financial operations."
+    ],
+    link: "#",
+    icon: "Bus",
+    tiers: ["Advanced", "Real-World"],
+    date: "2025-11",
+    isPublished: true,
+    order: 0
+  },
+  {
+    name: "UMN Festival 2025 (Official Platform)",
+    role: "Web Development Coordinator",
+    description: "Architected the comprehensive event platform for UMN Festival 2025 using a Hybrid Monolith approach (Laravel 12 + Inertia.js). The system handles end-to-end ticketing, from dynamic bundle pricing and referral tracking to real-time Midtrans payment synchronization and secure QR code check-in.",
+    tech: ["Laravel 12", "React 19", "Inertia.js 2.0", "Tailwind CSS v4", "Midtrans SDK", "PostgreSQL"],
+    highlights: [
+      "Designed a Hybrid SSR/SPA architecture combining Laravel's robustness with React's interactivity via Inertia.js 2.0.",
+      "Built a secure Ticket Validation System using SHA-256 hashing and 'Frame Capture' anti-replay protection for scanners.",
+      "Implemented complex Order Workflows: Bundle discounts, referral tracking, and automated PDF ticket generation with QR codes."
+    ],
+    link: "#",
+    icon: "Ticket",
+    tiers: ["Advanced", "Real-World", "Capstone"],
+    date: "2025-11",
+    isPublished: true,
+    order: 1
+  },
+  {
+    name: "Ark Care Ministry Website",
+    role: "Backend Developer & Project Coordinator",
+    description: "Volunteered to build a website for a nonprofit organization, leading the team and developing the backend system to support dynamic activity listings, content management, and user communication.",
+    tech: ["PHP", "Laravel", "MySQL"],
+    highlights: [
+      "Led a four-person volunteer squad to ship the MVP and onboarding flow on schedule.",
+      "Built modular backend endpoints to power dynamic activity listings and CMS updates.",
+      "Introduced secure messaging channels so staff and volunteers can coordinate quickly."
+    ],
+    link: "https://arkcareministry.org/",
+    icon: "Handshake",
+    tiers: ["Advanced", "Real-World"],
+    date: "2024-12",
+    isPublished: true,
+    order: 2
+  }
+];
+
+const defaultExperiences = [
+  {
+    role: "Coordinator of Web Division (Full Stack Developer)",
+    company: "UMN FESTIVAL 2025",
+    type: "Contract",
+    location: "Tangerang, Banten, Indonesia",
+    locationType: "Hybrid",
+    description: "Led the end-to-end development of UMN Festival's official website using Laravel, React, and Midtrans, building a fully dynamic platform for managing events, announcements, and committee access.",
+    skills: ["Laravel", "React.js", "Payment Gateways"],
+    media: {
+      type: "pdf",
+      url: "/umnfest2025.pdf",
+      thumbnail: "/umnfest.png",
+      title: "UMN Festival 2025 — UNIFY Ticketing Flow & Admin Dashboard",
+      description: "Screens from the end-to-end ticketing system for UNIFY 2025"
+    },
+    startDate: "2025-02",
+    endDate: "present",
+    isPublished: true,
+    order: 0
+  },
+  {
+    role: "Full Stack Developer",
+    company: "Koperasi Mikrolet Jakarta Raya (Komilet) — JakLingko Angkot Operator",
+    type: "Contract",
+    location: "Jakarta Metropolitan Area",
+    locationType: "Remote",
+    description: "Built and deployed a full-stack TypeScript platform for Koperasi Mikrolet Jakarta Raya (Komilet)—a JakLingko (Jakarta Integrated Transport System) angkot operator—to digitize end-to-end internal operations across drivers, vehicle owners, admin staff, and management.",
+    skills: ["Full-Stack Development", "Web Technologies", "Node.js", "TypeScript", "PostgreSQL", "Prisma ORM"],
+    media: {
+      type: "image",
+      url: "https://komilet.id",
+      thumbnail: "/komilet.png",
+      title: "Aplikasi Komilet",
+      description: "Full-stack application for JakLingko angkot operator management system"
+    },
+    startDate: "2025-07",
+    endDate: "present",
+    isPublished: true,
+    order: 1
+  },
+  {
+    role: "Founder, Digital Strategist & Web Developer",
+    company: "Rental Mobil City Park",
+    type: "Self-employed",
+    location: "Tangerang, Banten, Indonesia",
+    locationType: "Hybrid",
+    description: "Founded and developed the web interface for a local car rental business, while also helping establish its online presence and digital marketing strategy.",
+    skills: ["HTML", "CSS", "JavaScript", "Digital Marketing"],
+    startDate: "2024-06",
+    endDate: "present",
+    isPublished: true,
+    order: 2
+  },
+  {
+    role: "Web Developer",
+    company: "DAAI TV",
+    type: "Internship",
+    location: "Jakarta, Indonesia",
+    locationType: "On-site",
+    description: "Completed a web development internship, working on frontend and backend development using PHP, MySQL, and Bootstrap.",
+    skills: ["HTML", "Bootstrap", "PHP", "MySQL", "JavaScript"],
+    startDate: "2022-03",
+    endDate: "2022-05",
+    isPublished: true,
+    order: 3
+  }
+];
+
+const defaultEducation = [
+  {
+    degree: "Undergraduate Student, Informatics",
+    institution: "Universitas Multimedia Nusantara",
+    period: "2023 - 2027",
+    grade: "3.87",
+    isPublished: true,
+    order: 0
+  },
+  {
+    degree: "Software Engineering",
+    institution: "SMK Cinta Kasih Tzu Chi",
+    period: "2020 - 2023",
+    isPublished: true,
+    order: 1
+  }
+];
+
+const defaultCertifications = [
+  { name: "HCIA-AI V3.5 Course", provider: "Huawei ICT Academy", date: "May 2025", icon: "BrainCircuit", isPublished: true, order: 0 },
+  { name: "Python Intermediate Course", provider: "Sololearn", date: "June 2025", icon: "Code", isPublished: true, order: 1 },
+  { name: "PHP Course", provider: "Progate", date: "Jan 2022", icon: "FileCode", isPublished: true, order: 2 },
+  { name: "React Course", provider: "Progate", date: "Jan 2022", icon: "Code2", isPublished: true, order: 3 },
+  { name: "SQL Course", provider: "Progate", date: "Jan 2022", icon: "Database", isPublished: true, order: 4 },
+  { name: "Web Development Course", provider: "Progate", date: "Jan 2022", icon: "Globe", isPublished: true, order: 5 },
+  { name: "GIT Course", provider: "Progate", date: "Dec 2021", icon: "GitBranch", isPublished: true, order: 6 },
+  { name: "Startup of New Innovation Challenge", provider: "HIMPS-HI UPH", date: "2022", icon: "Rocket", isPublished: true, order: 7 },
+  { name: "JavaScript Course", provider: "Progate", date: "Dec 2021", icon: "FileCode", isPublished: true, order: 8 },
+  { name: "HTML & CSS Course", provider: "Progate", date: "Oct 2021", icon: "Code", isPublished: true, order: 9 }
+];
+
+const defaultFunFacts = [
+  { title: "Hidden Talent", text: "Ask me about Jakarta's transport routes, I can tell you the best way to reach any destination using public transport!", icon: "MapIcon", isPublished: true, order: 0 },
+  { title: "Surprising Fact", text: "Though I might seem reserved at first, I genuinely love meeting and chatting with new people.", icon: "HeartHandshake", isPublished: true, order: 1 },
+  { title: "Most Productive Hours", text: "Late night hours are when my creativity and productivity peak.", icon: "Hourglass", isPublished: true, order: 2 },
+  { title: "Best Way to Relax", text: "Nothing beats unwinding after a productive day of solving complex coding challenges.", icon: "Puzzle", isPublished: true, order: 3 },
+  { title: "Friends Describe Me As", text: "Ambitious and analytical, I love digging deeper into things and always strive to improve.", icon: "User", isPublished: true, order: 4 },
+  { title: "Underrated Joy", text: "That satisfying moment when I successfully help someone solve a problem or reach their goal.", icon: "Heart", isPublished: true, order: 5 }
+];
+
+const defaultInsights = [
+  { title: "Motivation", text: "Fueled by ambition, not afraid to fail, because every setback is simply a setup for the next level.", icon: "Rocket", isPublished: true, order: 0 },
+  { title: "Never Going Back", text: "I'll never return to being the shy and reserved person I once was. Now, I confidently embrace opportunities to speak and connect.", icon: "SkipBack", isPublished: true, order: 1 },
+  { title: "What Keeps Me Curious", text: "I'm endlessly curious about how things work, whether complex systems or compelling stories. I'm driven by the 'why' and 'how' behind it all.", icon: "SearchCheck", isPublished: true, order: 2 },
+  { title: "How I Stay Updated", text: "I actively stay informed and up-to-date on current events, tech trends, and global developments, constantly expanding my perspective and knowledge base.", icon: "Newspaper", isPublished: true, order: 3 }
+];
+
+// ========================================
+// SEED FUNCTIONS
+// ========================================
+
+/**
+ * Check if a collection is empty
+ */
+const isCollectionEmpty = async (collectionName) => {
+  try {
+    const snapshot = await getDocs(collection(db, collectionName));
+    return snapshot.empty;
+  } catch (error) {
+    console.error(`Error checking ${collectionName}:`, error);
+    return true; // Assume empty on error
+  }
+};
+
+/**
+ * Seed a singleton document (profile, skills)
+ */
+const seedSingletonDocument = async (collectionName, docId, data) => {
+  try {
+    const docRef = doc(db, collectionName, docId);
+    await setDoc(docRef, {
+      ...data,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    console.log(`✅ ${collectionName}/${docId} seeded successfully`);
+    return true;
+  } catch (error) {
+    console.error(`❌ Error seeding ${collectionName}/${docId}:`, error);
+    return false;
+  }
+};
+
+/**
+ * Seed a collection with multiple documents
+ */
+const seedCollection = async (collectionName, dataArray) => {
+  try {
+    const colRef = collection(db, collectionName);
+    let count = 0;
+    
+    for (const item of dataArray) {
+      await addDoc(colRef, {
+        ...item,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      count++;
+    }
+    
+    console.log(`✅ ${collectionName}: ${count} documents seeded`);
+    return count;
+  } catch (error) {
+    console.error(`❌ Error seeding ${collectionName}:`, error);
+    return 0;
+  }
+};
+
+/**
+ * Main seed function - Seeds ALL data to Firestore
+ */
+export const seedAllData = async (options = { force: false }) => {
+  console.log('🚀 Starting Firestore seed...\n');
+  
+  const results = {
+    profile: false,
+    skills: false,
+    projects: 0,
+    experiences: 0,
+    education: 0,
+    certifications: 0,
+    funFacts: 0,
+    insights: 0
+  };
+
+  try {
+    // 1. Seed Profile (singleton)
+    if (options.force || await isCollectionEmpty('profile')) {
+      results.profile = await seedSingletonDocument('profile', 'main', defaultProfile);
+    } else {
+      console.log('⏭️  Profile already exists, skipping...');
+    }
+
+    // 2. Seed Skills (singleton)
+    if (options.force || await isCollectionEmpty('skills')) {
+      results.skills = await seedSingletonDocument('skills', 'main', defaultSkills);
+    } else {
+      console.log('⏭️  Skills already exists, skipping...');
+    }
+
+    // 3. Seed Projects
+    if (options.force || await isCollectionEmpty('projects')) {
+      results.projects = await seedCollection('projects', defaultProjects);
+    } else {
+      console.log('⏭️  Projects already exists, skipping...');
+    }
+
+    // 4. Seed Experiences
+    if (options.force || await isCollectionEmpty('experiences')) {
+      results.experiences = await seedCollection('experiences', defaultExperiences);
+    } else {
+      console.log('⏭️  Experiences already exists, skipping...');
+    }
+
+    // 5. Seed Education
+    if (options.force || await isCollectionEmpty('education')) {
+      results.education = await seedCollection('education', defaultEducation);
+    } else {
+      console.log('⏭️  Education already exists, skipping...');
+    }
+
+    // 6. Seed Certifications
+    if (options.force || await isCollectionEmpty('certifications')) {
+      results.certifications = await seedCollection('certifications', defaultCertifications);
+    } else {
+      console.log('⏭️  Certifications already exists, skipping...');
+    }
+
+    // 7. Seed Fun Facts
+    if (options.force || await isCollectionEmpty('funFacts')) {
+      results.funFacts = await seedCollection('funFacts', defaultFunFacts);
+    } else {
+      console.log('⏭️  Fun Facts already exists, skipping...');
+    }
+
+    // 8. Seed Insights
+    if (options.force || await isCollectionEmpty('insights')) {
+      results.insights = await seedCollection('insights', defaultInsights);
+    } else {
+      console.log('⏭️  Insights already exists, skipping...');
+    }
+
+    console.log('\n📊 Seed Results:');
+    console.log('================');
+    console.log(`Profile:        ${results.profile ? '✅' : '⏭️ Skipped'}`);
+    console.log(`Skills:         ${results.skills ? '✅' : '⏭️ Skipped'}`);
+    console.log(`Projects:       ${results.projects} documents`);
+    console.log(`Experiences:    ${results.experiences} documents`);
+    console.log(`Education:      ${results.education} documents`);
+    console.log(`Certifications: ${results.certifications} documents`);
+    console.log(`Fun Facts:      ${results.funFacts} documents`);
+    console.log(`Insights:       ${results.insights} documents`);
+    console.log('\n🎉 Seed complete!');
+
+    return results;
+  } catch (error) {
+    console.error('❌ Seed failed:', error);
+    throw error;
+  }
+};
+
+// Export for use in admin panel
+export default seedAllData;

@@ -11,9 +11,12 @@ import {
   Plus,
   ArrowRight,
   RefreshCw,
-  ExternalLink
+  ExternalLink,
+  Database,
+  Loader2
 } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
+import { seedAllData } from '../../utils/seedFirestore';
 
 // Default stats when Firestore is empty
 const defaultStats = {
@@ -37,6 +40,7 @@ const Dashboard = () => {
   const [recentProjects, setRecentProjects] = useState(defaultRecentProjects);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -98,6 +102,26 @@ const Dashboard = () => {
     fetchStats();
   };
 
+  // Seed all data to Firestore
+  const handleSeedData = async () => {
+    if (!window.confirm('This will populate Firestore with all default portfolio data. Continue?')) {
+      return;
+    }
+    
+    setSeeding(true);
+    try {
+      await seedAllData({ force: false }); // Only seed empty collections
+      alert('✅ Data seeded successfully! Refreshing...');
+      firestoreService.clearCache();
+      await fetchStats();
+    } catch (error) {
+      console.error('Seed error:', error);
+      alert('❌ Failed to seed data. Check console for details.');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   const statCards = [
     { label: 'Projects', value: stats.projects, icon: FolderKanban, path: '/admin/projects', color: 'from-blue-500 to-cyan-500' },
     { label: 'Experiences', value: stats.experiences, icon: Briefcase, path: '/admin/experiences', color: 'from-purple-500 to-pink-500' },
@@ -133,7 +157,16 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold text-white">Dashboard</h1>
           <p className="text-gray-400 mt-1">Welcome back! Here's your portfolio overview.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={handleSeedData}
+            disabled={seeding}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors disabled:opacity-50 text-white"
+            title="Populate Firestore with default data"
+          >
+            {seeding ? <Loader2 size={18} className="animate-spin" /> : <Database size={18} />}
+            {seeding ? 'Seeding...' : 'Seed Data'}
+          </button>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
