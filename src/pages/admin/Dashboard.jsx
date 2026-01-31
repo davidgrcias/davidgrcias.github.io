@@ -13,7 +13,8 @@ import {
   RefreshCw,
   ExternalLink,
   Database,
-  Loader2
+  Loader2,
+  BookOpen
 } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
 import { seedAllData } from '../../utils/seedFirestore';
@@ -26,7 +27,8 @@ const defaultStats = {
   certifications: 10,
   skills: 5,
   funFacts: 6,
-  insights: 4
+  insights: 4,
+  posts: 4
 };
 
 const defaultRecentProjects = [
@@ -52,7 +54,8 @@ const Dashboard = () => {
         certificationsData,
         skillsData,
         funFactsData,
-        insightsData
+        insightsData,
+        postsData
       ] = await Promise.all([
         firestoreService.getCollection('projects'),
         firestoreService.getCollection('experiences'),
@@ -60,7 +63,8 @@ const Dashboard = () => {
         firestoreService.getCollection('certifications'),
         firestoreService.getDocument('skills', 'main'),
         firestoreService.getCollection('funFacts'),
-        firestoreService.getCollection('insights')
+        firestoreService.getCollection('insights'),
+        firestoreService.getCollection('posts')
       ]);
 
       // Use actual data if available, otherwise keep defaults
@@ -71,7 +75,8 @@ const Dashboard = () => {
         certifications: certificationsData?.length || defaultStats.certifications,
         skills: skillsData?.technical?.length || defaultStats.skills,
         funFacts: funFactsData?.length || defaultStats.funFacts,
-        insights: insightsData?.length || defaultStats.insights
+        insights: insightsData?.length || defaultStats.insights,
+        posts: postsData?.length || defaultStats.posts
       });
 
       // Get recent projects (sorted by date, top 5)
@@ -124,17 +129,17 @@ const Dashboard = () => {
 
   const statCards = [
     { label: 'Projects', value: stats.projects, icon: FolderKanban, path: '/admin/projects', color: 'from-blue-500 to-cyan-500' },
+    { label: 'Blog Posts', value: stats.posts, icon: BookOpen, path: '/admin/blog', color: 'from-pink-500 to-rose-500' },
     { label: 'Experiences', value: stats.experiences, icon: Briefcase, path: '/admin/experiences', color: 'from-purple-500 to-pink-500' },
     { label: 'Education', value: stats.education, icon: GraduationCap, path: '/admin/education', color: 'from-green-500 to-emerald-500' },
     { label: 'Certifications', value: stats.certifications, icon: Award, path: '/admin/certifications', color: 'from-yellow-500 to-orange-500' },
     { label: 'Skill Categories', value: stats.skills, icon: Wrench, path: '/admin/skills', color: 'from-red-500 to-rose-500' },
-    { label: 'Fun Facts', value: stats.funFacts, icon: Lightbulb, path: '/admin/content', color: 'from-indigo-500 to-violet-500' },
   ];
 
   const quickActions = [
     { label: 'Add Project', path: '/admin/projects/new', icon: FolderKanban },
+    { label: 'New Blog Post', path: '/admin/blog', icon: BookOpen },
     { label: 'Add Experience', path: '/admin/experiences/new', icon: Briefcase },
-    { label: 'Add Certification', path: '/admin/certifications/new', icon: Award },
     { label: 'Edit Profile', path: '/admin/profile', icon: User },
   ];
 

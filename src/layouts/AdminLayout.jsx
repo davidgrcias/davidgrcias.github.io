@@ -14,7 +14,8 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  BookOpen
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -65,6 +66,7 @@ const AdminLayout = () => {
   const navItems = [
     { label: 'Dashboard', path: '/admin', icon: LayoutDashboard, exact: true },
     { label: 'Projects', path: '/admin/projects', icon: FolderKanban },
+    { label: 'Blog Posts', path: '/admin/blog', icon: BookOpen },
     { label: 'Experiences', path: '/admin/experiences', icon: Briefcase },
     { label: 'Education', path: '/admin/education', icon: GraduationCap },
     { label: 'Certifications', path: '/admin/certifications', icon: Award },

@@ -465,7 +465,7 @@ const PortfolioContent = () => {
                 <SectionTitle>
                   {translateText("About Me", currentLanguage)}
                 </SectionTitle>
-                <p className="max-w-3xl mx-auto text-center text-lg text-slate-600 dark:text-gray-400 leading-relaxed">
+                <p className="max-w-3xl mx-auto text-center text-lg text-slate-600 dark:text-gray-400 leading-relaxed whitespace-pre-line">
                   {userProfile.aboutText}
                 </p>
                 <div className="max-w-4xl mx-auto mt-16">
@@ -529,7 +529,7 @@ const PortfolioContent = () => {
                                 <h4 className="font-bold text-slate-800 dark:text-white mb-1">
                                   {item.title}
                                 </h4>
-                                <p className="text-sm text-slate-600 dark:text-gray-400">
+                                <p className="text-sm text-slate-600 dark:text-gray-400 whitespace-pre-line">
                                   {item.text}
                                 </p>
                               </div>
@@ -559,7 +559,7 @@ const PortfolioContent = () => {
                                 <h4 className="font-bold text-slate-800 dark:text-white mb-1">
                                   {item.title}
                                 </h4>
-                                <p className="text-sm text-slate-600 dark:text-gray-400">
+                                <p className="text-sm text-slate-600 dark:text-gray-400 whitespace-pre-line">
                                   {item.text}
                                 </p>
                               </div>
@@ -754,7 +754,7 @@ const PortfolioContent = () => {
                               {/* Description */}
                               {exp.description && (
                                 <div className="mb-4">
-                                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
                                     {expandedDescriptions[index] 
                                       ? exp.description 
                                       : getTruncatedDescription(exp.description, 150)

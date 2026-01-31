@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Briefcase, Mail, Linkedin, Github, ExternalLink, Sparkles, Coffee, Loader2 } from 'lucide-react';
+import { MapPin, Linkedin, Github, Sparkles, Loader2, Youtube } from 'lucide-react';
 import { getUserProfile } from '../../data/userProfile';
 
 /**
@@ -23,10 +23,11 @@ const StatusCardWidget = ({ className = '' }) => {
           name: profileData.name,
           role: profileData.title,
           location: profileData.location,
+          avatar: profileData.avatar || profileData.photoUrl || '/profilpict.webp',
           status: profileData.status || 'open', // 'open' | 'employed' | 'busy'
           availableFor: profileData.availableFor || ['Full-time', 'Freelance'],
-          links: {
-            email: profileData.email,
+          socials: {
+            youtube: profileData.socials?.youtube?.url,
             linkedin: profileData.socials?.linkedin?.url,
             github: profileData.socials?.github?.url,
           }
@@ -38,11 +39,12 @@ const StatusCardWidget = ({ className = '' }) => {
           name: 'David Garcia',
           role: 'Software Developer',
           location: 'Jakarta, Indonesia',
+          avatar: '/profilpict.webp',
           status: 'open',
           availableFor: ['Full-time', 'Freelance'],
-          links: {
-            email: 'davidgarciasaragih7@gmail.com',
-            linkedin: 'https://linkedin.com/in/david-garcia-saragih',
+          socials: {
+            youtube: 'https://youtube.com/@DavidGTech',
+            linkedin: 'https://linkedin.com/in/davidgrcias',
             github: 'https://github.com/davidgrcias',
           }
         });
@@ -115,86 +117,97 @@ const StatusCardWidget = ({ className = '' }) => {
 
       {/* Content */}
       <div className="relative p-3.5 text-white">
-        {/* Status Badge */}
-        <div className="flex items-center justify-between mb-3">
-          <motion.div
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full ${currentStatus.bgColor} border ${currentStatus.borderColor}`}
-            animate={currentStatus.pulse ? { scale: [1, 1.02, 1] } : {}}
-            transition={{ duration: 2, repeat: Infinity }}
-          >
-            {currentStatus.pulse && (
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-            )}
-            <span className={`text-xs font-semibold ${currentStatus.textColor}`}>
-              {currentStatus.label}
-            </span>
-          </motion.div>
+        {/* Header Row: Photo + Role + Status Dot */}
+        <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/10">
+          {/* Profile Photo */}
+          <div className="relative flex-shrink-0">
+            <img 
+              src={profile.avatar} 
+              alt={profile.name}
+              className="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow-lg"
+            />
+          </div>
           
-          <div className="flex items-center gap-1 text-white/50">
-            <Coffee size={14} />
+          {/* Role + Location */}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[13px] font-semibold text-white truncate leading-tight">
+              {profile.role}
+            </h3>
+            <div className="flex items-center gap-1 text-white/50 text-[11px]">
+              <MapPin size={10} />
+              <span className="truncate">{profile.location}</span>
+              <span>🇮🇩</span>
+            </div>
+          </div>
+          
+          {/* Status Indicator */}
+          <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
+            <motion.div
+              className={`w-3 h-3 rounded-full ${currentStatus.pulse ? 'bg-emerald-500' : 'bg-amber-500'}`}
+              animate={currentStatus.pulse ? { scale: [1, 1.2, 1], opacity: [1, 0.7, 1] } : {}}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            />
+            <span className="text-[9px] text-white/40 font-medium uppercase tracking-wider">
+              {currentStatus.pulse ? 'Open' : 'Busy'}
+            </span>
           </div>
         </div>
 
-        {/* Profile Info */}
-        <div className="mb-3">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <Briefcase size={15} className="text-cyan-400" />
-            <h3 className="text-[13px] font-semibold text-white">{profile.role}</h3>
-          </div>
-          <div className="flex items-center gap-1.5 text-white/60 text-xs">
-            <MapPin size={11} />
-            <span>{profile.location}</span>
-            <span className="ml-1">🇮🇩</span>
-          </div>
-        </div>
-
-        {/* Available For Tags */}
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          <Sparkles size={11} className="text-yellow-400 mr-0.5" />
+        {/* Available For Tags - Centered */}
+        <div className="flex items-center justify-center gap-2 mb-3">
+          <Sparkles size={11} className="text-yellow-400" />
           {profile.availableFor.map((type) => (
             <span
               key={type}
-              className="px-2 py-0.5 bg-white/10 border border-white/10 rounded text-[10px] text-white/80"
+              className="px-2.5 py-0.5 bg-white/10 border border-white/10 rounded text-[10px] text-white/80"
             >
               {type}
             </span>
           ))}
         </div>
 
-        {/* Quick Links - Compact inline icons */}
-        <div className="flex items-center justify-center gap-2 pt-2.5 border-t border-white/10">
-          <motion.button
-            onClick={handleEmailClick}
-            whileHover={{ scale: 1.15, y: -2 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-lg bg-white/5 hover:bg-cyan-500/20 border border-white/5 hover:border-cyan-500/30 transition-all group"
-            title="Email"
-          >
-            <Mail size={16} className="text-white/60 group-hover:text-cyan-400 transition-colors" />
-          </motion.button>
-          
-          <motion.button
-            onClick={() => handleLinkClick(profile.links.linkedin)}
-            whileHover={{ scale: 1.15, y: -2 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-lg bg-white/5 hover:bg-blue-500/20 border border-white/5 hover:border-blue-500/30 transition-all group"
-            title="LinkedIn"
-          >
-            <Linkedin size={16} className="text-white/60 group-hover:text-blue-400 transition-colors" />
-          </motion.button>
-          
-          <motion.button
-            onClick={() => handleLinkClick(profile.links.github)}
-            whileHover={{ scale: 1.15, y: -2 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2 rounded-lg bg-white/5 hover:bg-purple-500/20 border border-white/5 hover:border-purple-500/30 transition-all group"
-            title="GitHub"
-          >
-            <Github size={16} className="text-white/60 group-hover:text-purple-400 transition-colors" />
-          </motion.button>
+        {/* Connect Section - Labeled */}
+        <div className="pt-3 border-t border-white/10">
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-[10px] text-white/40 uppercase tracking-wider">Connect</span>
+            <div className="flex items-center gap-2">
+              {profile.socials?.youtube && (
+                <motion.button
+                  onClick={() => handleLinkClick(profile.socials.youtube)}
+                  whileHover={{ scale: 1.15, y: -1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-red-500/20 border border-white/5 hover:border-red-500/30 transition-all group"
+                  title="YouTube"
+                >
+                  <Youtube size={14} className="text-white/60 group-hover:text-red-400 transition-colors" />
+                </motion.button>
+              )}
+              
+              {profile.socials?.linkedin && (
+                <motion.button
+                  onClick={() => handleLinkClick(profile.socials.linkedin)}
+                  whileHover={{ scale: 1.15, y: -1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-blue-500/20 border border-white/5 hover:border-blue-500/30 transition-all group"
+                  title="LinkedIn"
+                >
+                  <Linkedin size={14} className="text-white/60 group-hover:text-blue-400 transition-colors" />
+                </motion.button>
+              )}
+              
+              {profile.socials?.github && (
+                <motion.button
+                  onClick={() => handleLinkClick(profile.socials.github)}
+                  whileHover={{ scale: 1.15, y: -1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="p-1.5 rounded-lg bg-white/5 hover:bg-purple-500/20 border border-white/5 hover:border-purple-500/30 transition-all group"
+                  title="GitHub"
+                >
+                  <Github size={14} className="text-white/60 group-hover:text-purple-400 transition-colors" />
+                </motion.button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>

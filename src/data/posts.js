@@ -161,9 +161,11 @@ export const getPosts = async (currentLanguage = "en") => {
         const firestoreData = await getCollection('posts', { orderByField: 'date', orderDirection: 'desc' });
 
         if (firestoreData && firestoreData.length > 0) {
-            cachedPosts = firestoreData;
+            // Filter only published posts for frontend
+            const publishedPosts = firestoreData.filter(post => post.published !== false);
+            cachedPosts = publishedPosts;
             cacheTimestamp = Date.now();
-            return translateData(firestoreData, currentLanguage);
+            return translateData(publishedPosts, currentLanguage);
         }
     } catch (error) {
         console.warn('Failed to fetch posts from Firestore, using fallback:', error);
@@ -211,6 +213,12 @@ export const getCategories = async () => {
 const translateData = (data, language) => {
     if (language === "en") return data;
     return translateObject(data, language);
+};
+
+// Clear cache to force re-fetch
+export const clearPostsCache = () => {
+    cachedPosts = null;
+    cacheTimestamp = null;
 };
 
 // Initialize cache on module load

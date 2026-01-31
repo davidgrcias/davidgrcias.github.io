@@ -271,7 +271,7 @@ const ProjectsSection = () => {
             <p className="text-sm font-medium text-cyan-500 dark:text-cyan-400 mb-3">
               {project.role}
             </p>
-            <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">
+            <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 whitespace-pre-line">
               {project.description}
             </p>
             <div className="flex flex-wrap gap-2 mb-4">

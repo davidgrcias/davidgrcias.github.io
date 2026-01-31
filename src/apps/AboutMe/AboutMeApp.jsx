@@ -125,9 +125,9 @@ const AboutMeApp = () => {
               <div className="bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-6">
                 <div className="flex items-center gap-2 mb-3 text-blue-400">
                   <Sparkles size={20} />
-                  <h3 className="font-semibold">Life Philosophy</h3>
+                  <h3 className="font-semibold">About Me</h3>
                 </div>
-                <p className="text-zinc-300 leading-relaxed">{profile.bio}</p>
+                <p className="text-zinc-300 leading-relaxed whitespace-pre-line">{profile.bio}</p>
               </div>
 
               {/* Info Grid */}
@@ -135,7 +135,7 @@ const AboutMeApp = () => {
                 <InfoCard icon={<User />} label="Name" value={profile.name} />
                 <InfoCard icon={<Code />} label="Role" value={profile.title} />
                 <InfoCard icon={<MapPin />} label="Location" value={profile.location} />
-                <InfoCard icon={<Globe />} label="Portfolio" value="davidgrcias.github.io" />
+                <InfoCard icon={<Globe />} label="Portfolio" value={profile.website} />
               </div>
             </div>
           )}
@@ -164,8 +164,8 @@ const AboutMeApp = () => {
                 <ContactCard 
                   icon={<Globe />} 
                   label="Portfolio" 
-                  value="davidgrcias.github.io"
-                  link="https://davidgrcias.github.io"
+                  value={profile.website}
+                  link={`https://${profile.website}`}
                 />
               </div>
 

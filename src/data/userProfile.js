@@ -23,6 +23,7 @@ const userProfileBase = {
   },
   email: "davidgarciasaragih7@gmail.com",
   location: "Jakarta, Indonesia",
+  website: "davidgrcias.github.io",
   socials: {
     youtube: {
       url: "https://www.youtube.com/c/DavidGTech",
@@ -67,6 +68,8 @@ const normalizeProfile = (data) => {
     // Status card defaults
     status: data.status || 'open',
     availableFor: data.availableFor || ['Full-time', 'Freelance'],
+    // Website fallback
+    website: data.website || userProfileBase.website,
     // Ensure socials exist
     socials: data.socials || userProfileBase.socials,
   };
@@ -87,7 +90,7 @@ export const getUserProfile = async (currentLanguage = "en") => {
   } catch (error) {
     console.warn('Failed to fetch profile from Firestore, using fallback:', error);
   }
-  
+
   return translateData(normalizeProfile(userProfileBase), currentLanguage);
 };
 
@@ -109,4 +112,4 @@ const translateData = (data, language) => {
   return translateObject(data, language);
 };
 
-getUserProfile().catch(() => {});
+getUserProfile().catch(() => { });

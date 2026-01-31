@@ -21,6 +21,7 @@ import CertificationForm from "./pages/admin/CertificationForm";
 import Skills from "./pages/admin/Skills";
 import Profile from "./pages/admin/Profile";
 import Content from "./pages/admin/Content";
+import Blog from "./pages/admin/Blog";
 import Desktop from "./components/os/Desktop";
 
 // Initialize settings from localStorage immediately on load
@@ -62,6 +63,9 @@ export default function App() {
                 <Route path="projects" element={<Projects />} />
                 <Route path="projects/new" element={<ProjectForm />} />
                 <Route path="projects/:id" element={<ProjectForm />} />
+
+                {/* Blog Posts CRUD */}
+                <Route path="blog" element={<Blog />} />
 
                 {/* Experiences CRUD */}
                 <Route path="experiences" element={<Experiences />} />
