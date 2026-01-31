@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, GraduationCap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
 
 // Default education data
@@ -23,6 +23,7 @@ const defaultEducation = [
 ];
 
 const Education = () => {
+  const navigate = useNavigate();
   const [education, setEducation] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -154,15 +155,15 @@ const Education = () => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1">
-                  <Link
-                    to={edu.isStatic ? '#' : `/admin/education/${edu.id}`}
+                  <button
+                    onClick={() => !edu.isStatic && navigate(`/admin/education/${edu.id}`, { state: { education: edu } })}
                     className={`p-2 text-gray-400 hover:text-green-400 hover:bg-gray-800 rounded-lg transition-colors ${
                       edu.isStatic ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
-                    onClick={e => edu.isStatic && e.preventDefault()}
+                    disabled={edu.isStatic}
                   >
                     <Edit2 size={18} />
-                  </Link>
+                  </button>
                   <button
                     onClick={() => handleDelete(edu)}
                     disabled={deleting === edu.id || edu.isStatic}

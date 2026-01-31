@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   FolderKanban, 
   Briefcase, 
@@ -38,6 +38,7 @@ const defaultRecentProjects = [
 ];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(defaultStats);
   const [recentProjects, setRecentProjects] = useState(defaultRecentProjects);
   const [loading, setLoading] = useState(true);
@@ -228,10 +229,10 @@ const Dashboard = () => {
           <div className="divide-y divide-gray-800">
             {recentProjects.length > 0 ? (
               recentProjects.map((project, index) => (
-                <Link
+                <button
                   key={project.id || index}
-                  to={`/admin/projects/${project.id}`}
-                  className="flex items-center gap-4 p-4 hover:bg-gray-800/50 transition-colors"
+                  onClick={() => navigate(`/admin/projects/${project.id}`, { state: { project } })}
+                  className="flex items-center gap-4 p-4 hover:bg-gray-800/50 transition-colors w-full text-left"
                 >
                   <div className="w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center text-2xl overflow-hidden">
                     {project.image ? (
@@ -249,7 +250,7 @@ const Dashboard = () => {
                   }`}>
                     {project.isPublished !== false ? 'Published' : 'Draft'}
                   </div>
-                </Link>
+                </button>
               ))
             ) : (
               <div className="p-8 text-center text-gray-500">

@@ -34,15 +34,120 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   const { isMobile } = useDeviceDetection();
   const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
 
-  // Real System States (Simulated for realism as requested)
-  // Battery: Persisted random start, always charging, increments slowly
+  // ============================================
+  // BATTERY SIMULATION - Realistic Laptop Style
+  // ============================================
+  // Rules:
+  // - First load: Random 50-90%, charging
+  // - Refresh: Persist from localStorage
+  // - Charging: +1% every 11-30 seconds (random)
+  // - At 100%: Hold 11-20 seconds, then unplug
+  // - Discharging: -1% every 30-60 seconds (random)
+  // - At 25-30% (random threshold): Plug back in
+  // ============================================
+
   const [battery, setBattery] = useState(() => {
     const savedLevel = localStorage.getItem('webos-battery-level');
-    return { 
-      level: savedLevel ? parseFloat(savedLevel) : Math.random() * 0.6 + 0.2, // Load saved or random 20-80%
-      charging: true 
+    const savedCharging = localStorage.getItem('webos-battery-charging');
+    
+    // If we have saved data, use it
+    if (savedLevel !== null) {
+      const level = parseInt(savedLevel, 10);
+      if (!isNaN(level) && level >= 0 && level <= 100) {
+        return {
+          level: level,
+          charging: savedCharging === 'true'
+        };
+      }
+    }
+    
+    // First time: Random 50-90%, charging
+    const randomInitial = 50 + Math.floor(Math.random() * 41);
+    return {
+      level: randomInitial,
+      charging: true
     };
   });
+
+  // Threshold for when to "plug back in" (25-30%)
+  const dischargeThresholdRef = React.useRef(() => {
+    const saved = localStorage.getItem('webos-battery-threshold');
+    if (saved !== null) {
+      const val = parseInt(saved, 10);
+      if (!isNaN(val) && val >= 25 && val <= 30) return val;
+    }
+    return 25 + Math.floor(Math.random() * 6);
+  });
+
+  useEffect(() => {
+    let timeoutId = null;
+    let isMounted = true;
+
+    // Delay helpers
+    const getChargeDelay = () => 11000 + Math.floor(Math.random() * 19001);    // 11-30s
+    const getDischargeDelay = () => 30000 + Math.floor(Math.random() * 30001); // 30-60s
+    const getFullHoldDelay = () => 11000 + Math.floor(Math.random() * 9001);   // 11-20s
+
+    const scheduleNext = (delay) => {
+      if (isMounted && timeoutId === null) {
+        timeoutId = setTimeout(tick, delay);
+      }
+    };
+
+    const tick = () => {
+      if (!isMounted) return;
+      timeoutId = null;
+
+      setBattery(prev => {
+        let { level, charging } = prev;
+        let delay;
+
+        // Clamp level
+        level = Math.max(0, Math.min(100, level));
+
+        if (charging) {
+          if (level < 100) {
+            level = level + 1;
+            delay = getChargeDelay();
+          } else {
+            charging = false;
+            const newThreshold = 25 + Math.floor(Math.random() * 6);
+            dischargeThresholdRef.current = newThreshold;
+            localStorage.setItem('webos-battery-threshold', String(newThreshold));
+            delay = getFullHoldDelay();
+          }
+        } else {
+          if (level > dischargeThresholdRef.current) {
+            level = level - 1;
+            delay = getDischargeDelay();
+          } else {
+            charging = true;
+            delay = getChargeDelay();
+          }
+        }
+
+        // Persist to localStorage
+        localStorage.setItem('webos-battery-level', String(level));
+        localStorage.setItem('webos-battery-charging', String(charging));
+
+        // Schedule next tick
+        setTimeout(() => scheduleNext(delay), 0);
+
+        return { level, charging };
+      });
+    };
+
+    // Initial tick
+    scheduleNext(getChargeDelay());
+
+    return () => {
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
+  }, []);
   
   // Wifi: Random fluctuation 1-3 bars (simulated)
   const [wifiSignal, setWifiSignal] = useState(3); // 0-3 scale
@@ -123,30 +228,6 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
     }
   };
 
-  // Simulated Battery Charging Logic
-  useEffect(() => {
-    const chargeInterval = setInterval(() => {
-      setBattery(prev => {
-        // Stop at 100%
-        if (prev.level >= 1) return { level: 1, charging: true };
-        
-        // Increment by very small fixed amount (0.5%) for stability
-        const increment = 0.005; 
-        const newLevel = Math.min(1, prev.level + increment);
-        
-        // Save to localStorage
-        localStorage.setItem('webos-battery-level', newLevel.toString());
-        
-        return {
-          level: newLevel,
-          charging: true
-        };
-      });
-    }, 5000); // Update every 5 seconds (Slow & Stable)
-
-    return () => clearInterval(chargeInterval);
-  }, []);
-
   // Simulated Wifi Fluctuation
   useEffect(() => {
     const signalInterval = setInterval(() => {
@@ -205,7 +286,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
 
   const getBatteryIcon = () => {
     if (battery.charging) return <BatteryCharging size={16} className="text-green-400 animate-pulse" />;
-    if (battery.level < 0.2) return <Battery size={16} className="text-red-500 animate-pulse" />;
+    if (battery.level < 20) return <Battery size={16} className="text-red-500 animate-pulse" />;
     return <Battery size={16} />;
   };
 
@@ -806,13 +887,13 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   e.stopPropagation();
                   setActivePopup(activePopup === 'battery' ? null : 'battery');
                 }}
-                title={`${Math.round(battery.level * 100)}%${battery.charging ? ' - Charging' : ''}${batterySaver ? ' - Power Saver ON' : ''}`}
-                aria-label={`Battery ${Math.round(battery.level * 100)}%`}
+                title={`${Math.round(battery.level)}%${battery.charging ? ' - Charging' : (battery.level === 100 ? ' - Fully Charged' : ' - On Battery')}${batterySaver ? ' - Power Saver ON' : ''}`}
+                aria-label={`Battery ${Math.round(battery.level)}%`}
               >
                 {battery.charging ? <BatteryCharging size={16} className="text-green-400" /> : 
-                 battery.level < 0.2 ? <BatteryLow size={16} className="text-red-500 animate-pulse" /> :
-                 <Battery size={16} />}
-                <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level * 100)}%</span>
+                 battery.level < 20 ? <BatteryLow size={16} className="text-red-500 animate-pulse" /> :
+                 <Battery size={16} className={battery.level > 20 ? 'text-white' : ''} />}
+                <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level)}%</span>
               </div>
 
               {/* Battery Popup */}
@@ -835,8 +916,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`text-2xl font-bold ${battery.level < 0.2 ? 'text-red-400' : battery.level < 0.5 ? 'text-yellow-400' : 'text-cyan-400'}`}>
-                        {Math.round(battery.level * 100)}%
+                      <span className={`text-2xl font-bold ${battery.level < 20 ? 'text-red-400' : battery.level < 50 ? 'text-yellow-400' : 'text-cyan-400'}`}>
+                        {Math.round(battery.level)}%
                       </span>
                     </div>
                   </div>
@@ -846,11 +927,11 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                     <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${
-                          battery.level < 0.2 ? 'bg-red-500' : 
-                          battery.level < 0.5 ? 'bg-yellow-500' : 
+                          battery.level < 20 ? 'bg-red-500' : 
+                          battery.level < 50 ? 'bg-yellow-500' : 
                           'bg-green-500'
                         }`}
-                        style={{ width: `${battery.level * 100}%` }}
+                        style={{ width: `${battery.level}%` }}
                       />
                     </div>
                   </div>

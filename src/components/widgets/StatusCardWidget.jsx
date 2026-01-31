@@ -126,6 +126,11 @@ const StatusCardWidget = ({ className = '' }) => {
               alt={profile.name}
               className="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow-lg cursor-pointer hover:border-cyan-400/50 transition-colors"
               onDoubleClick={() => window.open('/admin', '_blank')}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/profilpict.webp';
+              }}
+              loading="eager"
               title="Double-click for admin"
             />
           </div>

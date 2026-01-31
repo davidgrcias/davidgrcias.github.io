@@ -36,6 +36,7 @@ import KeyboardHelp from './KeyboardHelp';
 import WelcomeTutorial from './WelcomeTutorial';
 import AchievementToast from '../achievements/AchievementToast';
 import PDFViewer from '../tools/PDFViewer';
+import { getUserProfile } from '../../data/userProfile';
 
 // Lazy load apps for better performance
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -80,12 +81,56 @@ const DesktopContent = () => {
     const [keyboardHelpOpen, setKeyboardHelpOpen] = useState(false);
     const [welcomeTutorialOpen, setWelcomeTutorialOpen] = useState(false);
     const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+    const [cvUrl, setCvUrl] = useState('/CV_DavidGarciaSaragih.pdf');
+    const [preloadedPdfUrl, setPreloadedPdfUrl] = useState(null);
     
     // Desktop widgets state
     const [showWidgets, setShowWidgets] = useState(() => {
         const saved = localStorage.getItem('webos-show-widgets');
         return saved !== 'false'; // Default true
     });
+
+    // Helper function to generate FASTEST embed URL
+    const generateEmbedUrl = (url) => {
+        if (!url) return null;
+        
+        // Extract Google Drive file ID
+        const match1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        const fileId = match1?.[1] || match2?.[1];
+        
+        if (fileId) {
+            // FASTEST: Direct Google Drive preview (instant load!)
+            return `https://drive.google.com/file/d/${fileId}/preview`;
+        }
+        
+        return `${url}#toolbar=0&navpanes=0&scrollbar=1`;
+    };
+
+    // Load CV URL from profile and PRELOAD it immediately
+    useEffect(() => {
+        getUserProfile('en').then(profile => {
+            if (profile.cvUrl) {
+                setCvUrl(profile.cvUrl);
+                // Generate and set preloaded URL
+                const embedUrl = generateEmbedUrl(profile.cvUrl);
+                setPreloadedPdfUrl(embedUrl);
+                
+                // Preload the PDF in a hidden iframe for instant loading
+                const preloadIframe = document.createElement('iframe');
+                preloadIframe.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;';
+                preloadIframe.src = embedUrl;
+                document.body.appendChild(preloadIframe);
+                
+                // Remove preload iframe after loading (keep browser cache)
+                preloadIframe.onload = () => {
+                    setTimeout(() => {
+                        preloadIframe.remove();
+                    }, 2000);
+                };
+            }
+        }).catch(console.error);
+    }, []);
 
     // Grid configuration constants - CENTERED with equal margins
     const { width, height } = useWindowSize();
@@ -729,12 +774,13 @@ const DesktopContent = () => {
                 }} 
             />
 
-            {/* PDF Viewer */}
+            {/* PDF Viewer - with preloaded URL for instant loading */}
             <PDFViewer
                 isOpen={pdfViewerOpen}
                 onClose={() => setPdfViewerOpen(false)}
-                pdfUrl="/CV_DavidGarciaSaragih.pdf"
+                pdfUrl={cvUrl}
                 title="CV - David Garcia Saragih"
+                preloadedUrl={preloadedPdfUrl}
             />
 
             {/* Desktop Widgets - Status Card, System Monitor & Featured Post */}

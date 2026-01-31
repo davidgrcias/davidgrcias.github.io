@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, ExternalLink, GripVertical, Eye, EyeOff } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Plus, Search, Edit2, Trash2, ExternalLink, GripVertical, Eye, EyeOff, Loader2, Download, Bus, Car, Smartphone, School, MapPin, Handshake, FolderOpen } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
+import { seedLinkedInProjects, linkedInProjects } from '../../utils/seedProjects';
+import { getIcon } from '../../icons/iconMap';
 
 // Default projects data for fallback
 const defaultProjects = [
@@ -34,10 +36,14 @@ const defaultProjects = [
 ];
 
 const Projects = () => {
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleting, setDeleting] = useState(null);
+  const [seeding, setSeeding] = useState(false);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [reordering, setReordering] = useState(false);
 
   useEffect(() => {
     fetchProjects();
@@ -113,6 +119,70 @@ const Projects = () => {
     return colors[tier] || 'bg-gray-500/20 text-gray-400';
   };
 
+  const handleSeedLinkedIn = async () => {
+    if (!window.confirm(`Import ${linkedInProjects.length} projects from LinkedIn data?\n\nThis will add new projects to Firestore.`)) return;
+    
+    setSeeding(true);
+    try {
+      const result = await seedLinkedInProjects();
+      alert(`✅ Import complete!\n\n${result.success} projects added successfully.\n${result.failed} failed.`);
+      fetchProjects(); // Refresh list
+    } catch (error) {
+      console.error('Seed error:', error);
+      alert('Failed to import projects. Check console.');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  // Drag and Drop handlers
+  const handleDragStart = (e, project) => {
+    setDraggedItem(project);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, targetProject) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem.id === targetProject.id) return;
+
+    const items = [...projects];
+    const draggedIdx = items.findIndex(p => p.id === draggedItem.id);
+    const targetIdx = items.findIndex(p => p.id === targetProject.id);
+
+    // Reorder array
+    items.splice(draggedIdx, 1);
+    items.splice(targetIdx, 0, draggedItem);
+
+    // Update order field
+    const reordered = items.map((item, idx) => ({ ...item, order: idx + 1 }));
+    setProjects(reordered);
+    setDraggedItem(null);
+
+    // Save to Firestore
+    setReordering(true);
+    try {
+      await Promise.all(
+        reordered.map(p => 
+          !p.isDefault && firestoreService.updateDocument('projects', p.id, { order: p.order })
+        )
+      );
+    } catch (error) {
+      console.error('Reorder error:', error);
+      fetchProjects(); // Revert on error
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -121,13 +191,24 @@ const Projects = () => {
           <h1 className="text-2xl font-bold text-white">Projects</h1>
           <p className="text-gray-400">Manage your portfolio showcase ({projects.length} total)</p>
         </div>
-        <Link 
-          to="/admin/projects/new"
-          className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
-        >
-          <Plus size={20} />
-          New Project
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSeedLinkedIn}
+            disabled={seeding}
+            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+            title="Import projects from LinkedIn data"
+          >
+            {seeding ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+            {seeding ? 'Importing...' : 'Import LinkedIn'}
+          </button>
+          <Link 
+            to="/admin/projects/new"
+            className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+          >
+            <Plus size={20} />
+            New Project
+          </Link>
+        </div>
       </div>
 
       {/* Search */}
@@ -178,27 +259,43 @@ const Projects = () => {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredProjects.map((project) => (
-            <div 
-              key={project.id} 
-              className={`bg-gray-900 rounded-xl border border-gray-800 hover:border-gray-700 transition-all overflow-hidden ${
-                project.isPublished === false ? 'opacity-60' : ''
-              }`}
-            >
-              <div className="flex items-stretch">
-                {/* Drag Handle (visual only for now) */}
-                <div className="hidden sm:flex items-center px-3 bg-gray-800/50 text-gray-600 cursor-grab">
-                  <GripVertical size={20} />
-                </div>
+          {reordering && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-blue-400 text-sm">
+              💾 Saving new order...
+            </div>
+          )}
+          {filteredProjects.map((project) => {
+            const IconComponent = project.icon && getIcon(project.icon, 32);
+            return (
+              <div 
+                key={project.id} 
+                draggable={!project.isDefault}
+                onDragStart={(e) => handleDragStart(e, project)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, project)}
+                onDragEnd={handleDragEnd}
+                className={`bg-gray-900 rounded-xl border border-gray-800 hover:border-gray-700 transition-all overflow-hidden ${
+                  project.isPublished === false ? 'opacity-60' : ''
+                } ${draggedItem?.id === project.id ? 'opacity-50' : ''}`}
+              >
+                <div className="flex items-stretch">
+                  {/* Drag Handle */}
+                  <div className={`hidden sm:flex items-center px-3 bg-gray-800/50 text-gray-600 ${
+                    project.isDefault ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'
+                  }`}>
+                    <GripVertical size={20} />
+                  </div>
 
-                {/* Icon/Image */}
-                <div className="w-16 sm:w-20 flex-shrink-0 bg-gray-800 flex items-center justify-center text-3xl">
-                  {project.image ? (
-                    <img src={project.image} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    project.icon || '📁'
-                  )}
-                </div>
+                  {/* Icon/Image */}
+                  <div className="w-16 sm:w-20 flex-shrink-0 bg-gray-800 flex items-center justify-center text-gray-400">
+                    {project.image ? (
+                      <img src={project.image} alt="" className="w-full h-full object-cover" />
+                    ) : IconComponent ? (
+                      IconComponent
+                    ) : (
+                      <FolderOpen size={32} />
+                    )}
+                  </div>
 
                 {/* Content */}
                 <div className="flex-1 p-4 min-w-0">
@@ -263,16 +360,16 @@ const Projects = () => {
                       <ExternalLink size={18} />
                     </a>
                   )}
-                  <Link
-                    to={project.isStatic ? '#' : `/admin/projects/${project.id}`}
+                  <button
+                    onClick={() => !project.isStatic && navigate(`/admin/projects/${project.id}`, { state: { project } })}
                     className={`p-2 text-gray-400 hover:text-green-400 hover:bg-gray-800 rounded-lg transition-colors ${
                       project.isStatic ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                     title="Edit"
-                    onClick={e => project.isStatic && e.preventDefault()}
+                    disabled={project.isStatic}
                   >
                     <Edit2 size={18} />
-                  </Link>
+                  </button>
                   <button
                     onClick={() => handleDelete(project)}
                     disabled={deleting === project.id || project.isStatic}
@@ -284,9 +381,10 @@ const Projects = () => {
                     <Trash2 size={18} className={deleting === project.id ? 'animate-pulse' : ''} />
                   </button>
                 </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

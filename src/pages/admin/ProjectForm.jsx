@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft, Loader2, Plus, X, Trash2 } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
 import ImageUploader from '../../components/admin/ImageUploader';
@@ -10,6 +10,7 @@ const ICON_OPTIONS = ['Bus', 'Ticket', 'Handshake', 'BotIcon', 'Car', 'School', 
 const ProjectForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -32,12 +33,6 @@ const ProjectForm = () => {
   // Temp inputs for array fields
   const [techInput, setTechInput] = useState('');
   const [highlightInput, setHighlightInput] = useState('');
-
-  useEffect(() => {
-    if (isEditMode) {
-      fetchProject();
-    }
-  }, [id]);
 
   const fetchProject = async () => {
     setLoading(true);
@@ -67,6 +62,35 @@ const ProjectForm = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isEditMode && id) {
+      // First check if data was passed via router state
+      const stateData = location.state?.project;
+      if (stateData) {
+        console.log('Loading from router state:', stateData);
+        setFormData({
+          name: stateData.name || '',
+          role: stateData.role || '',
+          description: stateData.description || '',
+          tech: stateData.tech || [],
+          highlights: stateData.highlights || [],
+          link: stateData.link || '',
+          icon: stateData.icon || '',
+          image: stateData.image || '',
+          tiers: stateData.tiers || [],
+          date: stateData.date || '',
+          order: stateData.order || 0,
+          isPublished: stateData.isPublished !== false
+        });
+      } else {
+        // Fallback to fetching from Firestore
+        console.log('Fetching from Firestore, id:', id);
+        fetchProject();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, id, location.state?.project]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -134,10 +158,14 @@ const ProjectForm = () => {
     };
 
     try {
-      if (isEditMode) {
+      // Check if editing default data (not in Firestore)
+      const isDefaultData = id?.startsWith('default-') || location.state?.project?.isDefault;
+      
+      if (isEditMode && !isDefaultData) {
+        // Normal update for real Firestore documents
         await firestoreService.updateDocument('projects', id, payload);
       } else {
-        // Get max order for new project
+        // Create new document (for new entries or migrating default data)
         const existing = await firestoreService.getCollection('projects');
         const maxOrder = existing.reduce((max, p) => Math.max(max, p.order || 0), 0);
         payload.order = maxOrder + 1;

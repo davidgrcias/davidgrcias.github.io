@@ -9,6 +9,7 @@ const userProfileBase = {
   title: "Full-Stack Web & Systems Engineer · Content Creator",
   photoUrl: "/profilpict.webp",
   avatar: "/profilpict.webp",
+  cvUrl: "/CV_DavidGarciaSaragih.pdf",
   aboutText:
     "I'm driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity",
   bio: "I'm driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity",
@@ -64,6 +65,8 @@ const normalizeProfile = (data) => {
     // Ensure avatar/photoUrl aliases work both ways
     avatar: data.avatar || data.photoUrl,
     photoUrl: data.photoUrl || data.avatar,
+    // Ensure CV URL exists
+    cvUrl: data.cvUrl || userProfileBase.cvUrl,
     // Ensure flat email/location from contact
     email: data.email || data.contact?.email,
     location: data.location || data.contact?.location,

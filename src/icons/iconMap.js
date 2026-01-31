@@ -55,10 +55,13 @@ import {
   Calendar,
   Play,
   Pause,
+  Smartphone,
+  Bus,
+  Car,
+  School,
 } from "lucide-react";
 import TikTokIcon from "../components/icons/TikTokIcon";
 import React from "react";
-import ChatBot from "../components/ChatBot";
 
 // Centralized icon mapping object
 export const iconMap = {
@@ -85,6 +88,10 @@ export const iconMap = {
   Hourglass: Hourglass,
   SkipBack: SkipBack,
   SquaresExclude: SquaresExclude,
+  Smartphone: Smartphone,
+  Bus: Bus,
+  Car: Car,
+  School: School,
 
   // Personal & Social
   Coffee: Coffee,

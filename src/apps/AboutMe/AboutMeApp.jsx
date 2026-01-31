@@ -77,7 +77,11 @@ const AboutMeApp = () => {
             <img 
               src={profile.avatar || "/profilpict.webp"}
               alt={profile.name}
-              loading="lazy"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/profilpict.webp';
+              }}
+              loading="eager"
               width="128"
               height="128"
               className="w-full h-full object-cover"

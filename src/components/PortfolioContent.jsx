@@ -322,6 +322,11 @@ const PortfolioContent = () => {
                   src={userProfile.photoUrl}
                   alt={userProfile.name}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = '/profilpict.webp';
+                  }}
+                  loading="eager"
                 />
               </motion.div>
               <motion.h1

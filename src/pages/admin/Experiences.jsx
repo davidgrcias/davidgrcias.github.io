@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Trash2, Briefcase, Calendar } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Plus, Search, Edit2, Trash2, Briefcase, Calendar, Loader2, Download, GripVertical } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
+import { seedLinkedInExperiences, linkedInExperiences } from '../../utils/seedExperiences';
 
 // Default experiences data
 const defaultExperiences = [
@@ -34,10 +35,14 @@ const defaultExperiences = [
 ];
 
 const Experiences = () => {
+  const navigate = useNavigate();
   const [experiences, setExperiences] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [deleting, setDeleting] = useState(null);
+  const [seeding, setSeeding] = useState(false);
+  const [draggedItem, setDraggedItem] = useState(null);
+  const [reordering, setReordering] = useState(false);
 
   useEffect(() => {
     fetchExperiences();
@@ -103,6 +108,66 @@ const Experiences = () => {
     );
   });
 
+  const handleSeedLinkedIn = async () => {
+    if (!window.confirm(`Import ${linkedInExperiences.length} experiences from LinkedIn data?\\n\\nThis will add new experiences to Firestore.`)) return;
+    
+    setSeeding(true);
+    try {
+      const result = await seedLinkedInExperiences();
+      alert(`✅ Import complete!\\n\\n${result.success} experiences added successfully.\\n${result.failed} failed.`);
+      fetchExperiences();
+    } catch (error) {
+      console.error('Seed error:', error);
+      alert('Failed to import experiences. Check console.');
+    } finally {
+      setSeeding(false);
+    }
+  };
+
+  const handleDragStart = (e, exp) => {
+    setDraggedItem(exp);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, targetExp) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem.id === targetExp.id) return;
+
+    const items = [...experiences];
+    const draggedIdx = items.findIndex(ex => ex.id === draggedItem.id);
+    const targetIdx = items.findIndex(ex => ex.id === targetExp.id);
+
+    items.splice(draggedIdx, 1);
+    items.splice(targetIdx, 0, draggedItem);
+
+    const reordered = items.map((item, idx) => ({ ...item, order: idx + 1 }));
+    setExperiences(reordered);
+    setDraggedItem(null);
+
+    setReordering(true);
+    try {
+      await Promise.all(
+        reordered.map(ex => 
+          !ex.isDefault && firestoreService.updateDocument('experiences', ex.id, { order: ex.order })
+        )
+      );
+    } catch (error) {
+      console.error('Reorder error:', error);
+      fetchExperiences();
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -111,13 +176,24 @@ const Experiences = () => {
           <h1 className="text-2xl font-bold text-white">Experiences</h1>
           <p className="text-gray-400">Manage your work history ({experiences.length} total)</p>
         </div>
-        <Link 
-          to="/admin/experiences/new"
-          className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
-        >
-          <Plus size={20} />
-          Add Experience
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSeedLinkedIn}
+            disabled={seeding}
+            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+            title="Import experiences from LinkedIn data"
+          >
+            {seeding ? <Loader2 size={20} className="animate-spin" /> : <Download size={20} />}
+            {seeding ? 'Importing...' : 'Import LinkedIn'}
+          </button>
+          <Link 
+            to="/admin/experiences/new"
+            className="flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-lg transition-colors font-medium"
+          >
+            <Plus size={20} />
+            Add Experience
+          </Link>
+        </div>
       </div>
 
       {/* Search */}
@@ -160,12 +236,31 @@ const Experiences = () => {
         </div>
       ) : (
         <div className="space-y-3">
+          {reordering && (
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 text-blue-400 text-sm">
+              💾 Saving new order...
+            </div>
+          )}
           {filtered.map((exp) => (
             <div 
               key={exp.id}
-              className="bg-gray-900 rounded-xl border border-gray-800 hover:border-gray-700 transition-all p-4"
+              draggable={!exp.isDefault}
+              onDragStart={(e) => handleDragStart(e, exp)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, exp)}
+              onDragEnd={handleDragEnd}
+              className={`bg-gray-900 rounded-xl border border-gray-800 hover:border-gray-700 transition-all p-4 ${
+                draggedItem?.id === exp.id ? 'opacity-50' : ''
+              }`}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-4">
+                {/* Drag Handle */}
+                <div className={`hidden sm:flex items-start pt-1 text-gray-600 ${
+                  exp.isDefault ? 'cursor-not-allowed' : 'cursor-grab active:cursor-grabbing'
+                }`}>
+                  <GripVertical size={20} />
+                </div>
+
                 {/* Main Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
@@ -212,15 +307,15 @@ const Experiences = () => {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1">
-                  <Link
-                    to={exp.isStatic ? '#' : `/admin/experiences/${exp.id}`}
+                  <button
+                    onClick={() => !exp.isStatic && navigate(`/admin/experiences/${exp.id}`, { state: { experience: exp } })}
                     className={`p-2 text-gray-400 hover:text-green-400 hover:bg-gray-800 rounded-lg transition-colors ${
                       exp.isStatic ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
-                    onClick={e => exp.isStatic && e.preventDefault()}
+                    disabled={exp.isStatic}
                   >
                     <Edit2 size={18} />
-                  </Link>
+                  </button>
                   <button
                     onClick={() => handleDelete(exp)}
                     disabled={deleting === exp.id || exp.isStatic}

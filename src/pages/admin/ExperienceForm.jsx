@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft, Loader2, Plus, X } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
 import ImageUploader from '../../components/admin/ImageUploader';
@@ -10,6 +10,7 @@ const LOCATION_TYPE_OPTIONS = ['Remote', 'On-site', 'Hybrid'];
 const ExperienceForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -35,12 +36,6 @@ const ExperienceForm = () => {
   });
 
   const [skillInput, setSkillInput] = useState('');
-
-  useEffect(() => {
-    if (isEditMode) {
-      fetchExperience();
-    }
-  }, [id]);
 
   const fetchExperience = async () => {
     setLoading(true);
@@ -69,6 +64,34 @@ const ExperienceForm = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isEditMode && id) {
+      // First check if data was passed via router state
+      const stateData = location.state?.experience;
+      if (stateData) {
+        console.log('Loading from router state:', stateData);
+        setFormData({
+          role: stateData.role || '',
+          company: stateData.company || '',
+          type: stateData.type || 'Full-time',
+          location: stateData.location || '',
+          locationType: stateData.locationType || 'On-site',
+          description: stateData.description || '',
+          skills: stateData.skills || [],
+          startDate: stateData.startDate || '',
+          endDate: stateData.endDate === 'present' ? '' : (stateData.endDate || ''),
+          isCurrent: stateData.endDate === 'present',
+          media: stateData.media || { type: 'image', url: '', thumbnail: '', title: '', description: '' }
+        });
+      } else {
+        // Fallback to fetching from Firestore
+        console.log('Fetching from Firestore, id:', id);
+        fetchExperience();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, id, location.state?.experience]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -126,9 +149,14 @@ const ExperienceForm = () => {
     }
 
     try {
-      if (isEditMode) {
+      // Check if editing default data (not in Firestore)
+      const isDefaultData = id?.startsWith('default-') || location.state?.experience?.isDefault;
+      
+      if (isEditMode && !isDefaultData) {
+        // Normal update for real Firestore documents
         await firestoreService.updateDocument('experiences', id, payload);
       } else {
+        // Create new document (for new entries or migrating default data)
         payload.createdAt = new Date().toISOString();
         await firestoreService.addDocument('experiences', payload);
       }

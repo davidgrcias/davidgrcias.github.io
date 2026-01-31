@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft, Loader2 } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
 
 const EducationForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const isEditMode = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -17,12 +18,6 @@ const EducationForm = () => {
     grade: '',
     order: 0
   });
-
-  useEffect(() => {
-    if (isEditMode) {
-      fetchEducation();
-    }
-  }, [id]);
 
   const fetchEducation = async () => {
     setLoading(true);
@@ -46,6 +41,28 @@ const EducationForm = () => {
     }
   };
 
+  useEffect(() => {
+    if (isEditMode && id) {
+      // Check if data was passed via router state first
+      const stateData = location.state?.education;
+      if (stateData) {
+        console.log('Loading from router state:', stateData);
+        setFormData({
+          degree: stateData.degree || '',
+          institution: stateData.institution || '',
+          period: stateData.period || '',
+          grade: stateData.grade || '',
+          order: stateData.order || 0
+        });
+      } else {
+        // Fallback to fetching from Firestore
+        console.log('Fetching from Firestore, id:', id);
+        fetchEducation();
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, id, location.state?.education]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -67,9 +84,14 @@ const EducationForm = () => {
     };
 
     try {
-      if (isEditMode) {
+      // Check if editing default data (not in Firestore)
+      const isDefaultData = id?.startsWith('default-') || location.state?.education?.isDefault;
+      
+      if (isEditMode && !isDefaultData) {
+        // Normal update for real Firestore documents
         await firestoreService.updateDocument('education', id, payload);
       } else {
+        // Create new document (for new entries or migrating default data)
         const existing = await firestoreService.getCollection('education');
         const maxOrder = existing.reduce((max, e) => Math.max(max, e.order || 0), 0);
         payload.order = maxOrder + 1;

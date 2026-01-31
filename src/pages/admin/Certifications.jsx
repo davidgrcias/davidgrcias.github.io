@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Award } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
 
 // Default certifications data
@@ -14,6 +14,7 @@ const defaultCertifications = [
 ];
 
 const Certifications = () => {
+  const navigate = useNavigate();
   const [certifications, setCertifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -130,15 +131,15 @@ const Certifications = () => {
                 
                 {/* Actions */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Link
-                    to={cert.isStatic ? '#' : `/admin/certifications/${cert.id}`}
+                  <button
+                    onClick={() => !cert.isStatic && navigate(`/admin/certifications/${cert.id}`, { state: { certification: cert } })}
                     className={`p-1.5 text-gray-400 hover:text-green-400 hover:bg-gray-800 rounded-lg transition-colors ${
                       cert.isStatic ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
-                    onClick={e => cert.isStatic && e.preventDefault()}
+                    disabled={cert.isStatic}
                   >
                     <Edit2 size={16} />
-                  </Link>
+                  </button>
                   <button
                     onClick={() => handleDelete(cert)}
                     disabled={deleting === cert.id || cert.isStatic}

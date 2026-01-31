@@ -151,6 +151,11 @@ const StartMenu = ({
                     src={profile.avatar} 
                     alt={profile.name}
                     className="w-8 h-8 rounded-full object-cover border border-white/20"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = '/profilpict.webp';
+                    }}
+                    loading="eager"
                   />
                 )}
                 <div>

@@ -4,30 +4,66 @@ import { X, Download, ExternalLink, FileText, Loader2 } from 'lucide-react';
 
 /**
  * PDF Preview Modal - Responsive CV/PDF Viewer
+ * Supports preloading for instant display
  */
-const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document' }) => {
+const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document', preloadedUrl = null }) => {
     const [isLoading, setIsLoading] = useState(true);
 
     // Reset loading state when modal opens/closes or URL changes
+    // If preloaded, skip loading state
     React.useEffect(() => {
         if (isOpen) {
-            setIsLoading(true);
+            setIsLoading(!preloadedUrl);
         }
-    }, [isOpen, pdfUrl]);
+    }, [isOpen, pdfUrl, preloadedUrl]);
 
     if (!isOpen) return null;
 
+    // Detect URL type and use FASTEST embed format
+    const isGoogleDocsViewer = pdfUrl?.includes('docs.google.com/viewer');
+    const isGoogleDrive = pdfUrl?.includes('drive.google.com');
+    
+    // Determine the embed URL - FASTEST METHOD
+    let embedUrl = pdfUrl;
+    let fileId = null;
+    
+    // Extract Google Drive file ID
+    if (isGoogleDrive || isGoogleDocsViewer) {
+        const match1 = pdfUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+        const match2 = pdfUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+        fileId = match1?.[1] || match2?.[1];
+    }
+    
+    if (fileId) {
+        // FASTEST: Direct Google Drive preview embed (no redirect, instant load)
+        embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+    } else if (!isGoogleDocsViewer && !isGoogleDrive) {
+        // Regular PDF URL
+        embedUrl = `${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`;
+    }
+
+    // Use preloaded URL if available, otherwise generate embed URL
+    const finalEmbedUrl = preloadedUrl || embedUrl;
+
+    // Download CV (only if user explicitly wants to)
     const handleDownload = () => {
+        if (fileId) {
+            // Google Drive direct download
+            window.open(`https://drive.google.com/uc?export=download&id=${fileId}`, '_blank');
+            return;
+        }
+        // For regular URLs
         const link = document.createElement('a');
         link.href = pdfUrl;
-        link.download = pdfUrl.split('/').pop() || 'document.pdf';
+        link.download = 'CV.pdf';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
 
+    // Open preview in new tab (NOT download!)
     const handleOpenInNewTab = () => {
-        window.open(pdfUrl, '_blank');
+        window.open(finalEmbedUrl, '_blank');
     };
 
     return (
@@ -71,6 +107,7 @@ const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document' }) => {
                                 <button
                                     onClick={handleDownload}
                                     className="flex items-center gap-2 px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-white text-sm font-medium rounded-lg transition-colors"
+                                    title="Download CV"
                                 >
                                     <Download size={16} />
                                     <span className="hidden sm:inline">Download</span>
@@ -99,10 +136,11 @@ const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document' }) => {
 
                             {/* Desktop/Tablet: Use iframe embed */}
                             <iframe
-                                src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=1`}
+                                src={finalEmbedUrl}
                                 className="w-full h-full border-0 hidden sm:block"
                                 title={title}
                                 onLoad={() => setIsLoading(false)}
+                                allow="autoplay"
                             />
 
                             {/* Mobile: Show preview image/placeholder with download option */}
@@ -120,14 +158,14 @@ const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document' }) => {
                                         className="flex items-center justify-center gap-2 px-4 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-colors"
                                     >
                                         <ExternalLink size={18} />
-                                        <span>Open PDF</span>
+                                        <span>View PDF</span>
                                     </button>
                                     <button
                                         onClick={handleDownload}
                                         className="flex items-center justify-center gap-2 px-4 py-3 bg-cyan-500 hover:bg-cyan-400 text-white rounded-xl transition-colors"
                                     >
                                         <Download size={18} />
-                                        <span>Download PDF</span>
+                                        <span>Download CV</span>
                                     </button>
                                 </div>
                             </div>
