@@ -1,6 +1,8 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { OSProvider, useOS } from '../../contexts/OSContext';
 import { NotificationProvider, useNotification } from '../../contexts/NotificationContext';
+import { VoiceProvider } from '../../contexts/VoiceContext';
+import VoiceAssistant from './VoiceAssistant';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useKonamiCode } from '../../hooks/useKonamiCode';
@@ -24,7 +26,7 @@ import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 import { useSound } from '../../contexts/SoundContext';
 import Calendar from '../widgets/Calendar';
 import PortfolioStats from '../widgets/PortfolioStats';
-import WeatherWidget from '../widgets/WeatherWidget';
+import StatusCardWidget from '../widgets/StatusCardWidget';
 import SystemMonitorWidget from '../widgets/SystemMonitorWidget';
 import KonamiSecret from '../easter-eggs/KonamiSecret';
 import ScreenshotTool from '../tools/ScreenshotTool';
@@ -312,6 +314,37 @@ const DesktopContent = () => {
             setKeyboardHelpOpen(true);
         },
     });
+
+    // Voice Control Event Listeners
+    useEffect(() => {
+        const handleVoiceOpenApp = (event) => {
+            const { appId } = event.detail;
+            
+            // Find the app from desktopShortcuts or settingsApp
+            let targetApp = desktopShortcuts.find(app => app.id === appId);
+            if (!targetApp && appId === 'settings') {
+                targetApp = settingsApp;
+            }
+            
+            if (targetApp) {
+                openApp(targetApp);
+            }
+        };
+        
+        const handleVoiceSpotlight = (event) => {
+            const query = event.detail;
+            setSpotlightQuery(query);
+            setSpotlightOpen(true);
+        };
+        
+        window.addEventListener('VOICE_OPEN_APP', handleVoiceOpenApp);
+        window.addEventListener('VOICE_OPEN_SPOTLIGHT', handleVoiceSpotlight);
+        
+        return () => {
+            window.removeEventListener('VOICE_OPEN_APP', handleVoiceOpenApp);
+            window.removeEventListener('VOICE_OPEN_SPOTLIGHT', handleVoiceSpotlight);
+        };
+    }, [desktopShortcuts, settingsApp, openApp]);
 
     // Right-click context menu (Desktop Background)
     const handleContextMenu = (e) => {
@@ -602,6 +635,7 @@ const DesktopContent = () => {
             )}
 
             {/* Command Palette */}
+            <VoiceAssistant />
             <CommandPalette
                 isOpen={commandPaletteOpen}
                 onClose={() => setCommandPaletteOpen(false)}
@@ -690,10 +724,10 @@ const DesktopContent = () => {
                 title="CV - David Garcia Saragih"
             />
 
-            {/* Desktop Widgets - Weather & System Monitor */}
+            {/* Desktop Widgets - Status Card & System Monitor */}
             {showWidgets && powerState === 'active' && (
                 <div className="fixed right-4 sm:right-6 top-4 sm:top-6 z-20 flex flex-col gap-4 pointer-events-auto">
-                    <WeatherWidget className="w-56 sm:w-64 md:w-72" />
+                    <StatusCardWidget className="w-56 sm:w-64 md:w-72" />
                     <SystemMonitorWidget className="w-56 sm:w-64 md:w-72" />
                 </div>
             )}
@@ -715,7 +749,9 @@ const Desktop = () => {
     return (
         <OSProvider>
             <NotificationProvider>
-                <DesktopContent />
+                <VoiceProvider>
+                    <DesktopContent />
+                </VoiceProvider>
             </NotificationProvider>
         </OSProvider>
     );

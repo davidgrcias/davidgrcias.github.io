@@ -1,7 +1,8 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
+import { useVoice } from '../../contexts/VoiceContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf, Power, RotateCcw, Check, Lock } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf, Power, RotateCcw, Check, Lock, Mic } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
@@ -24,6 +25,9 @@ const AppLoadingFallback = () => (
 
 const Taskbar = ({ onOpenSpotlight }) => {
   const { windows, activeWindowId, openApp, minimizeWindow, closeWindow, focusWindow, toggleSounds, isSoundEnabled, pinnedApps, togglePinApp, isPinned, reorderPinnedApps, sleep, restart, shutdown } = useOS();
+  const { voiceState, startListening, stopListening, isSupported, selectedLanguage } = useVoice();
+  const isListening = voiceState === 'listening';
+  const serviceAvailable = true; // Always available now (no API dependency)
   const { theme } = useTheme();
   const { isMobile } = useDeviceDetection();
   const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
@@ -327,6 +331,30 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
     return () => clearInterval(interval);
   }, [networksOpen]);
+  
+  // Voice Control Keyboard Shortcut (Ctrl+Shift+Space)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+Shift+Space to toggle voice listening
+      if (e.ctrlKey && e.shiftKey && e.code === 'Space') {
+        e.preventDefault();
+        if (isListening) {
+          stopListening();
+        } else {
+          startListening();
+        }
+      }
+      
+      // Escape to cancel listening
+      if (e.code === 'Escape' && isListening) {
+        e.preventDefault();
+        stopListening();
+      }
+    };
+    
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isListening, startListening, stopListening]);
 
   const handleNetworkClick = (url) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -400,30 +428,66 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
           {/* Search Bar */}
           {!isMobile && (
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 ${searchFocused
-              ? 'bg-white/15 border border-cyan-400/50 shadow-lg shadow-cyan-500/20'
-              : 'bg-white/5 border border-white/10 hover:bg-white/10'
-              }`}>
-              <Search size={16} className={`${searchFocused ? 'text-cyan-400' : 'text-white/50'} transition-colors`} />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  const query = e.target.value;
-                  setSearchQuery(query);
-                  if (query.trim()) {
-                    onOpenSpotlight && onOpenSpotlight(query);
+            <>
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 ${searchFocused
+                ? 'bg-white/15 border border-cyan-400/50 shadow-lg shadow-cyan-500/20'
+                : 'bg-white/5 border border-white/10 hover:bg-white/10'
+                }`}>
+                <Search size={16} className={`${searchFocused ? 'text-cyan-400' : 'text-white/50'} transition-colors`} />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    const query = e.target.value;
+                    setSearchQuery(query);
+                    if (query.trim()) {
+                      onOpenSpotlight && onOpenSpotlight(query);
+                    }
+                  }}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => {
+                    setSearchFocused(false);
+                    setSearchQuery(''); // Clear when focus is lost
+                  }}
+                  placeholder="Search apps, files..."
+                  className="bg-transparent border-0 outline-none text-white text-sm placeholder-white/40 w-48 focus:w-64 transition-all duration-300"
+                />
+              </div>
+
+              {/* Voice Control Button */}
+              {isSupported && (
+                <button
+                  onClick={() => isListening ? stopListening() : startListening()}
+                  disabled={!serviceAvailable && !isListening}
+                  className={`relative w-9 h-9 ml-2 rounded-lg flex items-center justify-center transition-all duration-300 group
+                      ${isListening 
+                        ? 'bg-red-500/20 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse' 
+                        : !serviceAvailable
+                        ? 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed opacity-50'
+                        : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white border border-white/5 hover:border-white/10 hover:shadow-lg'
+                      }`}
+                  title={
+                    !serviceAvailable 
+                      ? "Voice unavailable - Works best in Chrome/Edge" 
+                      : isListening 
+                        ? "Stop Voice (Esc)" 
+                        : "Voice Control (Ctrl+Shift+Space)\nSay: 'Open Terminal', 'Close window'"
                   }
-                }}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => {
-                  setSearchFocused(false);
-                  setSearchQuery(''); // Clear when focus is lost
-                }}
-                placeholder="Search apps, files..."
-                className="bg-transparent border-0 outline-none text-white text-sm placeholder-white/40 w-48 focus:w-64 transition-all duration-300"
-              />
-            </div>
+                >
+                  <Mic size={16} className={`transition-transform duration-300 ${isListening ? 'scale-110' : 'group-hover:scale-110'}`} />
+                  
+                  {/* Live Indicator Dot */}
+                  {isListening && (
+                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
+                  )}
+                  
+                  {/* Service Unavailable Indicator */}
+                  {!serviceAvailable && !isListening && (
+                    <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-orange-500 rounded-full" title="Service unavailable" />
+                  )}
+                </button>
+              )}
+            </>
           )}
         </div>
 

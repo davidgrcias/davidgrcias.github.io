@@ -20,7 +20,7 @@ const ContextMenu = ({ x, y, onClose, options }) => {
       >
         <div className="py-2">
           {options.map((option, index) => (
-            <React.Fragment key={option.label}>
+            <React.Fragment key={`${option.label}-${index}`}>
               {option.separator ? (
                 <div className="h-px bg-white/10 my-1 mx-2" />
               ) : (

@@ -140,7 +140,6 @@ const WindowFrame = ({ window }) => {
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-yellow-500/20 rounded-full transition-colors group"
             title="Minimize (Ctrl+M)"
-            aria-label="Minimize window"
           >
             <Minus size={14} className="text-yellow-400" />
           </motion.button>
@@ -150,7 +149,6 @@ const WindowFrame = ({ window }) => {
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-green-500/20 rounded-full transition-colors group"
             title="Maximize"
-            aria-label="Maximize window"
           >
             <Maximize2 size={13} className="text-green-400" />
           </motion.button>
@@ -160,7 +158,6 @@ const WindowFrame = ({ window }) => {
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-red-500/20 rounded-full transition-colors group"
             title="Close (Esc or Ctrl+W)"
-            aria-label="Close window"
           >
             <X size={14} className="text-red-400" />
           </motion.button>
