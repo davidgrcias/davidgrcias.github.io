@@ -119,22 +119,27 @@ const StatusCardWidget = ({ className = '' }) => {
       <div className="relative p-3.5 text-white">
         {/* Header Row: Photo + Role + Status Dot */}
         <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/10">
-          {/* Profile Photo */}
+          {/* Profile Photo - Double click to access admin */}
           <div className="relative flex-shrink-0">
             <img 
               src={profile.avatar} 
               alt={profile.name}
-              className="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow-lg"
+              className="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow-lg cursor-pointer hover:border-cyan-400/50 transition-colors"
+              onDoubleClick={() => window.open('/admin', '_blank')}
+              title="Double-click for admin"
             />
           </div>
           
-          {/* Role + Location */}
+          {/* Name + Role + Location */}
           <div className="flex-1 min-w-0">
-            <h3 className="text-[13px] font-semibold text-white truncate leading-tight">
-              {profile.role}
+            <h3 className="text-sm font-bold text-white truncate leading-tight">
+              {profile.name}
             </h3>
-            <div className="flex items-center gap-1 text-white/50 text-[11px]">
-              <MapPin size={10} />
+            <p className="text-[11px] text-white/70 truncate leading-tight mt-0.5">
+              {profile.role}
+            </p>
+            <div className="flex items-center gap-1 text-white/50 text-[10px] mt-0.5">
+              <MapPin size={9} />
               <span className="truncate">{profile.location}</span>
               <span>🇮🇩</span>
             </div>

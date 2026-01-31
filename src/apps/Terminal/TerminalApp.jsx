@@ -33,6 +33,14 @@ const TerminalApp = () => {
             case 'clear':
                 setHistory([]);
                 return;
+            case 'admin':
+            case 'sudo admin':
+            case 'sudo login':
+                output = "🔐 Opening Admin Panel... (Requires Google Auth)";
+                setTimeout(() => {
+                    window.open('/admin', '_blank');
+                }, 500);
+                break;
             case 'exit':
                 output = "Terminal session ended. (Close window to exit)";
                 break;

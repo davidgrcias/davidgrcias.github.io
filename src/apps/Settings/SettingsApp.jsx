@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, Globe, Info, Zap, Image } from 'lucide-react';
+import { Volume2, Globe, Info, Zap, Image, Shield } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTranslation } from '../../contexts/TranslationContext';
@@ -203,6 +203,16 @@ const SettingsApp = () => {
           >
             Themes
           </button>
+          <button
+            onClick={() => setActiveTab('admin')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'admin'
+              ? 'bg-amber-500/20 text-amber-400'
+              : 'text-white/60 hover:text-white hover:bg-white/5'
+              }`}
+          >
+            <Shield size={14} />
+            Admin
+          </button>
         </div>
       </div>
 
@@ -297,6 +307,39 @@ const SettingsApp = () => {
         )}
 
         {activeTab === 'themes' && <ThemeSettings />}
+
+        {activeTab === 'admin' && (
+          <div className="p-6 max-w-2xl">
+            <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-2xl p-8">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-amber-500/20 rounded-xl flex items-center justify-center">
+                  <Shield size={24} className="text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Admin Panel</h2>
+                  <p className="text-sm text-white/60">Manage your portfolio content</p>
+                </div>
+              </div>
+              
+              <p className="text-white/70 mb-6">
+                Access the admin panel to manage your profile, projects, skills, and blog posts. 
+                Protected by Google Authentication.
+              </p>
+              
+              <button
+                onClick={() => window.open('/admin', '_blank')}
+                className="w-full py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-3"
+              >
+                <Shield size={20} />
+                Open Admin Panel
+              </button>
+              
+              <p className="text-xs text-white/40 text-center mt-4">
+                🔐 Requires Google Account authentication
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -405,12 +405,13 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
         {/* Start Button / Logo */}
         <div className="flex items-center gap-2 sm:gap-3 mr-1 sm:mr-2">
+          {/* DG Logo Button - Opens Admin Panel */}
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onOpenSpotlight && onOpenSpotlight();
+              window.open('/admin', '_blank');
             }}
-            title="Open Spotlight Search (Ctrl+Space)"
+            title="Admin Panel (Protected by Google Auth)"
             className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30 group"
           >
             <span className="font-bold text-white text-sm group-hover:rotate-12 transition-transform">DG</span>
