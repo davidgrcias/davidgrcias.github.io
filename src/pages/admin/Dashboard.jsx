@@ -15,17 +15,26 @@ import {
 } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
 
+// Default stats when Firestore is empty
+const defaultStats = {
+  projects: 3,
+  experiences: 4,
+  education: 2,
+  certifications: 10,
+  skills: 5,
+  funFacts: 6,
+  insights: 4
+};
+
+const defaultRecentProjects = [
+  { id: '1', name: "Komilet (JakLingko Management System)", date: "2025-11", tiers: ["Advanced", "Real-World"] },
+  { id: '2', name: "UMN Festival 2025 (Official Platform)", date: "2025-11", tiers: ["Advanced", "Real-World", "Capstone"] },
+  { id: '3', name: "Ark Care Ministry Website", date: "2024-12", tiers: ["Advanced", "Real-World"] }
+];
+
 const Dashboard = () => {
-  const [stats, setStats] = useState({
-    projects: 0,
-    experiences: 0,
-    education: 0,
-    certifications: 0,
-    skills: 0,
-    funFacts: 0,
-    insights: 0
-  });
-  const [recentProjects, setRecentProjects] = useState([]);
+  const [stats, setStats] = useState(defaultStats);
+  const [recentProjects, setRecentProjects] = useState(defaultRecentProjects);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -45,19 +54,20 @@ const Dashboard = () => {
         firestoreService.getCollection('experiences'),
         firestoreService.getCollection('education'),
         firestoreService.getCollection('certifications'),
-        firestoreService.getDocument('settings', 'skills'),
+        firestoreService.getDocument('skills', 'main'),
         firestoreService.getCollection('funFacts'),
         firestoreService.getCollection('insights')
       ]);
 
+      // Use actual data if available, otherwise keep defaults
       setStats({
-        projects: projectsData?.length || 0,
-        experiences: experiencesData?.length || 0,
-        education: educationData?.length || 0,
-        certifications: certificationsData?.length || 0,
-        skills: skillsData?.categories?.length || 0,
-        funFacts: funFactsData?.length || 0,
-        insights: insightsData?.length || 0
+        projects: projectsData?.length || defaultStats.projects,
+        experiences: experiencesData?.length || defaultStats.experiences,
+        education: educationData?.length || defaultStats.education,
+        certifications: certificationsData?.length || defaultStats.certifications,
+        skills: skillsData?.technical?.length || defaultStats.skills,
+        funFacts: funFactsData?.length || defaultStats.funFacts,
+        insights: insightsData?.length || defaultStats.insights
       });
 
       // Get recent projects (sorted by date, top 5)
@@ -67,8 +77,10 @@ const Dashboard = () => {
           .slice(0, 5);
         setRecentProjects(sorted);
       }
+      // If no Firestore data, keep defaultRecentProjects
     } catch (error) {
       console.error('Error fetching stats:', error);
+      // Keep defaults on error
     } finally {
       setLoading(false);
       setRefreshing(false);

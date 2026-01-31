@@ -3,6 +3,16 @@ import { Plus, Search, Edit2, Trash2, Award } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
 
+// Default certifications data
+const defaultCertifications = [
+  { id: 'default-1', name: "HCIA-AI V3.5 Course", provider: "Huawei ICT Academy", date: "May 2025", icon: "BrainCircuitIcon", isDefault: true },
+  { id: 'default-2', name: "Python Intermediate Course", provider: "Sololearn", date: "June 2025", icon: "CodeIcon", isDefault: true },
+  { id: 'default-3', name: "PHP Course", provider: "Progate", date: "Jan 2022", icon: "FileCode", isDefault: true },
+  { id: 'default-4', name: "React Course", provider: "Progate", date: "Jan 2022", icon: "Code2", isDefault: true },
+  { id: 'default-5', name: "SQL Course", provider: "Progate", date: "Jan 2022", icon: "Database", isDefault: true },
+  { id: 'default-6', name: "GIT Course", provider: "Progate", date: "Dec 2021", icon: "GitBranch", isDefault: true }
+];
+
 const Certifications = () => {
   const [certifications, setCertifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,21 +27,10 @@ const Certifications = () => {
     try {
       setLoading(true);
       const data = await firestoreService.getCollection('certifications', { orderByField: 'order' });
-      
-      if (data && data.length > 0) {
-        setCertifications(data);
-      } else {
-        const { default: staticData } = await import('../../data/certifications');
-        setCertifications(staticData.map((c, i) => ({ ...c, id: `static-${i}`, isStatic: true })));
-      }
+      setCertifications(data && data.length > 0 ? data : defaultCertifications);
     } catch (error) {
       console.error("Error fetching certifications:", error);
-      try {
-        const { default: staticData } = await import('../../data/certifications');
-        setCertifications(staticData.map((c, i) => ({ ...c, id: `static-${i}`, isStatic: true })));
-      } catch (e) {
-        setCertifications([]);
-      }
+      setCertifications(defaultCertifications);
     } finally {
       setLoading(false);
     }

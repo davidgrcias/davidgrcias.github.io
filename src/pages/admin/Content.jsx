@@ -4,6 +4,21 @@ import { firestoreService } from '../../services/firestore';
 
 const ICON_OPTIONS = ['MapIcon', 'HeartHandshake', 'Hourglass', 'Puzzle', 'User', 'Heart', 'Rocket', 'SkipBack', 'SearchCheck', 'Newspaper', 'Star', 'Zap', 'Coffee', 'Music', 'Book', 'Camera', 'Gamepad', 'Code'];
 
+// Default data
+const defaultFunFacts = [
+  { id: 'default-1', title: "Hidden Talent", text: "Ask me about Jakarta's transport routes, I can tell you the best way to reach any destination using public transport!", icon: "MapIcon", isDefault: true },
+  { id: 'default-2', title: "Surprising Fact", text: "Though I might seem reserved at first, I genuinely love meeting and chatting with new people.", icon: "HeartHandshake", isDefault: true },
+  { id: 'default-3', title: "Most Productive Hours", text: "Late night hours are when my creativity and productivity peak.", icon: "Hourglass", isDefault: true },
+  { id: 'default-4', title: "Best Way to Relax", text: "Nothing beats unwinding after a productive day of solving complex coding challenges.", icon: "Puzzle", isDefault: true }
+];
+
+const defaultInsights = [
+  { id: 'default-1', title: "Motivation", text: "Fueled by ambition, not afraid to fail, because every setback is simply a setup for the next level.", icon: "Rocket", isDefault: true },
+  { id: 'default-2', title: "Never Going Back", text: "I'll never return to being the shy and reserved person I once was. Now, I confidently embrace opportunities to speak and connect.", icon: "SkipBack", isDefault: true },
+  { id: 'default-3', title: "What Keeps Me Curious", text: "I'm endlessly curious about how things work, whether complex systems or compelling stories.", icon: "SearchCheck", isDefault: true },
+  { id: 'default-4', title: "How I Stay Updated", text: "I actively stay informed and up-to-date on current events, tech trends, and global developments.", icon: "Newspaper", isDefault: true }
+];
+
 const Content = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -29,21 +44,12 @@ const Content = () => {
         firestoreService.getCollection('insights')
       ]);
 
-      if (funFactsData?.length > 0) {
-        setFunFacts(funFactsData);
-      } else {
-        const { default: staticFunFacts } = await import('../../data/funFacts');
-        setFunFacts(staticFunFacts.map((f, i) => ({ ...f, id: `static-${i}`, isStatic: true })));
-      }
-
-      if (insightsData?.length > 0) {
-        setInsights(insightsData);
-      } else {
-        const { default: staticInsights } = await import('../../data/insights');
-        setInsights(staticInsights.map((i, idx) => ({ ...i, id: `static-${idx}`, isStatic: true })));
-      }
+      setFunFacts(funFactsData && funFactsData.length > 0 ? funFactsData : defaultFunFacts);
+      setInsights(insightsData && insightsData.length > 0 ? insightsData : defaultInsights);
     } catch (error) {
       console.error("Error fetching content:", error);
+      setFunFacts(defaultFunFacts);
+      setInsights(defaultInsights);
     } finally {
       setLoading(false);
     }

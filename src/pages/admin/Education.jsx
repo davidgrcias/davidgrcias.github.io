@@ -3,6 +3,25 @@ import { Plus, Search, Edit2, Trash2, GraduationCap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
 
+// Default education data
+const defaultEducation = [
+  {
+    id: 'default-1',
+    degree: "Undergraduate Student, Informatics",
+    institution: "Universitas Multimedia Nusantara",
+    period: "2023 - 2027",
+    grade: "3.87",
+    isDefault: true
+  },
+  {
+    id: 'default-2',
+    degree: "Software Engineering",
+    institution: "SMK Cinta Kasih Tzu Chi",
+    period: "2020 - 2023",
+    isDefault: true
+  }
+];
+
 const Education = () => {
   const [education, setEducation] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,21 +36,10 @@ const Education = () => {
     try {
       setLoading(true);
       const data = await firestoreService.getCollection('education', { orderByField: 'order' });
-      
-      if (data && data.length > 0) {
-        setEducation(data);
-      } else {
-        const { default: staticData } = await import('../../data/education');
-        setEducation(staticData.map((e, i) => ({ ...e, id: `static-${i}`, isStatic: true })));
-      }
+      setEducation(data && data.length > 0 ? data : defaultEducation);
     } catch (error) {
       console.error("Error fetching education:", error);
-      try {
-        const { default: staticData } = await import('../../data/education');
-        setEducation(staticData.map((e, i) => ({ ...e, id: `static-${i}`, isStatic: true })));
-      } catch (e) {
-        setEducation([]);
-      }
+      setEducation(defaultEducation);
     } finally {
       setLoading(false);
     }

@@ -4,13 +4,22 @@ import { firestoreService } from '../../services/firestore';
 
 const ICON_OPTIONS = ['Layout', 'Database', 'Server', 'Brain', 'Lightbulb', 'Code', 'Globe', 'Cpu', 'Cloud', 'Shield'];
 
+// Default skills data
+const defaultSkills = {
+  technical: [
+    { category: "Front-End", skills: ["HTML", "CSS", "Tailwind CSS", "JavaScript & TypeScript", "React.js", "UI/UX Implementation"], icon: "Layout" },
+    { category: "Back-End", skills: ["PHP", "Laravel", "Node.js (TypeScript)", "PostgreSQL", "Prisma ORM", "MySQL", "REST API", "Auth & Session", "MVC", "Python", "Kotlin", "Java"], icon: "Database" },
+    { category: "DevOps & Deployment", skills: ["Git & GitHub", "Firebase", "Vercel", "cPanel Hosting", "Chrome DevTools", "Nginx"], icon: "Server" },
+    { category: "AI & Optimization Tools", skills: ["Google Analytics", "Google Search Console", "SEO Optimization", "Prompt Engineering"], icon: "Brain" },
+    { category: "Others", skills: ["Docs Writing", "Canva", "Figma", "Mobile-First Development", "Continually learning new technologies"], icon: "Lightbulb" }
+  ],
+  soft: ["Problem Solving", "Critical Thinking", "Fast Learning", "Adaptability", "Creativity", "Digital Communication", "Initiative", "Strong Work Ethic", "Team Collaboration", "Curiosity-Driven", "Branding", "Resilience"]
+};
+
 const Skills = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [skills, setSkills] = useState({
-    technical: [],
-    soft: []
-  });
+  const [skills, setSkills] = useState(defaultSkills);
   
   // New skill category form
   const [newCategory, setNewCategory] = useState({ category: '', skills: [], icon: 'Code' });
@@ -26,14 +35,16 @@ const Skills = () => {
       setLoading(true);
       const data = await firestoreService.getDocument('skills', 'main');
       
-      if (data && (data.technical || data.soft)) {
+      if (data && (data.technical?.length > 0 || data.soft?.length > 0)) {
         setSkills({
-          technical: data.technical || [],
-          soft: data.soft || []
+          technical: data.technical || defaultSkills.technical,
+          soft: data.soft || defaultSkills.soft
         });
       }
+      // If no data in Firestore, keep defaultSkills
     } catch (error) {
       console.error("Error fetching skills:", error);
+      // Keep default skills on error
     } finally {
       setLoading(false);
     }

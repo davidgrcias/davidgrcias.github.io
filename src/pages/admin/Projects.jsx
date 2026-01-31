@@ -3,6 +3,36 @@ import { Plus, Search, Edit2, Trash2, ExternalLink, GripVertical, Eye, EyeOff } 
 import { Link } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
 
+// Default projects data for fallback
+const defaultProjects = [
+  {
+    id: 'default-1',
+    name: "Komilet (JakLingko Management System)",
+    role: "Full-Stack Web & Systems Engineer",
+    description: "Architected a comprehensive fleet management system for JakLingko operators using Next.js 16 and PostgreSQL.",
+    tech: ["Next.js 16", "TypeScript", "PostgreSQL", "Prisma", "Tailwind CSS v4", "Redux Toolkit"],
+    tiers: ["Advanced", "Real-World"],
+    date: "2025-11",
+    link: "#",
+    icon: "Bus",
+    isPublished: true,
+    isDefault: true
+  },
+  {
+    id: 'default-2',
+    name: "UMN Festival 2025 (Official Platform)",
+    role: "Web Development Coordinator",
+    description: "Architected the comprehensive event platform for UMN Festival 2025 using a Hybrid Monolith approach.",
+    tech: ["Laravel 12", "React 19", "Inertia.js 2.0", "Tailwind CSS v4", "Midtrans SDK", "PostgreSQL"],
+    tiers: ["Advanced", "Real-World", "Capstone"],
+    date: "2025-11",
+    link: "#",
+    icon: "Ticket",
+    isPublished: true,
+    isDefault: true
+  }
+];
+
 const Projects = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,10 +47,11 @@ const Projects = () => {
     try {
       setLoading(true);
       const data = await firestoreService.getCollection('projects', { orderByField: 'order' });
-      setProjects(data || []);
+      // If Firestore has data, use it; otherwise use defaults
+      setProjects(data && data.length > 0 ? data : defaultProjects);
     } catch (error) {
       console.error("Error fetching projects:", error);
-      setProjects([]);
+      setProjects(defaultProjects);
     } finally {
       setLoading(false);
     }

@@ -3,28 +3,31 @@ import { Save, Loader2, Plus, X } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
 import ImageUploader from '../../components/admin/ImageUploader';
 
+// Static fallback data
+const defaultProfile = {
+  name: "David Garcia Saragih",
+  headline: "Full-Stack Web & Systems Engineer · Content Creator",
+  photoUrl: "/profilpict.webp",
+  aboutText: "I'm driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity",
+  contact: {
+    email: "davidgarciasaragih7@gmail.com",
+    location: "Jakarta, Indonesia",
+    whatsapp: "+6287776803957",
+    phone: ""
+  },
+  socials: {
+    youtube: { url: "https://www.youtube.com/c/DavidGTech", handle: "@DavidGTech" },
+    tiktok: { url: "https://www.tiktok.com/@davidgtech", handle: "@davidgtech" },
+    github: { url: "https://github.com/davidgrcias", handle: "davidgrcias" },
+    linkedin: { url: "https://www.linkedin.com/in/davidgrcias/", handle: "davidgrcias" },
+    instagram: { url: "https://www.instagram.com/davidgrcias/", handle: "@davidgrcias" }
+  }
+};
+
 const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState({
-    name: '',
-    headline: '',
-    photoUrl: '',
-    aboutText: '',
-    contact: {
-      email: '',
-      location: '',
-      whatsapp: '',
-      phone: ''
-    },
-    socials: {
-      youtube: { url: '', handle: '' },
-      tiktok: { url: '', handle: '' },
-      github: { url: '', handle: '' },
-      linkedin: { url: '', handle: '' },
-      instagram: { url: '', handle: '' }
-    }
-  });
+  const [profile, setProfile] = useState(defaultProfile);
 
   useEffect(() => {
     fetchProfile();
@@ -36,15 +39,24 @@ const Profile = () => {
       const data = await firestoreService.getDocument('profile', 'main');
       
       if (data && data.name) {
+        // Merge Firestore data with defaults to ensure all fields exist
         setProfile(prev => ({
-          ...prev,
+          ...defaultProfile,
           ...data,
-          contact: { ...prev.contact, ...data.contact },
-          socials: { ...prev.socials, ...data.socials }
+          contact: { ...defaultProfile.contact, ...data.contact },
+          socials: { 
+            youtube: { ...defaultProfile.socials.youtube, ...data.socials?.youtube },
+            tiktok: { ...defaultProfile.socials.tiktok, ...data.socials?.tiktok },
+            github: { ...defaultProfile.socials.github, ...data.socials?.github },
+            linkedin: { ...defaultProfile.socials.linkedin, ...data.socials?.linkedin },
+            instagram: { ...defaultProfile.socials.instagram, ...data.socials?.instagram }
+          }
         }));
       }
+      // If no data in Firestore, keep defaultProfile (already set in useState)
     } catch (error) {
       console.error("Error fetching profile:", error);
+      // Keep default profile on error
     } finally {
       setLoading(false);
     }
