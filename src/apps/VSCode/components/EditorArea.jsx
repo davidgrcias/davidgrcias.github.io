@@ -74,9 +74,21 @@ const EditorArea = ({ activeFile }) => {
     );
   }
 
+  // Determine file language from type or extension
+  const getLanguage = () => {
+    const name = activeFile?.name || '';
+    if (name.endsWith('.js') || name.endsWith('.jsx') || activeFile?.type === 'js') return 'javascript';
+    if (name.endsWith('.json') || activeFile?.type === 'json') return 'json';
+    if (name.endsWith('.xml') || activeFile?.type === 'xml') return 'xml';
+    if (name.endsWith('.ts') || name.endsWith('.tsx')) return 'typescript';
+    if (name.endsWith('.css')) return 'css';
+    if (name.endsWith('.html')) return 'html';
+    return 'javascript';
+  };
+
   // Content Generators
   const getFileContent = () => {
-    if (activeFile.type === 'md' || activeFile.name.endsWith('.md')) {
+    if (activeFile.type === 'md' || activeFile.name?.endsWith('.md')) {
       // It's a project
       const { title, description, tech, image, github, demo, readme } = activeFile.data || {};
       const markdown = `
@@ -104,31 +116,11 @@ ${readme || '### Case Study \n\nNo detailed case study available yet.'}
       );
     }
 
-    if (activeFile.id === 'about') {
-      const code = `
-const DavidGarcia = {
-  role: "Creative Developer",
-  location: "Jakarta, Indonesia",
-  skills: [
-    "React", "Next.js", "Three.js", "Firebase",
-    "Node.js", "TailwindCSS", "UI/UX Design"
-  ],
-  passion: "Bridging the gap between design and engineering.",
-  contact: {
-    email: "david@example.com",
-    github: "@davidgrcias"
-  },
-  
-  sayHi: function() {
-    console.log("Let's build something awesome together!");
-  }
-};
-
-DavidGarcia.sayHi();
-          `;
+    // If file has content from Firestore, use it
+    if (activeFile.content) {
       return (
         <SyntaxHighlighter
-          language="javascript"
+          language={getLanguage()}
           style={vscDarkPlus}
           showLineNumbers={true}
           lineNumberStyle={{
@@ -146,44 +138,7 @@ DavidGarcia.sayHi();
             fontFamily: "'Consolas', 'Monaco', monospace"
           }}
         >
-          {code.trim()}
-        </SyntaxHighlighter>
-      );
-    }
-
-    if (activeFile.id === 'contact') {
-      const code = `
-{
-  "name": "David Garcia Saragih",
-  "email": "david.garcia@umn.ac.id",
-  "socials": {
-     "linkedin": "linkedin.com/in/davidgarcia",
-     "instagram": "@davidgrcias"
-  },
-  "availability": "Open for opportunities"
-}
-          `;
-      return (
-        <SyntaxHighlighter
-          language="json"
-          style={vscDarkPlus}
-          showLineNumbers={true}
-          lineNumberStyle={{
-            color: '#858585',
-            paddingRight: '1em',
-            minWidth: '3em',
-            textAlign: 'right',
-            userSelect: 'none'
-          }}
-          customStyle={{
-            margin: 0,
-            padding: '16px 0',
-            fontSize: '14px',
-            background: 'transparent',
-            fontFamily: "'Consolas', 'Monaco', monospace"
-          }}
-        >
-          {code.trim()}
+          {activeFile.content.trim()}
         </SyntaxHighlighter>
       );
     }

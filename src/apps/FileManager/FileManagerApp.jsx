@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Folder, File, FileText, Image, Code, Download, ExternalLink, ChevronRight, Home, ArrowLeft, Search, Grid3x3, List } from 'lucide-react';
+import { Folder, File, FileText, Image, Code, Download, ExternalLink, ChevronRight, Home, ArrowLeft, Search, Grid3x3, List, Loader2 } from 'lucide-react';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 
 /**
  * File Manager App
- * Browse portfolio content as a file system
+ * Browse portfolio content as a file system - Data synced with Firestore
  */
 
-// Mock file system structure
-const fileSystem = {
+// Default file system structure (used as fallback)
+const defaultFileSystem = {
   '/': {
     name: 'Home',
     type: 'folder',
@@ -74,10 +75,37 @@ const fileSystem = {
 };
 
 const FileManagerApp = () => {
+  const [fileSystem, setFileSystem] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [currentPath, setCurrentPath] = useState('/');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  const db = getFirestore();
+
+  // Fetch file system from Firestore
+  useEffect(() => {
+    const fetchFileSystem = async () => {
+      try {
+        setLoading(true);
+        const docRef = doc(db, 'fileManager', 'main');
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists() && docSnap.data().structure) {
+          setFileSystem(docSnap.data().structure);
+        } else {
+          setFileSystem(defaultFileSystem);
+        }
+      } catch (error) {
+        console.error('Error fetching file system:', error);
+        setFileSystem(defaultFileSystem);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchFileSystem();
+  }, [db]);
 
   // Navigate to path
   const navigateTo = (path) => {
@@ -144,13 +172,23 @@ const FileManagerApp = () => {
     navigateTo(parts.length ? '/' + parts.join('/') : '/');
   };
 
-  const currentFolder = getCurrentFolder();
+  const currentFolder = loading ? {} : getCurrentFolder();
   const breadcrumbs = getBreadcrumbs();
 
   // Filter items by search
   const filteredItems = Object.entries(currentFolder).filter(([name]) =>
     name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="w-full h-full flex flex-col bg-slate-950 text-white items-center justify-center">
+        <Loader2 size={48} className="animate-spin text-cyan-400 mb-4" />
+        <p className="text-white/60">Loading file system...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full flex flex-col bg-slate-950 text-white">

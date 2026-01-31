@@ -7,6 +7,8 @@ import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
 import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
+import StartMenu from './StartMenu';
+import { getUserProfile } from '../../data/userProfile';
 
 // Lazy load apps
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -23,7 +25,7 @@ const AppLoadingFallback = () => (
   </div>
 );
 
-const Taskbar = ({ onOpenSpotlight }) => {
+const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   const { windows, activeWindowId, openApp, minimizeWindow, closeWindow, focusWindow, toggleSounds, isSoundEnabled, pinnedApps, togglePinApp, isPinned, reorderPinnedApps, sleep, restart, shutdown } = useOS();
   const { voiceState, startListening, stopListening, isSupported, selectedLanguage } = useVoice();
   const isListening = voiceState === 'listening';
@@ -52,6 +54,14 @@ const Taskbar = ({ onOpenSpotlight }) => {
   // Single popup state - only one can be open at a time
   // Values: null | 'wifi' | 'volume' | 'battery' | 'power'
   const [activePopup, setActivePopup] = useState(null);
+  
+  // Start Menu state
+  const [startMenuOpen, setStartMenuOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState({});
+
+  useEffect(() => {
+    getUserProfile('en').then(setUserProfile).catch(console.error);
+  }, []);
   
   // Brightness & Power Saver (simulated, stored in localStorage)
   const [brightness, setBrightness] = useState(() => {
@@ -405,17 +415,33 @@ const Taskbar = ({ onOpenSpotlight }) => {
 
         {/* Start Button / Logo */}
         <div className="flex items-center gap-2 sm:gap-3 mr-1 sm:mr-2">
-          {/* DG Logo Button - Opens Admin Panel */}
+          {/* DG Logo Button - Opens Start Menu */}
           <button
             onClick={(e) => {
               e.stopPropagation();
-              window.open('/admin', '_blank');
+              setStartMenuOpen(!startMenuOpen);
             }}
-            title="Admin Panel (Protected by Google Auth)"
-            className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95 transition-all shadow-lg hover:shadow-cyan-500/30 group"
+            title="Start Menu"
+            className={`w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-all shadow-lg group z-50
+              ${startMenuOpen 
+                ? 'bg-cyan-500 shadow-cyan-500/50 scale-105 ring-2 ring-white/20' 
+                : 'bg-gradient-to-br from-cyan-500 to-blue-600 hover:scale-110 active:scale-95 hover:shadow-cyan-500/30'
+              }`}
           >
             <span className="font-bold text-white text-sm group-hover:rotate-12 transition-transform">DG</span>
           </button>
+
+          {/* Start Menu Component */}
+          <StartMenu 
+            isOpen={startMenuOpen} 
+            onClose={() => setStartMenuOpen(false)}
+            shortcuts={shortcuts}
+            onOpenApp={(app) => {
+              handleAppClick(app);
+              setStartMenuOpen(false);
+            }}
+            profile={userProfile}
+          />
 
 
           {/* Search Bar */}

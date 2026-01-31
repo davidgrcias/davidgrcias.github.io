@@ -338,6 +338,150 @@ Join the movement! 🚀`,
   },
 ];
 
+// Default VS Code Files
+const defaultVscodeFiles = {
+  staticFiles: [
+    {
+      id: 'about',
+      name: 'about_me.js',
+      type: 'js',
+      content: `// About David Garcia Saragih
+const developer = {
+  name: "David Garcia Saragih",
+  title: "Full-Stack Web & Systems Engineer",
+  location: "Jakarta, Indonesia",
+  
+  passion: [
+    "Building innovative web experiences",
+    "Creating scalable systems",
+    "UI/UX Design"
+  ],
+  
+  philosophy: \`
+    I'm driven by curiosity and the excitement 
+    of learning something new. What started as 
+    a hobby has grown into a habit of building, 
+    exploring, and bringing ideas to life.
+  \`,
+  
+  currentFocus: "Building this OS-style portfolio"
+};
+
+export default developer;`
+    },
+    {
+      id: 'contact',
+      name: 'contact.json',
+      type: 'json',
+      content: `{
+  "name": "David Garcia Saragih",
+  "email": "davidgarciasaragih7@gmail.com",
+  "location": "Jakarta, Indonesia",
+  "phone": "+62 877-7680-3957",
+  "socials": {
+    "github": "https://github.com/davidgrcias",
+    "linkedin": "https://linkedin.com/in/davidgrcias",
+    "youtube": "https://youtube.com/@DavidGTech",
+    "tiktok": "https://tiktok.com/@davidgtech"
+  },
+  "availability": {
+    "status": "Open to opportunities",
+    "preferredRoles": ["Full-Stack Developer", "Frontend Developer"],
+    "workType": ["Full-time", "Freelance", "Contract"]
+  }
+}`
+    },
+    {
+      id: 'skills',
+      name: 'skills.xml',
+      type: 'xml',
+      content: `<?xml version="1.0" encoding="UTF-8"?>
+<skills>
+  <category name="Frontend">
+    <skill level="advanced">React.js</skill>
+    <skill level="advanced">Next.js</skill>
+    <skill level="advanced">Tailwind CSS</skill>
+    <skill level="intermediate">TypeScript</skill>
+    <skill level="advanced">Framer Motion</skill>
+  </category>
+  
+  <category name="Backend">
+    <skill level="advanced">Laravel</skill>
+    <skill level="advanced">PHP</skill>
+    <skill level="intermediate">Node.js</skill>
+    <skill level="advanced">MySQL</skill>
+    <skill level="intermediate">PostgreSQL</skill>
+  </category>
+  
+  <category name="Tools">
+    <skill level="advanced">Git & GitHub</skill>
+    <skill level="advanced">VS Code</skill>
+    <skill level="intermediate">Firebase</skill>
+    <skill level="intermediate">Docker</skill>
+  </category>
+</skills>`
+    }
+  ]
+};
+
+// Default File Manager Structure
+const defaultFileManager = {
+  structure: {
+    '/': {
+      name: 'Home',
+      type: 'folder',
+      children: {
+        'About': {
+          type: 'folder',
+          children: {
+            'Bio.md': { type: 'file', icon: 'text', content: '# David Garcia Saragih\n\nFull-stack developer passionate about creating innovative web experiences. Currently based in Jakarta, Indonesia.\n\n## Background\nI started my journey in web development with a curiosity about how websites work. Today, I build complex systems that serve real users.\n\n## Current Focus\n- Building scalable web applications\n- Learning new technologies\n- Creating content for developers', size: '3 KB' },
+            'Resume.pdf': { type: 'file', icon: 'document', size: '145 KB', downloadUrl: '#' },
+            'Skills.json': { type: 'file', icon: 'code', content: '{\n  "frontend": ["React", "Next.js", "Tailwind CSS"],\n  "backend": ["Laravel", "Node.js", "PostgreSQL"],\n  "tools": ["Git", "VS Code", "Firebase"]\n}', size: '1 KB' },
+          }
+        },
+        'Projects': {
+          type: 'folder',
+          children: {
+            'Portfolio-WebOS': {
+              type: 'folder',
+              children: {
+                'README.md': { type: 'file', icon: 'text', content: '# Portfolio WebOS\n\nAn OS-style portfolio built with React and Tailwind CSS.\n\n## Features\n- Draggable windows\n- Functional taskbar\n- Desktop icons\n- Voice commands', size: '2 KB' },
+                'screenshot.png': { type: 'file', icon: 'image', size: '650 KB', imageUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=400' },
+              }
+            },
+            'Other-Projects': {
+              type: 'folder',
+              children: {
+                'projects-list.md': { type: 'file', icon: 'text', content: '# My Projects\n\n1. Komilet (JakLingko Management)\n2. UMN Festival 2025\n3. Ark Care Ministry Website\n4. Various freelance projects', size: '1 KB' },
+              }
+            }
+          }
+        },
+        'Experience': {
+          type: 'folder',
+          children: {
+            'Work-History.md': { type: 'file', icon: 'text', content: '# Work Experience\n\n## Full-Stack Developer\nBuilding web applications and systems for various clients.\n\n## Content Creator\nCreating educational content about web development.', size: '2 KB' },
+            'Certifications': {
+              type: 'folder',
+              children: {
+                'certificates-info.md': { type: 'file', icon: 'text', content: '# Certifications\n\nVarious certifications in web development and related technologies.', size: '1 KB' },
+              }
+            },
+          }
+        },
+        'Contact': {
+          type: 'folder',
+          children: {
+            'Email.txt': { type: 'file', icon: 'text', content: 'davidgarciasaragih7@gmail.com', size: '1 KB' },
+            'LinkedIn.url': { type: 'file', icon: 'link', url: 'https://linkedin.com/in/davidgrcias', size: '1 KB' },
+            'GitHub.url': { type: 'file', icon: 'link', url: 'https://github.com/davidgrcias', size: '1 KB' },
+          }
+        },
+      }
+    }
+  }
+};
+
 // ========================================
 // SEED FUNCTIONS
 // ========================================
@@ -408,6 +552,8 @@ export const seedAllData = async (options = { force: false }) => {
   const results = {
     profile: false,
     skills: false,
+    vscodeFiles: false,
+    fileManager: false,
     projects: 0,
     experiences: 0,
     education: 0,
@@ -430,6 +576,20 @@ export const seedAllData = async (options = { force: false }) => {
       results.skills = await seedSingletonDocument('skills', 'main', defaultSkills);
     } else {
       console.log('⏭️  Skills already exists, skipping...');
+    }
+
+    // 2.5. Seed VS Code Files (singleton)
+    if (options.force || await isCollectionEmpty('vscodeFiles')) {
+      results.vscodeFiles = await seedSingletonDocument('vscodeFiles', 'main', defaultVscodeFiles);
+    } else {
+      console.log('⏭️  VS Code Files already exists, skipping...');
+    }
+
+    // 2.6. Seed File Manager (singleton)
+    if (options.force || await isCollectionEmpty('fileManager')) {
+      results.fileManager = await seedSingletonDocument('fileManager', 'main', defaultFileManager);
+    } else {
+      console.log('⏭️  File Manager already exists, skipping...');
     }
 
     // 3. Seed Projects
@@ -485,6 +645,8 @@ export const seedAllData = async (options = { force: false }) => {
     console.log('================');
     console.log(`Profile:        ${results.profile ? '✅' : '⏭️ Skipped'}`);
     console.log(`Skills:         ${results.skills ? '✅' : '⏭️ Skipped'}`);
+    console.log(`VS Code Files:  ${results.vscodeFiles ? '✅' : '⏭️ Skipped'}`);
+    console.log(`File Manager:   ${results.fileManager ? '✅' : '⏭️ Skipped'}`);
     console.log(`Projects:       ${results.projects} documents`);
     console.log(`Experiences:    ${results.experiences} documents`);
     console.log(`Education:      ${results.education} documents`);

@@ -721,10 +721,13 @@ const DesktopContent = () => {
             />
 
             {/* Taskbar */}
-            <Taskbar onOpenSpotlight={(query) => {
-                setSpotlightOpen(true);
-                setSpotlightQuery(query || '');
-            }} />
+            <Taskbar 
+                shortcuts={desktopShortcuts}
+                onOpenSpotlight={(query) => {
+                    setSpotlightOpen(true);
+                    setSpotlightQuery(query || '');
+                }} 
+            />
 
             {/* PDF Viewer */}
             <PDFViewer

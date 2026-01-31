@@ -15,7 +15,9 @@ import {
   Menu,
   X,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  Code2,
+  FolderTree
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -73,6 +75,8 @@ const AdminLayout = () => {
     { label: 'Skills', path: '/admin/skills', icon: Wrench },
     { label: 'Profile', path: '/admin/profile', icon: User },
     { label: 'Content', path: '/admin/content', icon: Lightbulb },
+    { label: 'VS Code Files', path: '/admin/vscode', icon: Code2 },
+    { label: 'File Manager', path: '/admin/files', icon: FolderTree },
   ];
 
   const isActive = (item) => {

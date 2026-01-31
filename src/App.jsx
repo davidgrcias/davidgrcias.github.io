@@ -22,6 +22,8 @@ import Skills from "./pages/admin/Skills";
 import Profile from "./pages/admin/Profile";
 import Content from "./pages/admin/Content";
 import Blog from "./pages/admin/Blog";
+import VSCodeFiles from "./pages/admin/VSCodeFiles";
+import FileManagerAdmin from "./pages/admin/FileManagerAdmin";
 import Desktop from "./components/os/Desktop";
 
 // Initialize settings from localStorage immediately on load
@@ -88,6 +90,10 @@ export default function App() {
 
                 {/* Content (funFacts + insights) */}
                 <Route path="content" element={<Content />} />
+
+                {/* VS Code Files & File Manager Structure */}
+                <Route path="vscode" element={<VSCodeFiles />} />
+                <Route path="files" element={<FileManagerAdmin />} />
               </Route>
 
               {/* Admin Auth */}

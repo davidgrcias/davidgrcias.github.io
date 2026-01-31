@@ -1,12 +1,44 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, ChevronDown, FileCode, FileJson, FileType, Folder, FolderOpen } from 'lucide-react';
-import { getFirestore, collection, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
 
 const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [projects, setProjects] = useState([]);
+  const [staticFiles, setStaticFiles] = useState([]);
   const db = getFirestore();
 
+  // Fetch static files from Firestore
+  useEffect(() => {
+    const fetchStaticFiles = async () => {
+      try {
+        const docRef = doc(db, 'vscodeFiles', 'main');
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists() && docSnap.data().staticFiles) {
+          setStaticFiles(docSnap.data().staticFiles);
+        } else {
+          // Default fallback
+          setStaticFiles([
+            { id: 'about', name: 'about_me.js', type: 'js', content: '// About Me\nconst developer = {\n  name: "David Garcia",\n  role: "Full Stack Developer"\n};' },
+            { id: 'contact', name: 'contact.json', type: 'json', content: '{\n  "email": "contact@example.com"\n}' },
+            { id: 'skills', name: 'skills.xml', type: 'xml', content: '<skills>\n  <skill>JavaScript</skill>\n  <skill>React</skill>\n</skills>' },
+          ]);
+        }
+      } catch (error) {
+        console.error('Error fetching VS Code files:', error);
+        // Default fallback on error
+        setStaticFiles([
+          { id: 'about', name: 'about_me.js', type: 'js', content: '// About Me\nconst developer = {\n  name: "David Garcia",\n  role: "Full Stack Developer"\n};' },
+          { id: 'contact', name: 'contact.json', type: 'json', content: '{\n  "email": "contact@example.com"\n}' },
+          { id: 'skills', name: 'skills.xml', type: 'xml', content: '<skills>\n  <skill>JavaScript</skill>\n  <skill>React</skill>\n</skills>' },
+        ]);
+      }
+    };
+    fetchStaticFiles();
+  }, [db]);
+
+  // Fetch projects from Firestore
   useEffect(() => {
     const fetchProjects = async () => {
       try {
@@ -38,17 +70,11 @@ const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
     fetchProjects();
   }, [db]);
 
-  const staticFiles = [
-    { id: 'about', name: 'about_me.js', type: 'js' },
-    { id: 'contact', name: 'contact.json', type: 'json' },
-    { id: 'skills', name: 'skills.xml', type: 'xml' },
-  ];
-
   useEffect(() => {
-    if (onFilesChange) {
+    if (onFilesChange && staticFiles.length > 0) {
       onFilesChange([...staticFiles, ...projects]);
     }
-  }, [projects, onFilesChange]);
+  }, [projects, staticFiles, onFilesChange]);
 
   const getIcon = (name) => {
     if (name.endsWith('.js')) return <FileCode size={16} className="text-yellow-400" />;
