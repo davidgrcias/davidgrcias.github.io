@@ -1,19 +1,58 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles, Youtube, Loader2 } from 'lucide-react';
+import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles, Youtube, Loader2, Copy, FileText, Download } from 'lucide-react';
 import { getUserProfile } from '../../data/userProfile';
 import { getSkills } from '../../data/skills';
+import { useOS } from '../../contexts/OSContext';
 
 /**
  * AboutMeApp - Personal information and bio in a beautiful card layout
  * Displays comprehensive personal details, skills, and social links
  * Now fetches data from Firestore for synchronization with Admin Panel
  */
-const AboutMeApp = () => {
+const AboutMeApp = ({ id }) => {
+  const { updateWindow } = useOS();
   const [activeTab, setActiveTab] = useState('personal');
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [skills, setSkills] = useState(null);
+
+  // Context Menu
+  useEffect(() => {
+    if (id && profile) {
+        updateWindow(id, {
+            contextMenuOptions: [
+                {
+                    label: 'Copy Contact Info',
+                    icon: <Copy size={16} />,
+                    onClick: () => {
+                        const info = `Name: ${profile.name}\nEmail: ${profile.email}\nWebsite: ${profile.website}`;
+                        navigator.clipboard.writeText(info);
+                        // Optional: Show toast
+                    },
+                    shortcut: 'Ctrl+C',
+                },
+                { separator: true },
+                {
+                    label: 'Download CV',
+                    icon: <Download size={16} />,
+                    onClick: () => {
+                         if (profile.cvUrl) {
+                             window.open(profile.cvUrl, '_blank');
+                         } else {
+                             alert('CV URL not available');
+                         }
+                    },
+                },
+                {
+                   label: 'Open Portfolio',
+                   icon: <Globe size={16} />,
+                   onClick: () => window.open(`https://${profile.website}`, '_blank'),
+                }
+            ]
+        });
+    }
+  }, [id, profile, updateWindow]);
 
   // Fetch data from Firestore
   useEffect(() => {

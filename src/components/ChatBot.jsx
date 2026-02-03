@@ -19,7 +19,6 @@ import { getInsights } from "../data/insights";
 import { getEducation } from "../data/education";
 import { getCertifications } from "../data/certifications";
 import { getFunFacts } from "../data/funFacts";
-import personalInfo from "../data/personalInfo";
 import { useTranslation } from "../contexts/TranslationContext";
 
 const ChatBot = () => {
@@ -85,16 +84,7 @@ const ChatBot = () => {
       headline: userProfile.headline,
       about: userProfile.aboutText,
       location: userProfile.contact.location,
-      basic: personalInfo.basic,
-      interests: personalInfo.interests,
-      personality: {
-        ...personalityInsights,
-        traits: personalInfo.personality.traits,
-        workStyle: personalInfo.personality.workStyle,
-        strengths: personalInfo.personality.strengths,
-      },
-      goals: personalInfo.goals,
-      faq: personalInfo.faq,
+      personality: personalityInsights,
     },
     contact: {
       email: userProfile.contact.email,
@@ -193,13 +183,9 @@ COMPLETE PROFILE OF DAVID GARCIA SARAGIH:
 === BASIC INFORMATION ===
 ${userProfile.name}
 Headline: ${userProfile.headline}
-Age: ${personalInfo.basic.age} years old (born ${personalInfo.basic.birthDate})
 Location: ${userProfile.contact.location}
-Religion: ${personalInfo.basic.religion}
 Email: ${userProfile.contact.email}
 WhatsApp: ${userProfile.contact.whatsapp}
-Portfolio: ${personalInfo.basic.contactInfo.portfolio}
-Philosophy: "${personalInfo.basic.philosophy}"
 
 About: ${userProfile.aboutText}
 
@@ -243,30 +229,14 @@ ${insights.map((insight) => `• ${insight.title}: ${insight.text}`).join("\n")}
 ${funFacts.map((fact) => `• ${fact.title}: ${fact.text}`).join("\n")}
 
 === SOCIAL MEDIA PRESENCE ===
-• YouTube: ${userProfile.socials.youtube.url} (${
-        userProfile.socials.youtube.handle
-      }) - ${personalInfo.professionalExperience.find(e => e.company.includes("YouTube"))?.achievements || ""}
-• TikTok: ${userProfile.socials.tiktok.url} (${
-        userProfile.socials.tiktok.handle
-      })
-• GitHub: ${userProfile.socials.github.url} (${
-        userProfile.socials.github.handle
-      })
-• LinkedIn: ${userProfile.socials.linkedin.url} (${
-        userProfile.socials.linkedin.handle
-      })
-• Instagram: ${userProfile.socials.instagram.url} (${
-        userProfile.socials.instagram.handle
-      })
+• YouTube: ${userProfile.socials.youtube.url} (${userProfile.socials.youtube.handle})
+• TikTok: ${userProfile.socials.tiktok.url} (${userProfile.socials.tiktok.handle})
+• GitHub: ${userProfile.socials.github.url} (${userProfile.socials.github.handle})
+• LinkedIn: ${userProfile.socials.linkedin.url} (${userProfile.socials.linkedin.handle})
+• Instagram: ${userProfile.socials.instagram.url} (${userProfile.socials.instagram.handle})
 
-=== CURRENT PROJECTS & ROLES ===
-${personalInfo.professionalExperience
-    .filter(e => e.period.includes("Present") || e.period.includes("2025"))
-    .map(e => `• ${e.role} at ${e.company}`)
-    .join("\n")}
-
-=== FAQ & KNOWLEDGE ===
-${Object.entries(personalInfo.faq).map(([q, a]) => `Q: ${q}\nA: ${a}`).join("\n\n")}
+=== CURRENT PROJECTS ===
+${projects.slice(0, 3).map(p => `• ${p.title}: ${p.description}`).join("\n")}
 `;
 
       const contextPrompt = `You are David Garcia Saragih's advanced AI assistant. Your goal is to represent David (a Full-Stack Web & Systems Engineer) professionally, enthusiastically, and smartly.

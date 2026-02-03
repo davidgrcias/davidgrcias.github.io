@@ -129,6 +129,12 @@ export const OSProvider = ({ children }) => {
     );
   }, [playClick]);
 
+  const updateWindow = useCallback((id, updates) => {
+    setWindows((prev) =>
+      prev.map((w) => (w.id === id ? { ...w, ...updates } : w))
+    );
+  }, []);
+
   // Pin/Unpin app
   const togglePinApp = useCallback((appId) => {
     setPinnedApps((prev) => {
@@ -164,6 +170,7 @@ export const OSProvider = ({ children }) => {
         closeWindow,
         minimizeWindow,
         maximizeWindow,
+        updateWindow,
         focusWindow,
         // Pinned apps
         pinnedApps,

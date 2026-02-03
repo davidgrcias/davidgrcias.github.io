@@ -4,15 +4,17 @@ import { Helmet } from 'react-helmet-async';
 import { 
   BookOpen, Clock, Calendar, Search, Filter, ArrowLeft, 
   ExternalLink, Loader2, Tag, ChevronRight, Sparkles,
-  Grid3X3, List, X
+  Grid3X3, List, X, RefreshCw, Share2
 } from 'lucide-react';
 import { getPosts, getCategories, getPostById } from '../../data/posts';
+import { useOS } from '../../contexts/OSContext';
 
 /**
  * Blog App
  * Full blog viewer with posts grid, category filter, and post detail view
  */
-const BlogApp = () => {
+const BlogApp = ({ id }) => {
+  const { updateWindow } = useOS();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState(['All']);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -21,21 +23,48 @@ const BlogApp = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
 
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [postsData, categoriesData] = await Promise.all([
+        getPosts(),
+        getCategories()
+      ]);
+      setPosts(postsData);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Error loading posts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Context Menu
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [postsData, categoriesData] = await Promise.all([
-          getPosts(),
-          getCategories()
-        ]);
-        setPosts(postsData);
-        setCategories(categoriesData);
-      } catch (error) {
-        console.error('Error loading posts:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (id) {
+        updateWindow(id, {
+            contextMenuOptions: [
+                {
+                    label: 'Refresh Posts',
+                    icon: <RefreshCw size={16} />,
+                    onClick: loadData,
+                    shortcut: 'F5',
+                },
+                { separator: true },
+                {
+                    label: 'Share Blog',
+                    icon: <Share2 size={16} />,
+                    onClick: () => {
+                       navigator.clipboard.writeText(window.location.origin);
+                       // Optional: Toast
+                    },
+                }
+            ]
+        });
+    }
+  }, [id, updateWindow]);
+
+  useEffect(() => {
     loadData();
   }, []);
 

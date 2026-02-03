@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ActivityBar from './components/ActivityBar';
 import Explorer from './components/Explorer';
 import SearchPanel from './components/SearchPanel';
@@ -7,12 +7,76 @@ import ExtensionsPanel from './components/ExtensionsPanel';
 import TabManager from './components/TabManager';
 import EditorArea from './components/EditorArea';
 import CopilotSidebar from './components/CopilotSidebar';
+import { useOS } from '../../contexts/OSContext';
+import { Save, Clipboard, Scissors, ClipboardCopy, Terminal as TerminalIcon } from 'lucide-react';
 
-const VSCodeApp = () => {
+const VSCodeApp = ({ id }) => {
+    const { updateWindow, activeWindowId } = useOS();
     const [activeTab, setActiveTab] = useState('files'); // ActivityBar Tab
     const [openFiles, setOpenFiles] = useState([]);
     const [activeFileId, setActiveFileId] = useState(null);
     const [allFiles, setAllFiles] = useState([]);
+
+    // Update window context menu when component mounts or dependencies change
+    useEffect(() => {
+        if (id) {
+            updateWindow(id, {
+                contextMenuOptions: [
+                    {
+                        label: 'Save File',
+                        icon: <Save size={16} />,
+                        onClick: () => {
+                            // Mock save functionality
+                            if (activeFileId) {
+                                // In a real app we'd save to file system
+                                console.log('Saving file...');
+                                // Maybe add a toast notification here later
+                            }
+                        },
+                        shortcut: 'Ctrl+S',
+                    },
+                    { separator: true },
+                    {
+                        label: 'Command Palette',
+                        icon: <TerminalIcon size={16} />,
+                        onClick: () => {
+                            // Trigger command palette logic if available
+                            alert('Command Palette opened');
+                        },
+                        shortcut: 'Ctrl+Shift+P',
+                    },
+                    { separator: true },
+                    {
+                        label: 'Cut',
+                        icon: <Scissors size={16} />,
+                        onClick: () => document.execCommand('cut'),
+                        shortcut: 'Ctrl+X',
+                    },
+                    {
+                        label: 'Copy',
+                        icon: <ClipboardCopy size={16} />,
+                        onClick: () => document.execCommand('copy'),
+                        shortcut: 'Ctrl+C',
+                    },
+                    {
+                        label: 'Paste',
+                        icon: <Clipboard size={16} />,
+                        onClick: () => navigator.clipboard.readText().then(text => document.execCommand('insertText', false, text)),
+                        shortcut: 'Ctrl+V',
+                    }
+                ]
+            });
+        }
+    }, [id, activeFileId, updateWindow]);
+
+    // Handle file content changes
+    const handleFileContentChange = (fileId, newContent) => {
+        setOpenFiles(prev => prev.map(f => 
+            f.id === fileId ? { ...f, content: newContent, isUnsaved: true } : f
+        ));
+    };
+
+
 
     // Sidebar Resizing
     const [sidebarWidth, setSidebarWidth] = useState(250);
@@ -133,7 +197,10 @@ const VSCodeApp = () => {
 
                 {/* Editor */}
                 <div className="flex-1 overflow-hidden relative">
-                    <EditorArea activeFile={activeFile} />
+                    <EditorArea 
+                        activeFile={activeFile} 
+                        onContentChange={handleFileContentChange}
+                    />
                 </div>
 
                 {/* Status Bar - Simple */}

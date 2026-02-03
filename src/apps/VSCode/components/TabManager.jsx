@@ -17,7 +17,7 @@ const TabManager = ({ openFiles, activeFileId, onTabClick, onCloseTab }) => {
   }
 
   return (
-    <div className="flex bg-[#252526] h-9 border-b border-[#1e1e1e] overflow-x-auto custom-scrollbar">
+    <div className="flex bg-[#252526] h-9 border-b border-[#1e1e1e] overflow-x-auto custom-scrollbar-tabs">
       {openFiles.map((file) => {
         const isActive = activeFileId === file.id;
 

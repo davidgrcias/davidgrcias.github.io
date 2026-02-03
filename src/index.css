@@ -102,6 +102,43 @@ body {
   cursor: pointer !important;
 }
 
+/* Helper to hide scrollbar but allow scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
+}
+
+/* Ultra thin scrollbar for tabs */
+.custom-scrollbar-tabs {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.3) transparent;
+}
+
+.custom-scrollbar-tabs::-webkit-scrollbar {
+  height: 1.5px;
+  /* Extremely thin */
+}
+
+.custom-scrollbar-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-tabs::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 10px;
+}
+
+.custom-scrollbar-tabs::-webkit-scrollbar-thumb:hover {
+  background: rgba(6, 182, 212, 0.6);
+}
+
 @keyframes explode {
   0% {
     transform: scale(1);

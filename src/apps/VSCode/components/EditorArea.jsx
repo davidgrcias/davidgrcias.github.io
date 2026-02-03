@@ -1,4 +1,4 @@
-import React from 'react';
+        import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -60,7 +60,7 @@ const Minimap = ({ lines = 20 }) => {
   );
 };
 
-const EditorArea = ({ activeFile }) => {
+const EditorArea = ({ activeFile, onContentChange }) => {
   if (!activeFile) {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center text-gray-500 bg-[#1e1e1e]">
@@ -116,8 +116,30 @@ ${readme || '### Case Study \n\nNo detailed case study available yet.'}
       );
     }
 
-    // If file has content from Firestore, use it
-    if (activeFile.content) {
+    // If file has content from Firestore, use it (or editable version)
+    if (activeFile.content || activeFile.content === '') {
+        const isEditable = true; // For now always true if it's a text/code file
+        
+        if (isEditable) {
+            return (
+                <div className="h-full w-full relative group">
+                    <textarea 
+                        className="w-full h-full bg-[#1e1e1e] text-[#d4d4d4] font-mono text-sm p-4 outline-none resize-none leading-relaxed custom-scrollbar selection:bg-[#264f78]"
+                        value={activeFile.content}
+                        onChange={(e) => onContentChange && onContentChange(activeFile.id, e.target.value)}
+                        spellCheck="false"
+                        autoCapitalize="off"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        style={{
+                            fontFamily: "'Consolas', 'Monaco', monospace",
+                            tabSize: 4
+                        }}
+                    />
+                </div>
+            );
+        }
+
       return (
         <SyntaxHighlighter
           language={getLanguage()}
@@ -146,13 +168,18 @@ ${readme || '### Case Study \n\nNo detailed case study available yet.'}
     return <div className="p-8 text-gray-400">// content not found</div>;
   };
 
+  // Determine if we need parent-level scrolling
+  // Project view (Markdown) needs parent scroll
+  // Editor view (Textarea) handles its own scroll
+  const isProjectView = activeFile.type === 'md' || activeFile.name?.endsWith('.md');
+  
   return (
     <div className="h-full w-full bg-[#1e1e1e] flex flex-col">
       {/* Breadcrumbs */}
       <Breadcrumbs activeFile={activeFile} />
 
       {/* Content */}
-      <div className="flex-1 overflow-auto custom-scrollbar">
+      <div className={`flex-1 ${isProjectView ? 'overflow-auto custom-scrollbar' : 'overflow-hidden'}`}>
         {getFileContent()}
       </div>
     </div>

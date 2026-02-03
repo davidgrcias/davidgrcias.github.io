@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useOS } from '../../contexts/OSContext';
+import { Trash2, XCircle, RotateCw } from 'lucide-react';
 
-const TerminalApp = () => {
+const TerminalApp = ({ id }) => {
+    const { updateWindow, closeWindow } = useOS();
     const [history, setHistory] = useState([
         { type: 'output', content: 'Welcome to DavidOS Terminal v1.0.0' },
         { type: 'output', content: "Type 'help' to see available commands." },
@@ -8,6 +11,40 @@ const TerminalApp = () => {
     const [input, setInput] = useState('');
     const inputRef = useRef(null);
     const bottomRef = useRef(null);
+
+    // Context Menu
+    useEffect(() => {
+        if (id) {
+            updateWindow(id, {
+                contextMenuOptions: [
+                    {
+                        label: 'Clear Terminal',
+                        icon: <Trash2 size={16} />,
+                        onClick: () => setHistory([]),
+                        shortcut: 'Ctrl+L',
+                    },
+                    { separator: true },
+                    {
+                        label: 'Restart Session',
+                        icon: <RotateCw size={16} />,
+                        onClick: () => {
+                            setHistory([
+                                { type: 'output', content: 'DavidOS Terminal v1.0.0' },
+                                { type: 'output', content: "Session restarted." },
+                            ]);
+                        },
+                    },
+                    { separator: true },
+                    {
+                        label: 'Kill Terminal',
+                        icon: <XCircle size={16} />,
+                        onClick: () => closeWindow(id),
+                        shortcut: 'Ctrl+W',
+                    }
+                ]
+            });
+        }
+    }, [id, updateWindow, closeWindow]);
 
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

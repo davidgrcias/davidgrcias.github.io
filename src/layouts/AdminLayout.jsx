@@ -17,7 +17,9 @@ import {
   ChevronRight,
   BookOpen,
   Code2,
-  FolderTree
+  FolderTree,
+  Database,
+  TrendingUp
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -77,6 +79,8 @@ const AdminLayout = () => {
     { label: 'Content', path: '/admin/content', icon: Lightbulb },
     { label: 'VS Code Files', path: '/admin/vscode', icon: Code2 },
     { label: 'File Manager', path: '/admin/files', icon: FolderTree },
+    { label: 'AI Knowledge', path: '/admin/knowledge', icon: Database },
+    { label: 'Chat Analytics', path: '/admin/chat-analytics', icon: TrendingUp },
   ];
 
   const isActive = (item) => {

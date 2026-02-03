@@ -24,6 +24,8 @@ import Content from "./pages/admin/Content";
 import Blog from "./pages/admin/Blog";
 import VSCodeFiles from "./pages/admin/VSCodeFiles";
 import FileManagerAdmin from "./pages/admin/FileManagerAdmin";
+import Knowledge from "./pages/admin/Knowledge";
+import ChatAnalytics from "./pages/admin/ChatAnalytics";
 import Desktop from "./components/os/Desktop";
 
 // Initialize settings from localStorage immediately on load
@@ -94,6 +96,10 @@ export default function App() {
                 {/* VS Code Files & File Manager Structure */}
                 <Route path="vscode" element={<VSCodeFiles />} />
                 <Route path="files" element={<FileManagerAdmin />} />
+
+                {/* AI Knowledge Base & Analytics */}
+                <Route path="knowledge" element={<Knowledge />} />
+                <Route path="chat-analytics" element={<ChatAnalytics />} />
               </Route>
 
               {/* Admin Auth */}

@@ -1,16 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Edit3, Save, X, Search, StickyNote, Clock } from 'lucide-react';
+import { Plus, Trash2, Edit3, Save, X, Search, StickyNote, Clock, Palette } from 'lucide-react';
+import { useOS } from '../../contexts/OSContext';
 
 /**
  * NotesApp - Simple sticky notes app for quick thoughts
  * Features: Create, edit, delete notes with local storage persistence
  */
-const NotesApp = () => {
+const NotesApp = ({ id }) => {
+  const { updateWindow } = useOS();
   const [notes, setNotes] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
+
+  // Context Menu
+  useEffect(() => {
+    if (id) {
+        updateWindow(id, {
+            contextMenuOptions: [
+                {
+                    label: 'New Note',
+                    icon: <Plus size={16} />,
+                    onClick: () => createNote(),
+                    shortcut: 'Ctrl+N',
+                },
+                { separator: true },
+                {
+                    label: 'Clear All Notes',
+                    icon: <Trash2 size={16} />,
+                    onClick: () => {
+                         if(confirm('Delete all notes?')) setNotes([]);
+                    },
+                }
+            ]
+        });
+    }
+  }, [id, updateWindow]); // Start of component logic
 
   // Load notes from localStorage on mount
   useEffect(() => {
