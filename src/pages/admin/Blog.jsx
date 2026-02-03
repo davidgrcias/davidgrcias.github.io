@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Loader2, BookOpen, Calendar, Clock, Star, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
+import MultiImageUploader from '../../components/admin/MultiImageUploader';
+import ImageUploader from '../../components/admin/ImageUploader';
+import { clearPostsCache } from '../../data/posts';
 
 // Default posts for fallback
 const defaultPosts = [
@@ -167,6 +170,7 @@ const Blog = () => {
       excerpt: '',
       content: '',
       image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80',
+      images: [],
       category: 'Tech',
       date: new Date().toISOString().split('T')[0],
       readTime: 5,
@@ -188,6 +192,7 @@ const Blog = () => {
     try {
       await firestoreService.deleteDocument('posts', id);
       setPosts(posts.filter(p => p.id !== id));
+      clearPostsCache(); // Clear cache so viewer sees changes
     } catch (error) {
       console.error("Error deleting post:", error);
       alert("Failed to delete post");
@@ -210,8 +215,8 @@ const Blog = () => {
       };
 
       if (editingPost.id) {
-        // Update existing
-        await firestoreService.updateDocument('posts', editingPost.id, postData);
+        // Update existing (use setDocument to handle upsert if it was a default post not yet in DB)
+        await firestoreService.setDocument('posts', editingPost.id, postData);
         setPosts(posts.map(p => p.id === editingPost.id ? { ...p, ...postData } : p));
       } else {
         // Create new
@@ -224,6 +229,7 @@ const Blog = () => {
 
       setIsEditing(false);
       setEditingPost(null);
+      clearPostsCache(); // Clear cache so viewer sees changes
     } catch (error) {
       console.error("Error saving post:", error);
       alert("Failed to save post");
@@ -360,17 +366,23 @@ Write your content here using Markdown...
               />
             </div>
 
-            {/* Meta Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Image URL */}
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Cover Image URL</label>
-                <input
-                  type="url"
-                  value={editingPost.image}
-                  onChange={(e) => setEditingPost({ ...editingPost, image: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-lg bg-gray-800 border border-gray-700 focus:border-blue-500 outline-none text-white"
-                  placeholder="https://images.unsplash.com/..."
+              {/* Meta Grid */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Image Uploader */}
+                <div>
+                   <ImageUploader 
+                     label="Cover Image"
+                     initialImage={editingPost.image}
+                     onImageUploaded={(url) => setEditingPost({ ...editingPost, image: url })}
+                   />
+                </div>
+
+              {/* Multi Image Upload */}
+              <div className="md:col-span-2">
+                <MultiImageUploader
+                  label="Gallery Images (Optional)"
+                  initialImages={editingPost.images || []}
+                  onImagesUploaded={(urls) => setEditingPost({ ...editingPost, images: urls })}
                 />
               </div>
 
@@ -459,22 +471,7 @@ Write your content here using Markdown...
           </div>
         </div>
 
-        {/* Preview */}
-        {editingPost.image && (
-          <div className="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-            <div className="p-4 border-b border-gray-800 bg-gray-800/30">
-              <h3 className="text-sm font-medium text-gray-300">Cover Preview</h3>
-            </div>
-            <div className="p-4">
-              <img
-                src={editingPost.image}
-                alt="Cover preview"
-                className="w-full h-48 object-cover rounded-lg"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            </div>
-          </div>
-        )}
+        {/* Preview removed as ImageUploader handles it */ }
       </div>
     );
   }

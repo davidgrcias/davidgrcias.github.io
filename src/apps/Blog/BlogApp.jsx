@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 import { 
   BookOpen, Clock, Calendar, Search, Filter, ArrowLeft, 
   ExternalLink, Loader2, Tag, ChevronRight, Sparkles,
@@ -51,11 +52,8 @@ const BlogApp = () => {
   };
 
   const handlePostClick = (post) => {
-    if (post.externalLink) {
-      window.open(post.externalLink, '_blank', 'noopener,noreferrer');
-    } else {
-      setSelectedPost(post);
-    }
+    // Always open in-app view first (no auto-redirect)
+    setSelectedPost(post);
   };
 
   // Loading state
@@ -71,6 +69,15 @@ const BlogApp = () => {
   if (selectedPost) {
     return (
       <div className="h-full flex flex-col bg-zinc-900 text-white overflow-hidden">
+        <Helmet>
+          <title>{selectedPost.title} | David Garcia</title>
+          <meta name="description" content={selectedPost.excerpt} />
+          <meta property="og:title" content={selectedPost.title} />
+          <meta property="og:description" content={selectedPost.excerpt} />
+          {selectedPost.image && <meta property="og:image" content={selectedPost.image} />}
+          <meta property="og:type" content="article" />
+        </Helmet>
+
         {/* Header */}
         <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-zinc-900/80 backdrop-blur-sm">
           <motion.button
@@ -108,24 +115,92 @@ const BlogApp = () => {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          {/* Hero Image */}
-          {selectedPost.image && (
-            <div className="relative h-48 sm:h-64">
-              <img 
-                src={selectedPost.image} 
-                alt={selectedPost.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
-              
-              {/* Category Badge */}
-              <div className="absolute bottom-4 left-4">
-                <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-medium">
-                  {selectedPost.category}
-                </span>
+          {/* Hero Image / Gallery Grid */}
+          {(() => {
+            // Combine all images (cover + gallery)
+            const allImages = [
+              ...(selectedPost.image ? [selectedPost.image] : []),
+              ...(selectedPost.images || [])
+            ];
+            
+            if (allImages.length === 0) return null;
+
+            if (allImages.length === 1) {
+              return (
+                <div className="relative h-48 sm:h-64">
+                   <img 
+                     src={allImages[0]} 
+                     alt={selectedPost.title}
+                     className="w-full h-full object-cover"
+                   />
+                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+                   {/* Category Badge */}
+                    <div className="absolute bottom-4 left-4">
+                      <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-medium">
+                        {selectedPost.category}
+                      </span>
+                    </div>
+                </div>
+              );
+            }
+
+            // Multi-image Grid
+            // Dynamic Grid Configuration
+            const isFourOrMore = allImages.length >= 4;
+            const gridColsClass = isFourOrMore ? 'grid-cols-3' : 'grid-cols-2';
+            
+            return (
+              <div className="p-4 pb-0">
+                <div className={`grid ${gridColsClass} grid-rows-2 gap-1 rounded-xl overflow-hidden aspect-video sm:aspect-[2/1]`}>
+                  {/* Image 1: Always Main/Top */}
+                  {/* If only 2 images, it's side by side, so no row spanning logic needed, just 1 col each if we didn't force rows-2 */}
+                  {/* Wait, for 2 images, we want side-by-side full height. 
+                      For 3+: 2 rows. 
+                      Let's split logic more clearly.
+                  */}
+                  
+                  {allImages.length === 2 ? (
+                     // 2 Images: Side by Side (Implicit 1 row, but container has aspect ratio)
+                     // To fill height, we can unset grid-rows-2 or just let them span row-span-2
+                     <>
+                        <div className="relative col-span-1 row-span-2 h-full"> 
+                           <img src={allImages[0]} className="w-full h-full object-cover" alt="" />
+                        </div>
+                        <div className="relative col-span-1 row-span-2 h-full"> 
+                           <img src={allImages[1]} className="w-full h-full object-cover" alt="" />
+                        </div>
+                     </>
+                  ) : (
+                    // 3 or 4+ Images: Top Heavy
+                    <>
+                       {/* Main Image (Top) */}
+                       <div className={`relative ${isFourOrMore ? 'col-span-3' : 'col-span-2'} row-span-1 h-full`}>
+                          <img src={allImages[0]} className="w-full h-full object-cover" alt="" />
+                       </div>
+                       
+                       {/* Sub Images (Bottom Row) */}
+                       {allImages.slice(1, 4).map((img, idx) => (
+                          <div key={idx} className="relative col-span-1 row-span-1 h-full">
+                            <img src={img} className="w-full h-full object-cover" alt="" />
+                            {/* Overlay on last item if there are more than 4 */}
+                            {idx === 2 && allImages.length > 4 && (
+                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-xl font-bold">
+                                +{allImages.length - 4}
+                              </div>
+                            )}
+                          </div>
+                       ))}
+                    </>
+                  )}
+                </div>
+                 <div className="mt-4 flex gap-2">
+                    <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-medium">
+                        {selectedPost.category}
+                    </span>
+                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Article Content */}
           <div className="p-6">
@@ -166,6 +241,24 @@ const BlogApp = () => {
                 );
               })}
             </div>
+
+            {/* External Link Button */}
+            {selectedPost.externalLink && (
+              <div className="mt-8 pt-6 border-t border-white/10">
+                <a
+                  href={selectedPost.externalLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-all font-medium group"
+                >
+                  Read Original Post
+                  <ExternalLink size={18} className="group-hover:translate-x-1 transition-transform" />
+                </a>
+                <p className="text-center sm:text-left text-xs text-white/40 mt-3">
+                  This post was originally published on an external platform. Click above to view the full verified source.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

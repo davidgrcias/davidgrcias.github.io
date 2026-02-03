@@ -66,6 +66,7 @@ const DesktopContent = () => {
     const { playUnlock, playOpen, playClose } = useSound();
     const [contextMenu, setContextMenu] = useState(null);
     const [shortcutContextMenu, setShortcutContextMenu] = useState(null);
+    const [windowContextMenu, setWindowContextMenu] = useState(null);
     // Removed local boot/lock states
     const hasShownWelcomeRef = React.useRef(false);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -339,6 +340,8 @@ const DesktopContent = () => {
                 setContextMenu(null);
             } else if (shortcutContextMenu) {
                 setShortcutContextMenu(null);
+            } else if (windowContextMenu) {
+                setWindowContextMenu(null);
             } else if (activeWindowId) {
                 closeWindow(activeWindowId);
             }
@@ -403,10 +406,29 @@ const DesktopContent = () => {
 
     // Right-click context menu (Desktop Background)
     const handleContextMenu = (e) => {
+        // Check if click target is inside a window
+        const clickedElement = e.target;
+        const isInsideWindow = clickedElement.closest && clickedElement.closest('[data-window-id]');
+
+        // If click is inside a window, don't show desktop menu
+        // (WindowFrame already handles its own context menu and stops propagation)
+        if (isInsideWindow) {
+            return;
+        }
+
         e.preventDefault();
         // Close other menus
         setShortcutContextMenu(null);
+        setWindowContextMenu(null);
         setContextMenu({ x: e.clientX, y: e.clientY });
+    };
+
+    // Handler untuk window context menu
+    const handleWindowContextMenu = (windowId, x, y, options) => {
+        // Close other menus
+        setContextMenu(null);
+        setShortcutContextMenu(null);
+        setWindowContextMenu({ windowId, x, y, options });
     };
 
     // Shortcut Context Menu Handler
@@ -575,6 +597,7 @@ const DesktopContent = () => {
             onClick={() => {
                 setContextMenu(null);
                 setShortcutContextMenu(null);
+                setWindowContextMenu(null);
                 setCommandPaletteOpen(false);
                 setWindowSwitcherOpen(false);
                 setSpotlightOpen(false);
@@ -625,7 +648,11 @@ const DesktopContent = () => {
 
             {/* Windows Layer */}
             {windows.map((window) => (
-                <WindowFrame key={window.id} window={window} />
+                <WindowFrame 
+                    key={window.id} 
+                    window={window} 
+                    onWindowContextMenu={handleWindowContextMenu}
+                />
             ))}
 
             {/* Desktop Background Context Menu */}
@@ -635,6 +662,16 @@ const DesktopContent = () => {
                     y={contextMenu.y}
                     options={contextMenuOptions}
                     onClose={() => setContextMenu(null)}
+                />
+            )}
+
+            {/* Window Context Menu */}
+            {windowContextMenu && (
+                <ContextMenu
+                    x={windowContextMenu.x}
+                    y={windowContextMenu.y}
+                    options={windowContextMenu.options}
+                    onClose={() => setWindowContextMenu(null)}
                 />
             )}
 

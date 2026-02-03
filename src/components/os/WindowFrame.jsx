@@ -7,7 +7,7 @@ import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import { useTouchGestures } from '../../hooks/useTouchGestures';
 import { useSound } from '../../contexts/SoundContext';
 
-const WindowFrame = ({ window }) => {
+const WindowFrame = ({ window, onWindowContextMenu }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
   const { theme } = useTheme();
   const { isMobile, isTablet, width, height } = useDeviceDetection();
@@ -32,16 +32,16 @@ const WindowFrame = ({ window }) => {
   const getWindowStyle = () => {
     if (window.isMaximized) {
       return {
-        width: '100vw',
-        height: 'calc(100vh - 64px)',
+        width: '100%',
+        height: 'calc(100% - 64px)',
         top: 0,
         left: 0,
       };
     }
     if (isMobile) {
       return {
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         top: 0,
         left: 0,
       };
@@ -69,8 +69,24 @@ const WindowFrame = ({ window }) => {
     dragControls.start(e);
   };
 
+  // Handle context menu in window content area
+  const handleWindowContextMenu = (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent bubbling to desktop
+    
+    // Check if window has context menu options
+    if (window.contextMenuOptions && window.contextMenuOptions.length > 0) {
+      // Trigger window context menu callback
+      if (onWindowContextMenu) {
+        onWindowContextMenu(window.id, e.clientX, e.clientY, window.contextMenuOptions);
+      }
+    }
+    // If no options, just prevent default (no menu shown)
+  };
+
   return (
     <motion.div
+      data-window-id={window.id}
       drag={!isMobile && !window.isMaximized}
       dragControls={dragControls}
       dragListener={false}
@@ -102,6 +118,10 @@ const WindowFrame = ({ window }) => {
       }}
       onMouseDown={() => focusWindow(window.id)}
       onTouchStart={() => focusWindow(window.id)}
+      onContextMenu={(e) => {
+        // Prevent desktop context menu when right-clicking anywhere on window (including title bar)
+        e.stopPropagation();
+      }}
       style={{
         zIndex: window.zIndex,
         position: 'absolute',
@@ -168,6 +188,7 @@ const WindowFrame = ({ window }) => {
       <div
         className="flex-1 overflow-auto bg-slate-900/50 p-1"
         onPointerDown={(e) => e.stopPropagation()}
+        onContextMenu={handleWindowContextMenu}
       >
         {window.component}
       </div>

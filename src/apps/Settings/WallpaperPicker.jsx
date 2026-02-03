@@ -54,7 +54,7 @@ const wallpapers = [
 ];
 
 const WallpaperPicker = () => {
-  const { wallpaperMode, setWallpaperMode, wallpaperImage, setWallpaperImage } = useTheme();
+  const { wallpaperMode, setWallpaperMode, wallpaperImage, setWallpaperImage, wallpaperTimePreset, setWallpaperTimePreset } = useTheme();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -64,17 +64,17 @@ const WallpaperPicker = () => {
         </h3>
         <div className="flex gap-2">
           <button
-            onClick={() => setWallpaperMode('dynamic')}
+            onClick={() => setWallpaperMode('gradient')}
             className={`flex-1 py-3 px-4 rounded-lg border transition-all flex items-center justify-center gap-2 ${
-              wallpaperMode === 'dynamic'
+              wallpaperMode === 'gradient'
                 ? 'bg-blue-500/20 border-blue-500 text-blue-300'
                 : 'bg-zinc-800/50 border-white/5 text-zinc-400 hover:bg-zinc-800'
             }`}
           >
             <Clock size={18} />
             <div className="text-left">
-              <div className="text-sm font-medium">Dynamic</div>
-              <div className="text-xs opacity-60">Changes with time</div>
+              <div className="text-sm font-medium">Gradient</div>
+              <div className="text-xs opacity-60">Time-based gradients</div>
             </div>
           </button>
           
@@ -135,17 +135,36 @@ const WallpaperPicker = () => {
         </div>
       )}
 
-      {/* Dynamic Info - Only show when mode is 'dynamic' */}
-      {wallpaperMode === 'dynamic' && (
-        <div className="text-center py-8 text-zinc-500 animate-slide-up bg-white/5 rounded-xl border border-white/5">
-          <Clock size={48} className="mx-auto mb-3 opacity-50" />
-          <p className="text-sm">Wallpaper changes automatically based on time of day.</p>
-          <div className="flex justify-center gap-4 mt-4 text-xs opacity-70">
-            <span>🌅 Morning</span>
-            <span>☀️ Day</span>
-            <span>🌇 Evening</span>
-            <span>🌙 Night</span>
+      {/* Time Preset Selection - Only show when mode is 'gradient' */}
+      {wallpaperMode === 'gradient' && (
+        <div className="animate-slide-up bg-white/5 rounded-xl p-4 border border-white/10">
+          <h3 className="text-white font-medium mb-3 flex items-center gap-2">
+            <Clock size={16} /> Time Preset
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { id: 'morning', label: 'Morning', icon: '🌅' },
+              { id: 'day', label: 'Day', icon: '☀️' },
+              { id: 'evening', label: 'Evening', icon: '🌇' },
+              { id: 'night', label: 'Night', icon: '🌙' },
+            ].map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => setWallpaperTimePreset(preset.id)}
+                className={`py-3 px-4 rounded-lg border transition-all flex items-center justify-center gap-2 ${
+                  wallpaperTimePreset === preset.id
+                    ? 'bg-blue-500/20 border-blue-500 text-blue-300'
+                    : 'bg-zinc-800/50 border-white/5 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300'
+                }`}
+              >
+                <span className="text-lg">{preset.icon}</span>
+                <span className="text-sm font-medium">{preset.label}</span>
+              </button>
+            ))}
           </div>
+          <p className="text-xs text-zinc-500 mt-3 text-center">
+            Choose your preferred time-based gradient preset
+          </p>
         </div>
       )}
     </div>

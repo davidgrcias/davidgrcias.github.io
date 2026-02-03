@@ -68,7 +68,7 @@ const BootSequence = ({ onComplete }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black flex flex-col items-center justify-center z-[10002]"
+        className="fixed top-0 left-0 w-full h-full bg-gradient-to-br from-gray-900 via-slate-900 to-black flex flex-col items-center justify-center z-[10002] overflow-hidden"
       >
         {/* Logo */}
         <motion.div

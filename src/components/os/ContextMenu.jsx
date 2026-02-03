@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Settings, Info, Wallpaper } from 'lucide-react';
 
 /**
- * Desktop Context Menu
- * Right-click menu for the desktop
+ * Context Menu Component
+ * Reusable right-click menu for desktop and windows
  */
 const ContextMenu = ({ x, y, onClose, options }) => {
   return (

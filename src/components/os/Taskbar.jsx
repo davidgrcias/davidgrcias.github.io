@@ -285,9 +285,32 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   };
 
   const getBatteryIcon = () => {
-    if (battery.charging) return <BatteryCharging size={16} className="text-green-400 animate-pulse" />;
-    if (battery.level < 20) return <Battery size={16} className="text-red-500 animate-pulse" />;
-    return <Battery size={16} />;
+    const { level, charging } = battery;
+    
+    // Changing color based on level
+    let colorClass = "text-white";
+    if (level <= 20) colorClass = "text-red-500";
+    else if (level <= 50) colorClass = "text-yellow-400";
+    else colorClass = "text-green-400"; // High battery is green or white? Usually white in OS, but user asked for "adjusted color". Green is clearer for "Good".
+
+    if (charging) {
+      return <BatteryCharging size={18} className="text-green-400 animate-pulse" />;
+    }
+
+    return (
+      <div className="relative flex items-center justify-center">
+        {/* Fill Level */}
+        <div 
+          className={`absolute left-[2px] top-[6px] h-[8px] bg-current rounded-[1px] transition-all duration-500 ${colorClass}`}
+          style={{ 
+            width: `${Math.max(2, (level / 100) * 13)}px`, 
+            opacity: 1
+          }} 
+        />
+        {/* Outline Frame */}
+        <Battery size={20} className={`relative z-10 ${colorClass}`} fillOpacity={0} />
+      </div>
+    );
   };
 
   const handleSoundToggle = () => {

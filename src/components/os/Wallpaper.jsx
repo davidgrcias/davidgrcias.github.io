@@ -1,51 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
 
 /**
  * Wallpaper Component
- * Renders a dynamic background that changes with time of day
+ * Renders a gradient background based on selected time preset
  * Includes subtle particle effects and smooth transitions
  */
 const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
-  const { wallpaperMode, wallpaperImage } = useTheme();
-  const [timeOfDay, setTimeOfDay] = useState('day'); // 'morning', 'day', 'evening', 'night'
-  const [gradient, setGradient] = useState('');
+  const { wallpaperMode, wallpaperImage, wallpaperTimePreset } = useTheme();
 
-  // Determine time of day and gradient
-  useEffect(() => {
-    const updateTime = () => {
-      const hour = new Date().getHours();
-      let newTime = 'day';
-      let newGradient = '';
-
-      if (hour >= 5 && hour < 11) {
-        newTime = 'morning';
-        newGradient = 'bg-gradient-to-br from-indigo-400 via-cyan-400 to-teal-400';
-      } else if (hour >= 11 && hour < 16) {
-        newTime = 'day';
-        newGradient = 'bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-500';
-      } else if (hour >= 16 && hour < 19) {
-        newTime = 'evening';
-        newGradient = 'bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600';
-      } else {
-        newTime = 'night';
-        // Deep night theme
-        newGradient = 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900';
-      }
-
-      setTimeOfDay(newTime);
-      setGradient(newGradient);
+  // Get gradient based on preset
+  const getGradientForPreset = (preset) => {
+    const gradients = {
+      morning: 'bg-gradient-to-br from-indigo-400 via-cyan-400 to-teal-400',
+      day: 'bg-gradient-to-br from-blue-400 via-cyan-500 to-teal-500',
+      evening: 'bg-gradient-to-br from-orange-400 via-pink-500 to-purple-600',
+      night: 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900',
     };
+    return gradients[preset] || gradients.night;
+  };
 
-    updateTime();
-    const interval = setInterval(updateTime, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, []);
+  const gradient = getGradientForPreset(wallpaperTimePreset);
 
   return (
     <div 
-      className={`h-screen w-screen overflow-hidden relative text-white transition-all duration-1000 ${wallpaperMode === 'dynamic' ? gradient : 'bg-zinc-900'} ${className}`}
+      className={`h-full w-full overflow-hidden relative text-white transition-all duration-1000 ${wallpaperMode === 'gradient' ? gradient : 'bg-zinc-900'} ${className}`}
       onContextMenu={onContextMenu}
       onClick={onClick}
     >
@@ -64,11 +44,11 @@ const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
         )}
       </AnimatePresence>
 
-      {/* Animated Particles Layer (Only in Dynamic Mode) */}
+      {/* Animated Particles Layer (Only in Gradient Mode) */}
       <AnimatePresence>
-        {wallpaperMode === 'dynamic' && (
+        {wallpaperMode === 'gradient' && (
           <motion.div 
-            key="dynamic-particles"
+            key="gradient-particles"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -104,7 +84,7 @@ const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
             ))}
 
             {/* Small Particles for Night Time */}
-            {timeOfDay === 'night' && [...Array(30)].map((_, i) => (
+            {wallpaperTimePreset === 'night' && [...Array(30)].map((_, i) => (
               <motion.div
                 key={`star-${i}`}
                 className="absolute w-1 h-1 bg-white rounded-full opacity-60"

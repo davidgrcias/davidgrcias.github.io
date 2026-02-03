@@ -94,8 +94,9 @@ export const themes = {
 
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState('dark');
-  const [wallpaperMode, setWallpaperMode] = useState('dynamic');
+  const [wallpaperMode, setWallpaperMode] = useState('gradient');
   const [wallpaperImage, setWallpaperImage] = useState('');
+  const [wallpaperTimePreset, setWallpaperTimePreset] = useState('night');
 
   // Load theme and wallpaper from localStorage
   useEffect(() => {
@@ -106,10 +107,24 @@ export const ThemeProvider = ({ children }) => {
     
     // Load wallpaper settings
     const savedMode = localStorage.getItem('webos-wallpaper-mode');
-    if (savedMode) setWallpaperMode(savedMode);
+    if (savedMode) {
+      // Migration: convert 'dynamic' to 'gradient'
+      if (savedMode === 'dynamic') {
+        setWallpaperMode('gradient');
+        localStorage.setItem('webos-wallpaper-mode', 'gradient');
+      } else {
+        setWallpaperMode(savedMode);
+      }
+    }
     
     const savedImage = localStorage.getItem('webos-wallpaper-image');
     if (savedImage) setWallpaperImage(savedImage);
+    
+    // Load wallpaper time preset
+    const savedPreset = localStorage.getItem('webos-wallpaper-time-preset');
+    if (savedPreset) {
+      setWallpaperTimePreset(savedPreset);
+    }
   }, []);
 
   // Save theme to localStorage
@@ -128,6 +143,10 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('webos-wallpaper-image', wallpaperImage);
   }, [wallpaperImage]);
+  
+  useEffect(() => {
+    localStorage.setItem('webos-wallpaper-time-preset', wallpaperTimePreset);
+  }, [wallpaperTimePreset]);
 
   const changeTheme = (themeId) => {
     if (themes[themeId]) {
@@ -146,6 +165,8 @@ export const ThemeProvider = ({ children }) => {
     setWallpaperMode,
     wallpaperImage,
     setWallpaperImage,
+    wallpaperTimePreset,
+    setWallpaperTimePreset,
   };
 
   return (
