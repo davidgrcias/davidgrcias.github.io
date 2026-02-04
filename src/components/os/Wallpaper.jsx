@@ -8,7 +8,7 @@ import { useTheme } from '../../contexts/ThemeContext';
  * Includes subtle particle effects and smooth transitions
  */
 const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
-  const { wallpaperMode, wallpaperImage, wallpaperTimePreset } = useTheme();
+  const { wallpaperMode, wallpaperImage, wallpaperTimePreset, batterySaver } = useTheme();
 
   // Get gradient based on preset
   const getGradientForPreset = (preset) => {
@@ -24,7 +24,7 @@ const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
   const gradient = getGradientForPreset(wallpaperTimePreset);
 
   return (
-    <div 
+    <div
       className={`h-full w-full overflow-hidden relative text-white transition-all duration-1000 ${wallpaperMode === 'gradient' ? gradient : 'bg-zinc-900'} ${className}`}
       onContextMenu={onContextMenu}
       onClick={onClick}
@@ -44,10 +44,10 @@ const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
         )}
       </AnimatePresence>
 
-      {/* Animated Particles Layer (Only in Gradient Mode) */}
+      {/* Animated Particles Layer (Only in Gradient Mode AND Battery Saver is OFF) */}
       <AnimatePresence>
-        {wallpaperMode === 'gradient' && (
-          <motion.div 
+        {wallpaperMode === 'gradient' && !batterySaver && (
+          <motion.div
             key="gradient-particles"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -107,10 +107,12 @@ const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
         )}
       </AnimatePresence>
 
-      {/* Noise Overlay for texture */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-[1]" 
-           style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.6%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }} 
-      />
+      {/* Noise Overlay for texture (Disabled on Battery Saver) */}
+      {!batterySaver && (
+        <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-[1]"
+          style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.6%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' }}
+        />
+      )}
 
       {/* Content Container */}
       <div className="relative z-10 w-full h-full">

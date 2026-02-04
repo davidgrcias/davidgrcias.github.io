@@ -33,7 +33,7 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
     if (window.isMaximized) {
       return {
         width: '100%',
-        height: 'calc(100% - 64px)',
+        height: 'calc(100% - 48px)',
         top: 0,
         left: 0,
       };
@@ -73,7 +73,7 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
   const handleWindowContextMenu = (e) => {
     e.preventDefault();
     e.stopPropagation(); // Prevent bubbling to desktop
-    
+
     // Check if window has context menu options
     if (window.contextMenuOptions && window.contextMenuOptions.length > 0) {
       // Trigger window context menu callback
@@ -104,7 +104,8 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
       animate={{
         scale: window.isMinimized ? 0 : 1,
         opacity: window.isMinimized ? 0 : 1,
-        y: window.isMinimized ? 200 : 0,
+        y: window.isMinimized ? 200 : (window.isMaximized ? 0 : undefined), // Force reset Y on maximize
+        x: window.isMaximized ? 0 : undefined, // Force reset X on maximize
         display: window.isMinimized ? 'none' : 'flex',
       }}
       exit={{ scale: 0.9, opacity: 0, y: 20 }}

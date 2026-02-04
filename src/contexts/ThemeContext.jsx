@@ -97,14 +97,22 @@ export const ThemeProvider = ({ children }) => {
   const [wallpaperMode, setWallpaperMode] = useState('gradient');
   const [wallpaperImage, setWallpaperImage] = useState('');
   const [wallpaperTimePreset, setWallpaperTimePreset] = useState('night');
+  // Default to TRUE for better first-time performance
+  const [batterySaver, setBatterySaver] = useState(true);
 
   // Load theme and wallpaper from localStorage
   useEffect(() => {
+    // Load battery saver setting
+    const savedBatterySaver = localStorage.getItem('webos-battery-saver');
+    if (savedBatterySaver !== null) {
+      setBatterySaver(savedBatterySaver === 'true');
+    }
+
     const savedTheme = localStorage.getItem('webos-theme');
     if (savedTheme && themes[savedTheme]) {
       setCurrentTheme(savedTheme);
     }
-    
+
     // Load wallpaper settings
     const savedMode = localStorage.getItem('webos-wallpaper-mode');
     if (savedMode) {
@@ -116,10 +124,10 @@ export const ThemeProvider = ({ children }) => {
         setWallpaperMode(savedMode);
       }
     }
-    
+
     const savedImage = localStorage.getItem('webos-wallpaper-image');
     if (savedImage) setWallpaperImage(savedImage);
-    
+
     // Load wallpaper time preset
     const savedPreset = localStorage.getItem('webos-wallpaper-time-preset');
     if (savedPreset) {
@@ -130,7 +138,7 @@ export const ThemeProvider = ({ children }) => {
   // Save theme to localStorage
   useEffect(() => {
     localStorage.setItem('webos-theme', currentTheme);
-    
+
     // Apply theme to document
     document.documentElement.setAttribute('data-theme', currentTheme);
   }, [currentTheme]);
@@ -139,14 +147,19 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem('webos-wallpaper-mode', wallpaperMode);
   }, [wallpaperMode]);
-  
+
   useEffect(() => {
     localStorage.setItem('webos-wallpaper-image', wallpaperImage);
   }, [wallpaperImage]);
-  
+
   useEffect(() => {
     localStorage.setItem('webos-wallpaper-time-preset', wallpaperTimePreset);
   }, [wallpaperTimePreset]);
+
+  // Save battery saver setting
+  useEffect(() => {
+    localStorage.setItem('webos-battery-saver', batterySaver.toString());
+  }, [batterySaver]);
 
   const changeTheme = (themeId) => {
     if (themes[themeId]) {
@@ -167,6 +180,8 @@ export const ThemeProvider = ({ children }) => {
     setWallpaperImage,
     wallpaperTimePreset,
     setWallpaperTimePreset,
+    batterySaver,
+    setBatterySaver,
   };
 
   return (

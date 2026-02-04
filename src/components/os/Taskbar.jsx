@@ -30,7 +30,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   const { voiceState, startListening, stopListening, isSupported, selectedLanguage } = useVoice();
   const isListening = voiceState === 'listening';
   const serviceAvailable = true; // Always available now (no API dependency)
-  const { theme } = useTheme();
+  const { theme, batterySaver, setBatterySaver } = useTheme();
   const { isMobile } = useDeviceDetection();
   const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
 
@@ -173,10 +173,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
     const saved = localStorage.getItem('webos-brightness');
     return saved ? parseInt(saved) : 100;
   });
-  const [batterySaver, setBatterySaver] = useState(() => {
-    const saved = localStorage.getItem('webos-battery-saver');
-    return saved === 'true';
-  });
+  // Battery saver moved to ThemeContext
 
   // Drag & drop state
   const [draggedIndex, setDraggedIndex] = useState(null);
@@ -249,16 +246,15 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   useEffect(() => {
     localStorage.setItem('webos-brightness', brightness.toString());
     // Apply brightness as a filter to the root element
-    const effectiveBrightness = batterySaver ? Math.min(brightness, 70) : brightness;
+    // User requested NO dimming on battery saver, only animation reduction
+    const effectiveBrightness = brightness;
+
     document.documentElement.style.filter = effectiveBrightness < 100
       ? `brightness(${effectiveBrightness / 100})`
       : 'none';
   }, [brightness, batterySaver]);
 
-  // Save battery saver setting
-  useEffect(() => {
-    localStorage.setItem('webos-battery-saver', batterySaver.toString());
-  }, [batterySaver]);
+
 
   // Defined Apps - Memoized to prevent recreation
   const apps = React.useMemo(() => [
@@ -309,6 +305,13 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
         />
         {/* Outline Frame */}
         <Battery size={20} className={`relative z-10 ${colorClass}`} fillOpacity={0} />
+
+        {/* Battery Saver Indicator */}
+        {!charging && batterySaver && (
+          <div className="absolute -bottom-[2px] -right-[2px] bg-zinc-900 rounded-full border border-zinc-900 z-20">
+            <Leaf size={10} className="text-green-400 fill-green-400" />
+          </div>
+        )}
       </div>
     );
   };
@@ -876,8 +879,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                           else setMuted(true);
                         }}
                         className={`flex-1 py-1.5 text-xs rounded-lg transition-colors ${volume === v && !isMuted
-                            ? 'bg-cyan-500 text-white'
-                            : 'bg-white/10 text-white/70 hover:bg-white/20'
+                          ? 'bg-cyan-500 text-white'
+                          : 'bg-white/10 text-white/70 hover:bg-white/20'
                           }`}
                       >
                         {v}%
@@ -889,8 +892,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   <button
                     onClick={() => setMuted(!isMuted)}
                     className={`w-full py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${isMuted
-                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                        : 'bg-white/10 text-white hover:bg-white/20'
+                      ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                      : 'bg-white/10 text-white hover:bg-white/20'
                       }`}
                   >
                     {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
@@ -911,9 +914,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                 title={`${Math.round(battery.level)}%${battery.charging ? ' - Charging' : (battery.level === 100 ? ' - Fully Charged' : ' - On Battery')}${batterySaver ? ' - Power Saver ON' : ''}`}
                 aria-label={`Battery ${Math.round(battery.level)}%`}
               >
-                {battery.charging ? <BatteryCharging size={16} className="text-green-400" /> :
-                  battery.level < 20 ? <BatteryLow size={16} className="text-red-500 animate-pulse" /> :
-                    <Battery size={16} className={battery.level > 20 ? 'text-white' : ''} />}
+                {getBatteryIcon()}
                 <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level)}%</span>
               </div>
 
@@ -948,8 +949,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                     <div className="h-3 bg-white/10 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${battery.level < 20 ? 'bg-red-500' :
-                            battery.level < 50 ? 'bg-yellow-500' :
-                              'bg-green-500'
+                          battery.level < 50 ? 'bg-yellow-500' :
+                            'bg-green-500'
                           }`}
                         style={{ width: `${battery.level}%` }}
                       />
@@ -988,8 +989,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                           key={b}
                           onClick={() => setBrightness(b)}
                           className={`flex-1 py-1 text-xs rounded-lg transition-colors ${brightness === b
-                              ? 'bg-yellow-500 text-black'
-                              : 'bg-white/10 text-white/70 hover:bg-white/20'
+                            ? 'bg-yellow-500 text-black'
+                            : 'bg-white/10 text-white/70 hover:bg-white/20'
                             }`}
                         >
                           {b === 20 ? <Moon size={12} className="mx-auto" /> : `${b}%`}
@@ -1004,8 +1005,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   <button
                     onClick={() => setBatterySaver(!batterySaver)}
                     className={`w-full py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between px-4 ${batterySaver
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-white/10 text-white hover:bg-white/20'
+                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                      : 'bg-white/10 text-white hover:bg-white/20'
                       }`}
                   >
                     <div className="flex items-center gap-2">
@@ -1013,7 +1014,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                       <div className="text-left">
                         <span className="block">Battery Saver</span>
                         <span className="text-xs opacity-60">
-                          {batterySaver ? 'Reduces brightness & animations' : 'Extend battery life'}
+                          {batterySaver ? 'Reduces animations used' : 'Optimize performance'}
                         </span>
                       </div>
                     </div>

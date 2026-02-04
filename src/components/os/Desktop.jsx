@@ -84,7 +84,7 @@ const DesktopContent = () => {
     const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
     const [cvUrl, setCvUrl] = useState('/CV_DavidGarciaSaragih.pdf');
     const [preloadedPdfUrl, setPreloadedPdfUrl] = useState(null);
-    
+
     // Desktop widgets state
     const [showWidgets, setShowWidgets] = useState(() => {
         const saved = localStorage.getItem('webos-show-widgets');
@@ -94,17 +94,17 @@ const DesktopContent = () => {
     // Helper function to generate FASTEST embed URL
     const generateEmbedUrl = (url) => {
         if (!url) return null;
-        
+
         // Extract Google Drive file ID
         const match1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
         const match2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         const fileId = match1?.[1] || match2?.[1];
-        
+
         if (fileId) {
             // FASTEST: Direct Google Drive preview (instant load!)
             return `https://drive.google.com/file/d/${fileId}/preview`;
         }
-        
+
         return `${url}#toolbar=0&navpanes=0&scrollbar=1`;
     };
 
@@ -116,13 +116,13 @@ const DesktopContent = () => {
                 // Generate and set preloaded URL
                 const embedUrl = generateEmbedUrl(profile.cvUrl);
                 setPreloadedPdfUrl(embedUrl);
-                
+
                 // Preload the PDF in a hidden iframe for instant loading
                 const preloadIframe = document.createElement('iframe');
                 preloadIframe.style.cssText = 'position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;';
                 preloadIframe.src = embedUrl;
                 document.body.appendChild(preloadIframe);
-                
+
                 // Remove preload iframe after loading (keep browser cache)
                 preloadIframe.onload = () => {
                     setTimeout(() => {
@@ -138,20 +138,20 @@ const DesktopContent = () => {
     const GRID_SIZE = 120; // pixels per cell (bigger for more visible icons)
     const TASKBAR_HEIGHT = 48;
     const MIN_MARGIN = 24; // minimum margin on all sides
-    
+
     // Reserve space for widgets if they are visible (approx 320px + margins)
-    const WIDGET_SIDEBAR_WIDTH = (showWidgets && powerState === 'active' && width > 768) ? 320 : 0; 
-    
+    const WIDGET_SIDEBAR_WIDTH = (showWidgets && powerState === 'active' && width > 768) ? 320 : 0;
+
     // Calculate how many cells fit with equal margins
     const availableWidth = width - (MIN_MARGIN * 2) - WIDGET_SIDEBAR_WIDTH;
     const availableHeight = height - TASKBAR_HEIGHT - (MIN_MARGIN * 2);
     const GRID_COLS = Math.max(1, Math.floor(availableWidth / GRID_SIZE));
     const GRID_ROWS = Math.max(1, Math.floor(availableHeight / GRID_SIZE));
-    
+
     // Calculate actual margins to center the grid perfectly in the available space
     const GRID_WIDTH = GRID_COLS * GRID_SIZE;
     const GRID_HEIGHT = GRID_ROWS * GRID_SIZE;
-    
+
     // Center logic: (AvailableSpace - GridWidth) / 2
     // We treat the "AvailableSpace" as the full width minus the widget sidebar.
     // So the grid centers in the "empty" area on the left.
@@ -175,17 +175,17 @@ const DesktopContent = () => {
         };
 
         if (!saved) return defaultLayout;
-        
+
         try {
             const parsed = JSON.parse(saved);
             // Validate each position - must have valid row/col within bounds
             const validated = {};
             for (const [id, pos] of Object.entries(parsed)) {
                 if (
-                    pos && 
-                    typeof pos.row === 'number' && 
+                    pos &&
+                    typeof pos.row === 'number' &&
                     typeof pos.col === 'number' &&
-                    pos.row >= 0 && 
+                    pos.row >= 0 &&
                     pos.col >= 0
                 ) {
                     validated[id] = pos;
@@ -377,27 +377,27 @@ const DesktopContent = () => {
     useEffect(() => {
         const handleVoiceOpenApp = (event) => {
             const { appId } = event.detail;
-            
+
             // Find the app from desktopShortcuts or settingsApp
             let targetApp = desktopShortcuts.find(app => app.id === appId);
             if (!targetApp && appId === 'settings') {
                 targetApp = settingsApp;
             }
-            
+
             if (targetApp) {
                 openApp(targetApp);
             }
         };
-        
+
         const handleVoiceSpotlight = (event) => {
             const query = event.detail;
             setSpotlightQuery(query);
             setSpotlightOpen(true);
         };
-        
+
         window.addEventListener('VOICE_OPEN_APP', handleVoiceOpenApp);
         window.addEventListener('VOICE_OPEN_SPOTLIGHT', handleVoiceSpotlight);
-        
+
         return () => {
             window.removeEventListener('VOICE_OPEN_APP', handleVoiceOpenApp);
             window.removeEventListener('VOICE_OPEN_SPOTLIGHT', handleVoiceSpotlight);
@@ -448,7 +448,7 @@ const DesktopContent = () => {
         const occupied = new Set();
         allShortcuts.forEach((shortcut, index) => {
             if (shortcut.id === currentId) return; // Skip current dragging icon
-            
+
             const gridPos = iconGridPositions[shortcut.id];
             if (gridPos) {
                 occupied.add(`${gridPos.row},${gridPos.col}`);
@@ -468,7 +468,7 @@ const DesktopContent = () => {
         if (!occupied.has(`${targetRow},${targetCol}`)) {
             return { row: targetRow, col: targetCol };
         }
-        
+
         // Spiral search for nearest free cell
         for (let radius = 1; radius <= 20; radius++) {
             for (let dr = -radius; dr <= radius; dr++) {
@@ -491,26 +491,26 @@ const DesktopContent = () => {
     // Drag Handler with Grid Snapping and Collision Detection
     const handleDragEnd = (id, info, currentIndex) => {
         setDraggingId(null);
-        
+
         // Use mouse position to determine target cell
         // info.point is the absolute position of the pointer
         const mouseX = info.point.x;
         const mouseY = info.point.y;
-        
+
         // Convert mouse position to grid indices
         const targetCol = Math.floor((mouseX - MARGIN_X) / GRID_SIZE);
         const targetRow = Math.floor((mouseY - MARGIN_Y) / GRID_SIZE);
-        
+
         // Clamp to valid range
         const clampedRow = Math.max(0, Math.min(GRID_ROWS - 1, targetRow));
         const clampedCol = Math.max(0, Math.min(GRID_COLS - 1, targetCol));
-        
+
         // Check for collision and find free cell
         const occupied = getOccupiedCells(id);
         const finalPos = findNearestFreeCell(clampedRow, clampedCol, occupied);
-        
+
         console.log('DRAG:', { id, mouseX, mouseY, targetRow, targetCol, clampedRow, clampedCol, finalPos });
-        
+
         // Update state
         const newGridPositions = {
             ...iconGridPositions,
@@ -519,7 +519,7 @@ const DesktopContent = () => {
 
         setIconGridPositions(newGridPositions);
         localStorage.setItem('webos-desktop-grid', JSON.stringify(newGridPositions));
-        
+
         // Increment dragKey to force DesktopIcon re-mount
         setDragKeyCounter(prev => prev + 1);
     };
@@ -592,7 +592,7 @@ const DesktopContent = () => {
     }
 
     return (
-        <Wallpaper 
+        <Wallpaper
             onContextMenu={handleContextMenu}
             onClick={() => {
                 setContextMenu(null);
@@ -619,7 +619,7 @@ const DesktopContent = () => {
                         row: Math.floor(index / GRID_COLS),
                         col: index % GRID_COLS
                     };
-                    
+
                     // CLAMP position to ensure it fits within current grid (responsiveness)
                     // This prevents icons from overlapping with the widget area or going off-screen
                     const validCol = Math.min(gridPos.col, GRID_COLS - 1);
@@ -648,9 +648,9 @@ const DesktopContent = () => {
 
             {/* Windows Layer */}
             {windows.map((window) => (
-                <WindowFrame 
-                    key={window.id} 
-                    window={window} 
+                <WindowFrame
+                    key={window.id}
+                    window={window}
                     onWindowContextMenu={handleWindowContextMenu}
                 />
             ))}
@@ -803,12 +803,12 @@ const DesktopContent = () => {
             />
 
             {/* Taskbar */}
-            <Taskbar 
+            <Taskbar
                 shortcuts={desktopShortcuts}
                 onOpenSpotlight={(query) => {
                     setSpotlightOpen(true);
                     setSpotlightQuery(query || '');
-                }} 
+                }}
             />
 
             {/* PDF Viewer - with preloaded URL for instant loading */}
@@ -822,10 +822,10 @@ const DesktopContent = () => {
 
             {/* Desktop Widgets - Status Card, System Monitor & Featured Post */}
             {showWidgets && powerState === 'active' && (
-                <div className="fixed right-4 sm:right-6 top-4 sm:top-6 z-20 flex flex-col gap-4 pointer-events-auto">
+                <div className="absolute right-4 sm:right-6 top-4 sm:top-6 z-0 flex flex-col gap-4 pointer-events-auto">
                     <StatusCardWidget className="w-56 sm:w-64 md:w-72" />
-                    <FeaturedPostWidget 
-                        className="w-56 sm:w-64 md:w-72" 
+                    <FeaturedPostWidget
+                        className="w-56 sm:w-64 md:w-72"
                         onOpenBlog={() => {
                             // Find the blog shortcut and open it
                             const blogShortcut = desktopShortcuts.find(s => s.id === 'blog');
@@ -845,11 +845,11 @@ const DesktopContent = () => {
 
             {/* Lock Screen - Show only when locked */}
             {powerState === 'locked' && (
-                <LockScreen 
+                <LockScreen
                     onUnlock={() => {
                         playUnlock();
                         wake();
-                    }} 
+                    }}
                 />
             )}
         </Wallpaper>
