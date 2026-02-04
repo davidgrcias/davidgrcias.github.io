@@ -19,9 +19,9 @@ const AboutMeApp = lazy(() => import('../../apps/AboutMe/AboutMeApp'));
 const NotesApp = lazy(() => import('../../apps/Notes/NotesApp'));
 
 const AppLoadingFallback = () => (
-    <div className="w-full h-full flex items-center justify-center bg-zinc-900">
-        <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-    </div>
+  <div className="w-full h-full flex items-center justify-center bg-zinc-900">
+    <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+  </div>
 );
 
 const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
@@ -119,10 +119,10 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
   // Filter commands by query
   const filteredCommands = query
     ? allCommands.filter(cmd =>
-        cmd.title.toLowerCase().includes(query.toLowerCase()) ||
-        cmd.description.toLowerCase().includes(query.toLowerCase()) ||
-        cmd.keywords.some(k => k.includes(query.toLowerCase()))
-      )
+      (cmd.title || '').toLowerCase().includes(query.toLowerCase()) ||
+      (cmd.description || '').toLowerCase().includes(query.toLowerCase()) ||
+      (cmd.keywords || []).some(k => k.toLowerCase().includes(query.toLowerCase()))
+    )
     : commands; // Show only main commands when no query
 
   // Keyboard navigation
@@ -223,11 +223,10 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
                       handleClose();
                     }}
                     onMouseEnter={() => setSelectedIndex(index)}
-                    className={`w-full flex items-center gap-4 px-4 py-3 transition-colors ${
-                      selectedIndex === index
+                    className={`w-full flex items-center gap-4 px-4 py-3 transition-colors ${selectedIndex === index
                         ? 'bg-cyan-500/20 text-white'
                         : 'text-white/80 hover:bg-white/5'
-                    }`}
+                      }`}
                   >
                     <div className="flex-shrink-0">{command.icon}</div>
                     <div className="flex-1 text-left min-w-0">

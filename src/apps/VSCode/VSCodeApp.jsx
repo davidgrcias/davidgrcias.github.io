@@ -69,9 +69,29 @@ const VSCodeApp = ({ id }) => {
         }
     }, [id, activeFileId, updateWindow]);
 
+    // Handle External Actions
+    useEffect(() => {
+        const handleAction = (e) => {
+            const { appId, action, payload } = e.detail;
+            if (appId !== 'vscode') return;
+
+            if (action === 'open-file' && payload) {
+                // Check if file is already open
+                setOpenFiles(prev => {
+                    if (prev.find(f => f.id === payload.id)) return prev;
+                    return [...prev, payload];
+                });
+                setActiveFileId(payload.id);
+            }
+        };
+
+        window.addEventListener('WEBOS_APP_ACTION', handleAction);
+        return () => window.removeEventListener('WEBOS_APP_ACTION', handleAction);
+    }, []);
+
     // Handle file content changes
     const handleFileContentChange = (fileId, newContent) => {
-        setOpenFiles(prev => prev.map(f => 
+        setOpenFiles(prev => prev.map(f =>
             f.id === fileId ? { ...f, content: newContent, isUnsaved: true } : f
         ));
     };
@@ -197,8 +217,8 @@ const VSCodeApp = ({ id }) => {
 
                 {/* Editor */}
                 <div className="flex-1 overflow-hidden relative">
-                    <EditorArea 
-                        activeFile={activeFile} 
+                    <EditorArea
+                        activeFile={activeFile}
                         onContentChange={handleFileContentChange}
                     />
                 </div>

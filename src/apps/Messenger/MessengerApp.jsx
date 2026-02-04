@@ -77,6 +77,30 @@ const MessengerApp = ({ id }) => {
         }
     }, [id, messages, updateWindow]);
 
+    // Handle External Actions
+    useEffect(() => {
+        const handleAction = (e) => {
+            const { appId, action, payload } = e.detail;
+            if (appId !== 'messenger') return;
+
+            if (action === 'new-chat') {
+                setMessages([{
+                    type: 'bot',
+                    content: "Hello! 👋 I'm David's AI Assistant.\n\nAsk me about his projects, skills, or just say hi! I can tell you all about his journey.",
+                }]);
+            } else if (action === 'set-status') {
+                const statusMsg = payload.status === 'online' ? "Status set to Online 🟢" : "Status set to Do Not Disturb 🔴";
+                setMessages(prev => [...prev, {
+                    type: 'bot',
+                    content: statusMsg,
+                }]);
+            }
+        };
+
+        window.addEventListener('WEBOS_APP_ACTION', handleAction);
+        return () => window.removeEventListener('WEBOS_APP_ACTION', handleAction);
+    }, []);
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -466,10 +490,10 @@ const MessengerApp = ({ id }) => {
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'} group`}>
                         <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm transition-all ${msg.type === 'user'
-                                ? 'bg-blue-500 text-white rounded-br-sm'
-                                : msg.isError
-                                    ? 'bg-red-500/20 border border-red-500/30 text-red-300 rounded-bl-sm'
-                                    : 'bg-zinc-700 text-white border border-zinc-600 rounded-bl-sm'
+                            ? 'bg-blue-500 text-white rounded-br-sm'
+                            : msg.isError
+                                ? 'bg-red-500/20 border border-red-500/30 text-red-300 rounded-bl-sm'
+                                : 'bg-zinc-700 text-white border border-zinc-600 rounded-bl-sm'
                             }`}>
                             <div className="prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 text-inherit">
                                 <ReactMarkdown>{msg.content}</ReactMarkdown>
@@ -493,8 +517,8 @@ const MessengerApp = ({ id }) => {
                                 <button
                                     onClick={() => handleFeedback(msg.id, 'thumbs_up')}
                                     className={`p-1 rounded transition-colors ${msg.feedback === 'thumbs_up'
-                                            ? 'bg-green-500/20 text-green-400'
-                                            : 'bg-zinc-800 text-zinc-500 hover:bg-green-500/10 hover:text-green-400'
+                                        ? 'bg-green-500/20 text-green-400'
+                                        : 'bg-zinc-800 text-zinc-500 hover:bg-green-500/10 hover:text-green-400'
                                         }`}
                                     title="Good response"
                                 >
@@ -503,8 +527,8 @@ const MessengerApp = ({ id }) => {
                                 <button
                                     onClick={() => handleFeedback(msg.id, 'thumbs_down')}
                                     className={`p-1 rounded transition-colors ${msg.feedback === 'thumbs_down'
-                                            ? 'bg-red-500/20 text-red-400'
-                                            : 'bg-zinc-800 text-zinc-500 hover:bg-red-500/10 hover:text-red-400'
+                                        ? 'bg-red-500/20 text-red-400'
+                                        : 'bg-zinc-800 text-zinc-500 hover:bg-red-500/10 hover:text-red-400'
                                         }`}
                                     title="Poor response"
                                 >
@@ -601,8 +625,8 @@ const MessengerApp = ({ id }) => {
                         type="button"
                         onClick={toggleVoiceInput}
                         className={`p-2 rounded-full transition-all ${isListening
-                                ? 'bg-red-500 text-white animate-pulse'
-                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                            ? 'bg-red-500 text-white animate-pulse'
+                            : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                             }`}
                         title={isListening ? 'Listening... (click to stop)' : 'Voice input'}
                         disabled={isTyping}
@@ -623,8 +647,8 @@ const MessengerApp = ({ id }) => {
                         type="button"
                         onClick={() => setVoiceEnabled(!voiceEnabled)}
                         className={`p-2 rounded-full transition-all ${voiceEnabled
-                                ? 'bg-green-500 text-white'
-                                : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700 hover:text-white'
                             }`}
                         title={voiceEnabled ? 'Auto-speak enabled' : 'Auto-speak disabled'}
                     >

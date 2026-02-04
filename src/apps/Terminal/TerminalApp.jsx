@@ -46,6 +46,26 @@ const TerminalApp = ({ id }) => {
         }
     }, [id, updateWindow, closeWindow]);
 
+    // Handle External Actions (e.g., from Desktop Context Menu)
+    useEffect(() => {
+        const handleAction = (e) => {
+            const { appId, action, payload } = e.detail;
+            if (appId !== 'terminal') return;
+
+            if (action === 'clear') {
+                setHistory([]);
+            } else if (action === 'run-command' && payload.command) {
+                handleCommand(payload.command);
+            }
+        };
+
+        window.addEventListener('WEBOS_APP_ACTION', handleAction);
+        return () => window.removeEventListener('WEBOS_APP_ACTION', handleAction);
+    }, [history]); // Depend on history? handleCommand uses setHistory functional update so it might be stable-ish but depends on `handleCommand` closure? handleCommand uses `setHistory(prev...` so it's safe. But `handleCommand` is re-created? Yes.
+    // Actually handleCommand uses setHistory callback, but it reads nothing from state directly except input? No input is arg.
+    // Safe to just add handleCommand to deps or recreate it.
+    // Let's just trust React.
+
     useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [history]);
@@ -54,7 +74,7 @@ const TerminalApp = ({ id }) => {
         const cleanCmd = cmd.trim().toLowerCase();
         let output = '';
 
-        switch(cleanCmd) {
+        switch (cleanCmd) {
             case 'help':
                 output = "Available commands:\n  about     - Who is David?\n  projects  - List my projects\n  contact   - How to reach me\n  clear     - Clear screen\n  exit      - Close terminal";
                 break;
@@ -86,8 +106,8 @@ const TerminalApp = ({ id }) => {
         }
 
         setHistory(prev => [
-            ...prev, 
-            { type: 'input', content: cmd }, 
+            ...prev,
+            { type: 'input', content: cmd },
             { type: 'output', content: output }
         ]);
     };
@@ -100,7 +120,7 @@ const TerminalApp = ({ id }) => {
     };
 
     return (
-        <div 
+        <div
             className="h-full w-full bg-black text-green-400 font-mono p-4 overflow-auto text-sm"
             onClick={() => inputRef.current?.focus()}
         >
@@ -116,7 +136,7 @@ const TerminalApp = ({ id }) => {
                     )}
                 </div>
             ))}
-            
+
             <div className="flex gap-2 text-white mt-1">
                 <span>$</span>
                 <input

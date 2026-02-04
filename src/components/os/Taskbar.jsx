@@ -482,19 +482,22 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
 
   // Ordered apps: pinned apps + open unpinned apps (CRITICAL: prevents taskbar disappearing)
   const orderedApps = React.useMemo(() => {
+    // Helper to find app in shortcuts (priority) or internal apps
+    const findApp = (id) => shortcuts.find(s => s.id === id) || apps.find(a => a.id === id);
+
     // Get pinned apps in order
     const pinnedAppsInOrder = pinnedApps
-      .map(id => apps.find(app => app.id === id))
+      .map(id => findApp(id))
       .filter(Boolean);
 
     // Get open apps that are NOT pinned
     const openUnpinnedApps = windows
-      .map(w => apps.find(app => app.id === w.id))
+      .map(w => findApp(w.id))
       .filter(app => app && !pinnedApps.includes(app.id))
       .filter((app, index, self) => index === self.findIndex(a => a.id === app.id));
 
     return [...pinnedAppsInOrder, ...openUnpinnedApps];
-  }, [pinnedApps, windows, apps]);
+  }, [pinnedApps, windows, apps, shortcuts]);
 
 
 
@@ -1116,6 +1119,29 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
           onClick={(e) => e.stopPropagation()}
           onContextMenu={(e) => e.preventDefault()}
         >
+          {/* Custom App Actions from Desktop Shortcuts */}
+          {contextMenu.app.contextMenuOptions && (
+            <>
+              {contextMenu.app.contextMenuOptions.map((opt, idx) => (
+                opt.separator ? (
+                  <div key={idx} className="h-px bg-white/10 my-1"></div>
+                ) : (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      if (opt.onClick) opt.onClick();
+                      setContextMenu(null);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors"
+                  >
+                    {opt.label}
+                  </button>
+                )
+              ))}
+              <div className="h-px bg-white/10 my-1"></div>
+            </>
+          )}
+
           {contextMenu.isOpen && (
             <>
               <button

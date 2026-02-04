@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
-import { 
-  BookOpen, Clock, Calendar, Search, Filter, ArrowLeft, 
+import {
+  BookOpen, Clock, Calendar, Search, Filter, ArrowLeft,
   ExternalLink, Loader2, Tag, ChevronRight, Sparkles,
   Grid3X3, List, X, RefreshCw, Share2
 } from 'lucide-react';
@@ -39,30 +39,41 @@ const BlogApp = ({ id }) => {
     }
   };
 
-  // Context Menu
+  // Context Menu & External Actions
   useEffect(() => {
     if (id) {
-        updateWindow(id, {
-            contextMenuOptions: [
-                {
-                    label: 'Refresh Posts',
-                    icon: <RefreshCw size={16} />,
-                    onClick: loadData,
-                    shortcut: 'F5',
-                },
-                { separator: true },
-                {
-                    label: 'Share Blog',
-                    icon: <Share2 size={16} />,
-                    onClick: () => {
-                       navigator.clipboard.writeText(window.location.origin);
-                       // Optional: Toast
-                    },
-                }
-            ]
-        });
+      updateWindow(id, {
+        contextMenuOptions: [
+          {
+            label: 'Refresh Posts',
+            icon: <RefreshCw size={16} />,
+            onClick: loadData,
+            shortcut: 'F5',
+          },
+          { separator: true },
+          {
+            label: 'Share Blog',
+            icon: <Share2 size={16} />,
+            onClick: () => navigator.clipboard.writeText(window.location.origin),
+          }
+        ]
+      });
     }
   }, [id, updateWindow]);
+
+  // Listen for external actions
+  useEffect(() => {
+    const handleAction = (e) => {
+      const { appId, action } = e.detail;
+      if (appId !== 'blog') return;
+
+      if (action === 'refresh') loadData();
+      if (action === 'share') navigator.clipboard.writeText(window.location.origin);
+    };
+
+    window.addEventListener('WEBOS_APP_ACTION', handleAction);
+    return () => window.removeEventListener('WEBOS_APP_ACTION', handleAction);
+  }, []);
 
   useEffect(() => {
     loadData();
@@ -71,7 +82,7 @@ const BlogApp = ({ id }) => {
   const filteredPosts = posts.filter(post => {
     const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -151,24 +162,24 @@ const BlogApp = ({ id }) => {
               ...(selectedPost.image ? [selectedPost.image] : []),
               ...(selectedPost.images || [])
             ];
-            
+
             if (allImages.length === 0) return null;
 
             if (allImages.length === 1) {
               return (
                 <div className="relative h-48 sm:h-64">
-                   <img 
-                     src={allImages[0]} 
-                     alt={selectedPost.title}
-                     className="w-full h-full object-cover"
-                   />
-                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
-                   {/* Category Badge */}
-                    <div className="absolute bottom-4 left-4">
-                      <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-medium">
-                        {selectedPost.category}
-                      </span>
-                    </div>
+                  <img
+                    src={allImages[0]}
+                    alt={selectedPost.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
+                  {/* Category Badge */}
+                  <div className="absolute bottom-4 left-4">
+                    <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-medium">
+                      {selectedPost.category}
+                    </span>
+                  </div>
                 </div>
               );
             }
@@ -177,7 +188,7 @@ const BlogApp = ({ id }) => {
             // Dynamic Grid Configuration
             const isFourOrMore = allImages.length >= 4;
             const gridColsClass = isFourOrMore ? 'grid-cols-3' : 'grid-cols-2';
-            
+
             return (
               <div className="p-4 pb-0">
                 <div className={`grid ${gridColsClass} grid-rows-2 gap-1 rounded-xl overflow-hidden aspect-video sm:aspect-[2/1]`}>
@@ -187,46 +198,46 @@ const BlogApp = ({ id }) => {
                       For 3+: 2 rows. 
                       Let's split logic more clearly.
                   */}
-                  
+
                   {allImages.length === 2 ? (
-                     // 2 Images: Side by Side (Implicit 1 row, but container has aspect ratio)
-                     // To fill height, we can unset grid-rows-2 or just let them span row-span-2
-                     <>
-                        <div className="relative col-span-1 row-span-2 h-full"> 
-                           <img src={allImages[0]} className="w-full h-full object-cover" alt="" />
-                        </div>
-                        <div className="relative col-span-1 row-span-2 h-full"> 
-                           <img src={allImages[1]} className="w-full h-full object-cover" alt="" />
-                        </div>
-                     </>
+                    // 2 Images: Side by Side (Implicit 1 row, but container has aspect ratio)
+                    // To fill height, we can unset grid-rows-2 or just let them span row-span-2
+                    <>
+                      <div className="relative col-span-1 row-span-2 h-full">
+                        <img src={allImages[0]} className="w-full h-full object-cover" alt="" />
+                      </div>
+                      <div className="relative col-span-1 row-span-2 h-full">
+                        <img src={allImages[1]} className="w-full h-full object-cover" alt="" />
+                      </div>
+                    </>
                   ) : (
                     // 3 or 4+ Images: Top Heavy
                     <>
-                       {/* Main Image (Top) */}
-                       <div className={`relative ${isFourOrMore ? 'col-span-3' : 'col-span-2'} row-span-1 h-full`}>
-                          <img src={allImages[0]} className="w-full h-full object-cover" alt="" />
-                       </div>
-                       
-                       {/* Sub Images (Bottom Row) */}
-                       {allImages.slice(1, 4).map((img, idx) => (
-                          <div key={idx} className="relative col-span-1 row-span-1 h-full">
-                            <img src={img} className="w-full h-full object-cover" alt="" />
-                            {/* Overlay on last item if there are more than 4 */}
-                            {idx === 2 && allImages.length > 4 && (
-                              <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-xl font-bold">
-                                +{allImages.length - 4}
-                              </div>
-                            )}
-                          </div>
-                       ))}
+                      {/* Main Image (Top) */}
+                      <div className={`relative ${isFourOrMore ? 'col-span-3' : 'col-span-2'} row-span-1 h-full`}>
+                        <img src={allImages[0]} className="w-full h-full object-cover" alt="" />
+                      </div>
+
+                      {/* Sub Images (Bottom Row) */}
+                      {allImages.slice(1, 4).map((img, idx) => (
+                        <div key={idx} className="relative col-span-1 row-span-1 h-full">
+                          <img src={img} className="w-full h-full object-cover" alt="" />
+                          {/* Overlay on last item if there are more than 4 */}
+                          {idx === 2 && allImages.length > 4 && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-xl font-bold">
+                              +{allImages.length - 4}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </>
                   )}
                 </div>
-                 <div className="mt-4 flex gap-2">
-                    <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-medium">
-                        {selectedPost.category}
-                    </span>
-                 </div>
+                <div className="mt-4 flex gap-2">
+                  <span className="px-3 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-purple-400 text-xs font-medium">
+                    {selectedPost.category}
+                  </span>
+                </div>
               </div>
             );
           })()}
@@ -234,7 +245,7 @@ const BlogApp = ({ id }) => {
           {/* Article Content */}
           <div className="p-6">
             <h1 className="text-xl sm:text-2xl font-bold mb-4">{selectedPost.title}</h1>
-            
+
             {/* Render markdown-like content */}
             <div className="prose prose-invert prose-sm max-w-none">
               {selectedPost.content.split('\n').map((line, idx) => {
@@ -262,8 +273,8 @@ const BlogApp = ({ id }) => {
                 // Handle **bold** text
                 const formattedLine = line.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white">$1</strong>');
                 return (
-                  <p 
-                    key={idx} 
+                  <p
+                    key={idx}
                     className="text-white/70 mb-2 leading-relaxed"
                     dangerouslySetInnerHTML={{ __html: formattedLine }}
                   />
@@ -305,7 +316,7 @@ const BlogApp = ({ id }) => {
             <h1 className="font-bold text-lg">Blog</h1>
             <span className="text-xs text-white/40 ml-2">{posts.length} posts</span>
           </div>
-          
+
           {/* View Toggle */}
           <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1">
             <button
@@ -334,7 +345,7 @@ const BlogApp = ({ id }) => {
             className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-cyan-500/50"
           />
           {searchQuery && (
-            <button 
+            <button
               onClick={() => setSearchQuery('')}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
             >
@@ -349,11 +360,10 @@ const BlogApp = ({ id }) => {
             <motion.button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                selectedCategory === cat 
-                  ? 'bg-cyan-500 text-white' 
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${selectedCategory === cat
+                  ? 'bg-cyan-500 text-white'
                   : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-              }`}
+                }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -385,13 +395,13 @@ const BlogApp = ({ id }) => {
                 {/* Thumbnail */}
                 {post.image && (
                   <div className="relative h-32 overflow-hidden">
-                    <img 
-                      src={post.image} 
+                    <img
+                      src={post.image}
                       alt={post.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
-                    
+
                     {/* Featured Badge */}
                     {post.featured && (
                       <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30">
@@ -399,7 +409,7 @@ const BlogApp = ({ id }) => {
                         <span className="text-[9px] font-medium text-yellow-400">FEATURED</span>
                       </div>
                     )}
-                    
+
                     {/* Category */}
                     <div className="absolute bottom-2 left-2">
                       <span className="px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-300 text-[10px] font-medium">
@@ -408,7 +418,7 @@ const BlogApp = ({ id }) => {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Content */}
                 <div className="p-3">
                   <h3 className="font-semibold text-sm mb-1 group-hover:text-cyan-400 transition-colors line-clamp-2">
@@ -445,8 +455,8 @@ const BlogApp = ({ id }) => {
                 {/* Thumbnail */}
                 {post.image && (
                   <div className="relative w-24 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-                    <img 
-                      src={post.image} 
+                    <img
+                      src={post.image}
                       alt={post.title}
                       className="w-full h-full object-cover"
                     />
@@ -457,7 +467,7 @@ const BlogApp = ({ id }) => {
                     )}
                   </div>
                 )}
-                
+
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -475,7 +485,7 @@ const BlogApp = ({ id }) => {
                   <p className="text-xs text-white/50 line-clamp-1">{post.excerpt}</p>
                   <span className="text-[10px] text-white/30 mt-1 block">{formatDate(post.date)}</span>
                 </div>
-                
+
                 <ChevronRight size={16} className="text-white/30 group-hover:text-cyan-400 self-center transition-colors" />
               </motion.div>
             ))}

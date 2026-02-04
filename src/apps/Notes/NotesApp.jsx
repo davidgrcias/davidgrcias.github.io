@@ -17,26 +17,52 @@ const NotesApp = ({ id }) => {
   // Context Menu
   useEffect(() => {
     if (id) {
-        updateWindow(id, {
-            contextMenuOptions: [
-                {
-                    label: 'New Note',
-                    icon: <Plus size={16} />,
-                    onClick: () => createNote(),
-                    shortcut: 'Ctrl+N',
-                },
-                { separator: true },
-                {
-                    label: 'Clear All Notes',
-                    icon: <Trash2 size={16} />,
-                    onClick: () => {
-                         if(confirm('Delete all notes?')) setNotes([]);
-                    },
-                }
-            ]
-        });
+      updateWindow(id, {
+        contextMenuOptions: [
+          {
+            label: 'New Note',
+            icon: <Plus size={16} />,
+            onClick: () => createNote(),
+            shortcut: 'Ctrl+N',
+          },
+          { separator: true },
+          {
+            label: 'Clear All Notes',
+            icon: <Trash2 size={16} />,
+            onClick: () => {
+              if (confirm('Delete all notes?')) setNotes([]);
+            },
+          }
+        ]
+      });
     }
   }, [id, updateWindow]); // Start of component logic
+
+  // Handle External Actions
+  useEffect(() => {
+    const handleAction = (e) => {
+      const { appId, action } = e.detail;
+      if (appId !== 'notes') return;
+
+      if (action === 'new-note') {
+        const newNote = {
+          id: Date.now(),
+          content: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        // Use functional update to avoid dependency issues
+        setNotes(prev => [newNote, ...prev]);
+        setEditingId(newNote.id);
+        setEditContent('');
+      } else if (action === 'clear-all') {
+        if (confirm('Delete all notes?')) setNotes([]);
+      }
+    };
+
+    window.addEventListener('WEBOS_APP_ACTION', handleAction);
+    return () => window.removeEventListener('WEBOS_APP_ACTION', handleAction);
+  }, []);
 
   // Load notes from localStorage on mount
   useEffect(() => {
@@ -88,8 +114,8 @@ const NotesApp = ({ id }) => {
 
   // Save edit
   const saveEdit = (id) => {
-    setNotes(notes.map(note => 
-      note.id === id 
+    setNotes(notes.map(note =>
+      note.id === id
         ? { ...note, content: editContent, updatedAt: new Date().toISOString() }
         : note
     ));

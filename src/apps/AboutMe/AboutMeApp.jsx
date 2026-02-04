@@ -17,42 +17,60 @@ const AboutMeApp = ({ id }) => {
   const [profile, setProfile] = useState(null);
   const [skills, setSkills] = useState(null);
 
-  // Context Menu
+  // Context Menu & External Actions
   useEffect(() => {
     if (id && profile) {
-        updateWindow(id, {
-            contextMenuOptions: [
-                {
-                    label: 'Copy Contact Info',
-                    icon: <Copy size={16} />,
-                    onClick: () => {
-                        const info = `Name: ${profile.name}\nEmail: ${profile.email}\nWebsite: ${profile.website}`;
-                        navigator.clipboard.writeText(info);
-                        // Optional: Show toast
-                    },
-                    shortcut: 'Ctrl+C',
-                },
-                { separator: true },
-                {
-                    label: 'Download CV',
-                    icon: <Download size={16} />,
-                    onClick: () => {
-                         if (profile.cvUrl) {
-                             window.open(profile.cvUrl, '_blank');
-                         } else {
-                             alert('CV URL not available');
-                         }
-                    },
-                },
-                {
-                   label: 'Open Portfolio',
-                   icon: <Globe size={16} />,
-                   onClick: () => window.open(`https://${profile.website}`, '_blank'),
-                }
-            ]
-        });
+      updateWindow(id, {
+        contextMenuOptions: [
+          {
+            label: 'Copy Contact Info',
+            icon: <Copy size={16} />,
+            onClick: () => handleCopyContact(),
+            shortcut: 'Ctrl+C',
+          },
+          { separator: true },
+          {
+            label: 'Download CV',
+            icon: <Download size={16} />,
+            onClick: () => handleDownloadCV(),
+          },
+          {
+            label: 'Open Portfolio',
+            icon: <Globe size={16} />,
+            onClick: () => window.open(`https://${profile.website}`, '_blank'),
+          }
+        ]
+      });
     }
   }, [id, profile, updateWindow]);
+
+  const handleCopyContact = () => {
+    if (!profile) return;
+    const info = `Name: ${profile.name}\nEmail: ${profile.email}\nWebsite: ${profile.website}`;
+    navigator.clipboard.writeText(info);
+  };
+
+  const handleDownloadCV = () => {
+    if (profile?.cvUrl) {
+      window.open(profile.cvUrl, '_blank');
+    } else {
+      alert('CV URL not available');
+    }
+  };
+
+  // Listen for external actions
+  useEffect(() => {
+    const handleAction = (e) => {
+      const { appId, action } = e.detail;
+      if (appId !== 'about-me') return;
+
+      if (action === 'copy-contact') handleCopyContact();
+      if (action === 'download-cv') handleDownloadCV();
+    };
+
+    window.addEventListener('WEBOS_APP_ACTION', handleAction);
+    return () => window.removeEventListener('WEBOS_APP_ACTION', handleAction);
+  }, [profile]);
 
   // Fetch data from Firestore
   useEffect(() => {
@@ -113,7 +131,7 @@ const AboutMeApp = ({ id }) => {
           className="text-center mb-8"
         >
           <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl ring-4 ring-blue-500/20">
-            <img 
+            <img
               src={profile.avatar || "/profilpict.webp"}
               alt={profile.name}
               onError={(e) => {
@@ -142,8 +160,8 @@ const AboutMeApp = ({ id }) => {
               onClick={() => setActiveTab(tab.id)}
               className={`
                 flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200
-                ${activeTab === tab.id 
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30' 
+                ${activeTab === tab.id
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-700/50'
                 }
               `}
@@ -198,15 +216,15 @@ const AboutMeApp = ({ id }) => {
             <div className="space-y-6">
               {/* Contact Methods */}
               <div className="space-y-4">
-                <ContactCard 
-                  icon={<Mail />} 
-                  label="Email" 
+                <ContactCard
+                  icon={<Mail />}
+                  label="Email"
                   value={profile.email}
                   link={`mailto:${profile.email}`}
                 />
-                <ContactCard 
-                  icon={<Globe />} 
-                  label="Portfolio" 
+                <ContactCard
+                  icon={<Globe />}
+                  label="Portfolio"
                   value={profile.website}
                   link={`https://${profile.website}`}
                 />

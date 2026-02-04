@@ -211,6 +211,21 @@ const DesktopContent = () => {
         unlockAchievement('konamiCode');
     });
 
+    // Helper to trigger internal app actions via custom events
+    const triggerAppAction = (appId, action, payload = {}) => {
+        // 1. Ensure app is open/focused
+        const shortcut = desktopShortcuts.find(s => s.id === appId);
+        if (shortcut) openApp(shortcut);
+
+        // 2. Dispatch event for the app to handle
+        // Small delay to ensure app is mounted/ready if it was closed
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('WEBOS_APP_ACTION', {
+                detail: { appId, action, payload }
+            }));
+        }, 100);
+    };
+
     // Desktop shortcuts
     const desktopShortcuts = [
         {
@@ -225,35 +240,15 @@ const DesktopContent = () => {
                 </Suspense>
             ),
             title: 'VS Code',
-        },
-        // ... (Other shortcuts remain the same, just copied for reference in complete file context if needed, but here we assume strict replacement)
-        {
-            id: 'file-manager',
-            label: 'Files',
-            icon: <FolderOpen size={32} />,
-            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="File Manager"><FileManagerApp /></ErrorBoundary></Suspense>,
-            title: 'File Manager',
-        },
-        {
-            id: 'about-me',
-            label: 'About Me',
-            icon: <User size={32} />,
-            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense>,
-            title: 'About Me',
-        },
-        {
-            id: 'notes',
-            label: 'Notes',
-            icon: <StickyNote size={32} />,
-            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense>,
-            title: 'Quick Notes',
-        },
-        {
-            id: 'messenger',
-            label: 'Chat',
-            icon: <MessageSquare size={32} />,
-            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense>,
-            title: 'Messages',
+            contextMenuOptions: [
+                { label: 'New Window', onClick: () => openApp('vscode') },
+                {
+                    label: 'Open Projects JSON',
+                    onClick: () => triggerAppAction('vscode', 'open-file', { id: 'projects', name: 'projects.json', content: '// Project list here...' })
+                },
+                { separator: true },
+                { label: 'Recent: Portfolio v1', onClick: () => { } },
+            ]
         },
         {
             id: 'terminal',
@@ -261,6 +256,58 @@ const DesktopContent = () => {
             icon: <Terminal size={32} />,
             component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Terminal"><TerminalApp /></ErrorBoundary></Suspense>,
             title: 'Terminal',
+            contextMenuOptions: [
+                { label: 'Clear Session', onClick: () => triggerAppAction('terminal', 'clear') },
+                { separator: true },
+                { label: 'Run: npm start', onClick: () => triggerAppAction('terminal', 'run-command', { command: 'npm start' }) },
+                { label: 'Run: help', onClick: () => triggerAppAction('terminal', 'run-command', { command: 'help' }) },
+            ]
+        },
+        {
+            id: 'messenger',
+            label: 'Chat',
+            icon: <MessageSquare size={32} />,
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense>,
+            title: 'Messages',
+            contextMenuOptions: [
+                { label: 'New Conversation', onClick: () => triggerAppAction('messenger', 'new-chat') },
+                { separator: true },
+                { label: 'Status: Online', onClick: () => triggerAppAction('messenger', 'set-status', { status: 'online' }) },
+                { label: 'Status: Busy', onClick: () => triggerAppAction('messenger', 'set-status', { status: 'busy' }) },
+            ]
+        },
+        {
+            id: 'notes',
+            label: 'Notes',
+            icon: <StickyNote size={32} />,
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense>,
+            title: 'Quick Notes',
+            contextMenuOptions: [
+                { label: 'New Note', onClick: () => triggerAppAction('notes', 'new-note') },
+                { label: 'Clear All', onClick: () => triggerAppAction('notes', 'clear-all') },
+            ]
+        },
+        {
+            id: 'about-me',
+            label: 'About Me',
+            icon: <User size={32} />,
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense>,
+            title: 'About Me',
+            contextMenuOptions: [
+                { label: 'View Contact Info', onClick: () => triggerAppAction('about-me', 'copy-contact') },
+                { label: 'Download Resume', onClick: () => triggerAppAction('about-me', 'download-cv') },
+            ]
+        },
+        {
+            id: 'file-manager',
+            label: 'Files',
+            icon: <FolderOpen size={32} />,
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="File Manager"><FileManagerApp /></ErrorBoundary></Suspense>,
+            title: 'File Manager',
+            contextMenuOptions: [
+                { label: 'New Folder', onClick: () => alert('Feature coming soon') },
+                { label: 'Open Terminal Here', onClick: () => openApp('terminal') },
+            ]
         },
         {
             id: 'blog',
@@ -268,6 +315,10 @@ const DesktopContent = () => {
             icon: <BookOpen size={32} />,
             component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Blog"><BlogApp /></ErrorBoundary></Suspense>,
             title: 'Blog',
+            contextMenuOptions: [
+                { label: 'Refresh Feed', onClick: () => triggerAppAction('blog', 'refresh') },
+                { label: 'Share', onClick: () => triggerAppAction('blog', 'share') },
+            ]
         },
     ];
 
