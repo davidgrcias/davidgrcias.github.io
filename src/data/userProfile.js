@@ -90,21 +90,50 @@ const withTimeout = (promise, ms) => {
   ]);
 };
 
+const STORAGE_KEY = 'webos-user-profile';
+const STORAGE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
 export const getUserProfile = async (currentLanguage = "en") => {
+  // 1. Check Memory Cache
   if (cachedProfile && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TTL)) {
     return translateData(normalizeProfile(cachedProfile), currentLanguage);
   }
 
+  // 2. Check LocalStorage Cache (Fastest persistent)
   try {
-    // Timeout set to 1.5 seconds - if Firestore is slow, fallback to local quickly
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const { data, timestamp } = JSON.parse(saved);
+      if (Date.now() - timestamp < STORAGE_TTL) {
+        // Update memory cache
+        cachedProfile = data;
+        cacheTimestamp = Date.now();
+        // Return immediately for speed, but trigger background refresh if needed? 
+        // For now, trust storage to be fast.
+        return translateData(normalizeProfile(data), currentLanguage);
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to parse cached profile', e);
+  }
+
+  try {
+    // 3. Fetch from Firestore (Timeout increased to 10s)
     const firestoreData = await withTimeout(
       getDocument('profile', 'main'),
-      1500
+      10000
     );
 
     if (firestoreData && firestoreData.name) {
       cachedProfile = firestoreData;
       cacheTimestamp = Date.now();
+
+      // Save to localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        data: firestoreData,
+        timestamp: Date.now()
+      }));
+
       return translateData(normalizeProfile(firestoreData), currentLanguage);
     }
   } catch (error) {
@@ -114,6 +143,9 @@ export const getUserProfile = async (currentLanguage = "en") => {
     }
   }
 
+  // 4. Fallback to Local Base
+  // If we have stale data in storage, maybe use that instead of base? 
+  // But for now, base is safe default.
   return translateData(normalizeProfile(userProfileBase), currentLanguage);
 };
 

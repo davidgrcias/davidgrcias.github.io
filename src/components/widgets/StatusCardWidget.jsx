@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Linkedin, Github, Sparkles, Loader2, Youtube } from 'lucide-react';
-import { getUserProfile } from '../../data/userProfile';
+import { getUserProfile, getUserProfileSync } from '../../data/userProfile';
 
 /**
  * Professional Status Card Widget
@@ -9,22 +9,40 @@ import { getUserProfile } from '../../data/userProfile';
  * NOW SYNCS WITH ADMIN PANEL via Firestore
  */
 const StatusCardWidget = ({ className = '' }) => {
-  const [loading, setLoading] = useState(true);
-  const [profile, setProfile] = useState(null);
+  // 1. Load Initial State INSTANTLY from Sync (Memory/Base)
+  // This ensures the user NEVER sees a spinner, just the content
+  const [profile, setProfile] = useState(() => {
+    const initial = getUserProfileSync('en');
+    return {
+      name: initial.name,
+      role: initial.title,
+      location: initial.location,
+      avatar: initial.avatar || initial.photoUrl || '/profilpict.webp',
+      status: initial.status || 'open',
+      availableFor: initial.availableFor || ['Full-time', 'Freelance'],
+      socials: {
+        youtube: initial.socials?.youtube?.url,
+        linkedin: initial.socials?.linkedin?.url,
+        github: initial.socials?.github?.url,
+      }
+    };
+  });
 
-  // Fetch profile from Firestore
+  const [loading, setLoading] = useState(false);
+
+  // 2. Refresh from Firestore in Background
   useEffect(() => {
     const loadProfile = async () => {
+      setLoading(true);
       try {
         const profileData = await getUserProfile('en');
-        
-        // Transform profile data for this component
+
         setProfile({
           name: profileData.name,
           role: profileData.title,
           location: profileData.location,
           avatar: profileData.avatar || profileData.photoUrl || '/profilpict.webp',
-          status: profileData.status || 'open', // 'open' | 'employed' | 'busy'
+          status: profileData.status || 'open',
           availableFor: profileData.availableFor || ['Full-time', 'Freelance'],
           socials: {
             youtube: profileData.socials?.youtube?.url,
@@ -33,21 +51,7 @@ const StatusCardWidget = ({ className = '' }) => {
           }
         });
       } catch (error) {
-        console.error('Error loading profile:', error);
-        // Fallback data
-        setProfile({
-          name: 'David Garcia',
-          role: 'Software Developer',
-          location: 'Jakarta, Indonesia',
-          avatar: '/profilpict.webp',
-          status: 'open',
-          availableFor: ['Full-time', 'Freelance'],
-          socials: {
-            youtube: 'https://youtube.com/@DavidGTech',
-            linkedin: 'https://linkedin.com/in/davidgrcias',
-            github: 'https://github.com/davidgrcias',
-          }
-        });
+        console.error('Background profile refresh failed:', error);
       } finally {
         setLoading(false);
       }
@@ -82,18 +86,8 @@ const StatusCardWidget = ({ className = '' }) => {
     }
   };
 
-  // Loading state
-  if (loading || !profile) {
-    return (
-      <div className={`relative overflow-hidden rounded-2xl border border-white/10 ${className}`}>
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-green-500 opacity-20" />
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" />
-        <div className="relative p-3.5 text-white flex items-center justify-center h-full min-h-[180px]">
-          <Loader2 className="w-6 h-6 animate-spin text-white/50" />
-        </div>
-      </div>
-    );
-  }
+  // Removed blocking loader - Content determines visibility
+  if (!profile) return null;
 
   const currentStatus = statusConfig[profile.status] || statusConfig.open;
 
@@ -121,8 +115,8 @@ const StatusCardWidget = ({ className = '' }) => {
         <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/10">
           {/* Profile Photo - Double click to access admin */}
           <div className="relative flex-shrink-0">
-            <img 
-              src={profile.avatar} 
+            <img
+              src={profile.avatar}
               alt={profile.name}
               className="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow-lg cursor-pointer hover:border-cyan-400/50 transition-colors"
               onDoubleClick={() => window.open('/admin', '_blank')}
@@ -134,7 +128,7 @@ const StatusCardWidget = ({ className = '' }) => {
               title="Double-click for admin"
             />
           </div>
-          
+
           {/* Name + Role + Location */}
           <div className="flex-1 min-w-0">
             <h3 className="text-sm font-bold text-white truncate leading-tight">
@@ -149,7 +143,7 @@ const StatusCardWidget = ({ className = '' }) => {
               <span>🇮🇩</span>
             </div>
           </div>
-          
+
           {/* Status Indicator */}
           <div className="flex-shrink-0 flex flex-col items-center gap-0.5">
             <motion.div
@@ -192,7 +186,7 @@ const StatusCardWidget = ({ className = '' }) => {
                   <Youtube size={14} className="text-white/60 group-hover:text-red-400 transition-colors" />
                 </motion.button>
               )}
-              
+
               {profile.socials?.linkedin && (
                 <motion.button
                   onClick={() => handleLinkClick(profile.socials.linkedin)}
@@ -204,7 +198,7 @@ const StatusCardWidget = ({ className = '' }) => {
                   <Linkedin size={14} className="text-white/60 group-hover:text-blue-400 transition-colors" />
                 </motion.button>
               )}
-              
+
               {profile.socials?.github && (
                 <motion.button
                   onClick={() => handleLinkClick(profile.socials.github)}

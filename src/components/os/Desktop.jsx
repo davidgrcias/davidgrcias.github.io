@@ -822,7 +822,7 @@ const DesktopContent = () => {
 
             {/* Desktop Widgets - Status Card, System Monitor & Featured Post */}
             {showWidgets && powerState === 'active' && (
-                <div className="absolute right-4 sm:right-6 top-4 sm:top-6 z-0 flex flex-col gap-4 pointer-events-auto">
+                <div className="absolute right-4 sm:right-6 top-4 sm:top-6 z-20 flex flex-col gap-4 pointer-events-auto">
                     <StatusCardWidget className="w-56 sm:w-64 md:w-72" />
                     <FeaturedPostWidget
                         className="w-56 sm:w-64 md:w-72"

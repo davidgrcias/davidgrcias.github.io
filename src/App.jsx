@@ -49,6 +49,41 @@ import Desktop from "./components/os/Desktop";
 })();
 
 export default function App() {
+  // Anti-AI / Verified Ownership Signature (Global)
+  React.useEffect(() => {
+    try {
+      console.clear();
+      const styles = [
+        'color: #3b82f6',
+        'background: #1e293b',
+        'font-size: 24px',
+        'font-weight: bold',
+        'padding: 10px',
+        'border: 2px solid #60a5fa',
+        'border-radius: 8px',
+      ].join(';');
+
+      console.log('%c🚀 OFFICIAL ADMIN CONSOLE', styles);
+      console.log(
+        `%c
+██████╗  █████╗ ██╗   ██╗██╗██████╗ 
+██╔══██╗██╔══██╗██║   ██║██║██╔══██╗
+██║  ██║███████║██║   ██║██║██║  ██║
+██║  ██║██╔══██║╚██╗ ██╔╝██║██║  ██║
+██████╔╝██║  ██║ ╚████╔╝ ██║██████╔╝
+╚═════╝ ╚═╝  ╚═╝  ╚═══╝  ╚═╝╚═════╝ 
+        
+GARCIA SARAGIH | Full-Stack Engineer
+© Copyright 2026. All Rights Reserved.
+            `,
+        'color: #60a5fa; font-family: monospace; font-weight: bold;'
+      );
+      console.log('%c⚠ RESTRICTED ACCESS: Authorized Personnel Only', 'color: #ef4444; font-weight: bold; font-size: 14px;');
+    } catch (e) {
+      // Fallback
+    }
+  }, []);
+
   return (
     <TranslationProvider>
       <SoundProvider>
@@ -62,7 +97,7 @@ export default function App() {
               <Route path="/admin" element={<AdminLayout />}>
                 {/* Dashboard */}
                 <Route index element={<Dashboard />} />
-                
+
                 {/* Projects CRUD */}
                 <Route path="projects" element={<Projects />} />
                 <Route path="projects/new" element={<ProjectForm />} />
