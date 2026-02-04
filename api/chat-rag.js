@@ -17,12 +17,12 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { 
-    message, 
+  const {
+    message,
     context = [], // Previous messages for conversation context
     retrievedDocs = [], // Documents from vector search (sent from client)
     language = "en",
-    useRAG = true 
+    useRAG = true
   } = req.body;
 
   if (!message) {
@@ -42,10 +42,10 @@ export default async function handler(req, res) {
     // Build enhanced prompt with RAG context
     let prompt = "";
 
-    // System instructions
-    const systemPrompt = language === "id" 
-      ? `Kamu adalah asisten AI David Gracia yang ramah dan membantu. Jawab pertanyaan dengan akurat berdasarkan informasi yang diberikan.`
-      : `You are David Gracia's friendly and helpful AI assistant. Answer questions accurately based on the provided information.`;
+    // System instructions - STRICT PERSONA
+    const systemPrompt = language === "id"
+      ? `Kamu adalah asisten AI profesional untuk David Gracia. Jawab hanya berdasarkan fakta yang ada di Knowledge Base. Jangan mengarang bebas (hallucinate). Gaya bicara: Profesional namun tetap ramah.`
+      : `You are David Gracia's professional AI assistant. Answer STRICTLY based on the provided Knowledge Base. Do NOT hallucinate or invent facts. Tone: Professional yet approachable.`;
 
     // Add retrieved documents as context (if RAG enabled)
     if (useRAG && retrievedDocs.length > 0) {
@@ -54,10 +54,10 @@ export default async function handler(req, res) {
         .join("\n\n---\n\n");
 
       const ragInstructions = language === "id"
-        ? `Gunakan informasi berikut untuk menjawab pertanyaan. Jika informasi tidak cukup, katakan dengan jujur bahwa kamu tidak memiliki informasi tersebut.`
-        : `Use the following information to answer the question. If the information is insufficient, honestly say you don't have that information.`;
+        ? `Gunakan informasi berikut sebagai SATU-SATUNYA sumber kebenaran. Jika tidak ada di sini, katakan: "Maaf, informasi tersebut tidak tersedia di data saya."`
+        : `Use the following information as the SINGLE source of truth. If the answer is not here, state: "I'm sorry, that information is not currently in my database."`;
 
-      prompt += `${systemPrompt}\n\n${ragInstructions}\n\n### KNOWLEDGE BASE:\n${contextText}\n\n`;
+      prompt += `${systemPrompt}\n\n${ragInstructions}\n\n### KNOWLEDGE BASE (TRUTH SOURCE):\n${contextText}\n\n`;
     } else {
       prompt += `${systemPrompt}\n\n`;
     }
@@ -68,14 +68,14 @@ export default async function handler(req, res) {
         .slice(-5) // Last 5 messages only
         .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
         .join("\n");
-      
+
       prompt += `### CONVERSATION HISTORY:\n${historyText}\n\n`;
     }
 
     // Add current question
     const questionLabel = language === "id" ? "PERTANYAAN" : "QUESTION";
     const answerLabel = language === "id" ? "JAWABAN" : "ANSWER";
-    
+
     prompt += `### ${questionLabel}:\n${message}\n\n### ${answerLabel}:`;
 
     // Additional instructions
@@ -91,25 +91,25 @@ export default async function handler(req, res) {
     const response = await result.response;
     const responseTime = Date.now() - startTime;
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       response: response.text(),
       responseTime,
-      sources: retrievedDocs.map(doc => ({ 
-        id: doc.id, 
+      sources: retrievedDocs.map(doc => ({
+        id: doc.id,
         title: doc.title,
-        similarity: doc.similarity 
+        similarity: doc.similarity
       })),
       tokensUsed: result.response.usageMetadata || null
     });
 
   } catch (error) {
     console.error("RAG Chat API Error:", error);
-    
+
     const errorMessage = language === "id"
       ? "Maaf, terjadi kesalahan saat memproses permintaan Anda."
       : "Sorry, there was an error processing your request.";
-    
-    return res.status(500).json({ 
+
+    return res.status(500).json({
       error: error.message || errorMessage,
       response: errorMessage
     });

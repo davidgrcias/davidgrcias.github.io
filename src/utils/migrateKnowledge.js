@@ -10,22 +10,33 @@ import { getFunFacts } from '../data/funFacts';
 import { batchImportKnowledge } from '../services/vectorStore';
 
 // Extract knowledge from existing data structures
-export const extractKnowledgeBase = (language = 'en') => {
-  const userProfile = getUserProfile(language);
-  const experiences = getExperiences(language);
-  const skills = getSkills(language);
-  const projects = getProjects(language);
-  const insights = getInsights(language);
-  const education = getEducation(language);
-  const certifications = getCertifications(language);
-  const funFacts = getFunFacts(language);
+export const extractKnowledgeBase = async (language = 'en') => {
+  const [
+    userProfile,
+    experiences,
+    skills,
+    projects,
+    insights,
+    education,
+    certifications,
+    funFacts
+  ] = await Promise.all([
+    getUserProfile(language),
+    getExperiences(language),
+    getSkills(language),
+    getProjects(language),
+    getInsights(language),
+    getEducation(language),
+    getCertifications(language),
+    getFunFacts(language)
+  ]);
 
   const knowledgeEntries = [];
 
   // 1. Personal Information
   knowledgeEntries.push({
     title: `About ${userProfile.name}`,
-    content: `${userProfile.name} - ${userProfile.headline}\n\n${userProfile.aboutText}\n\nLocation: ${userProfile.contact.location}`,
+    content: `${userProfile.name} - ${userProfile.headline}\n\n${userProfile.aboutText}\n\nLocation: ${userProfile.contact?.location || userProfile.location}`,
     type: 'portfolio',
     category: 'personal',
     tags: ['about', 'bio', 'introduction', 'personal'],
@@ -35,7 +46,7 @@ export const extractKnowledgeBase = (language = 'en') => {
   // 2. Contact Information
   knowledgeEntries.push({
     title: 'Contact Information',
-    content: `You can reach David through:\n\nEmail: ${userProfile.contact.email}\nWhatsApp: ${userProfile.contact.whatsapp}\nLocation: ${userProfile.contact.location}\n\nSocial Media:\n${Object.entries(userProfile.socials).map(([platform, data]) => `- ${platform}: ${data.url} (${data.handle})`).join('\n')}`,
+    content: `You can reach David through:\n\nEmail: ${userProfile.contact?.email || userProfile.email}\nWhatsApp: ${userProfile.contact?.whatsapp || ''}\nLocation: ${userProfile.contact?.location || userProfile.location}\n\nSocial Media:\n${Object.entries(userProfile.socials || {}).map(([platform, data]) => `- ${platform}: ${data.url} (${data.handle})`).join('\n')}`,
     type: 'portfolio',
     category: 'contact',
     tags: ['contact', 'email', 'social media', 'whatsapp'],
@@ -69,7 +80,7 @@ export const extractKnowledgeBase = (language = 'en') => {
   }
 
   // 5. Professional Experience
-  experiences.forEach((exp, idx) => {
+  experiences.forEach((exp) => {
     knowledgeEntries.push({
       title: `${exp.role} at ${exp.company}`,
       content: `**Position:** ${exp.role}\n**Company:** ${exp.company} (${exp.type})\n**Period:** ${exp.startDate} to ${exp.endDate}\n\n**Description:**\n${exp.description || 'Professional experience in this role.'}\n\n**Technologies & Skills Used:**\n${exp.skills.map(skill => `- ${skill}`).join('\n')}\n\n${exp.achievements ? `**Achievements:**\n${exp.achievements.map(a => `- ${a}`).join('\n')}` : ''}`,
@@ -111,7 +122,7 @@ export const extractKnowledgeBase = (language = 'en') => {
       content: `**Project:** ${project.title}\n**Category:** ${project.category}\n\n**Description:**\n${project.description}\n\n**Technologies Used:**\n${project.technologies?.map(tech => `- ${tech}`).join('\n') || 'Various technologies'}\n\n${project.features ? `**Key Features:**\n${project.features.map(f => `- ${f}`).join('\n')}` : ''}\n\n${project.github ? `**GitHub:** ${project.github}` : ''}\n${project.demo ? `**Demo:** ${project.demo}` : ''}`,
       type: 'portfolio',
       category: 'projects',
-      tags: ['project', project.category?.toLowerCase(), ...project.technologies?.slice(0, 3) || []],
+      tags: ['project', project.category?.toLowerCase(), ...(project.technologies?.slice(0, 3) || [])].filter(Boolean),
       language
     });
   });
@@ -159,20 +170,20 @@ export const extractKnowledgeBase = (language = 'en') => {
 export const migrateKnowledgeToFirestore = async (language = 'en') => {
   try {
     console.log(`Starting migration for language: ${language}`);
-    
-    const knowledgeEntries = extractKnowledgeBase(language);
+
+    const knowledgeEntries = await extractKnowledgeBase(language);
     console.log(`Extracted ${knowledgeEntries.length} knowledge entries`);
-    
+
     const results = await batchImportKnowledge(knowledgeEntries);
-    
+
     console.log('Migration complete!');
     console.log(`Success: ${results.success.length}`);
     console.log(`Failed: ${results.failed.length}`);
-    
+
     if (results.failed.length > 0) {
       console.error('Failed entries:', results.failed);
     }
-    
+
     return results;
   } catch (error) {
     console.error('Migration error:', error);
@@ -186,16 +197,16 @@ export const migrateAllLanguages = async () => {
     en: null,
     id: null
   };
-  
+
   try {
     // English
     console.log('Migrating English knowledge...');
     results.en = await migrateKnowledgeToFirestore('en');
-    
-    // Indonesian
-    console.log('Migrating Indonesian knowledge...');
-    results.id = await migrateKnowledgeToFirestore('id');
-    
+
+    // Indonesian - Disabled per user request (relying on auto-translation)
+    // console.log('Migrating Indonesian knowledge...');
+    // results.id = await migrateKnowledgeToFirestore('id');
+
     console.log('All migrations complete!');
     return results;
   } catch (error) {

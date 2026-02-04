@@ -49,7 +49,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   const [battery, setBattery] = useState(() => {
     const savedLevel = localStorage.getItem('webos-battery-level');
     const savedCharging = localStorage.getItem('webos-battery-charging');
-    
+
     // If we have saved data, use it
     if (savedLevel !== null) {
       const level = parseInt(savedLevel, 10);
@@ -60,7 +60,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
         };
       }
     }
-    
+
     // First time: Random 50-90%, charging
     const randomInitial = 50 + Math.floor(Math.random() * 41);
     return {
@@ -148,18 +148,18 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
       }
     };
   }, []);
-  
+
   // Wifi: Random fluctuation 1-3 bars (simulated)
   const [wifiSignal, setWifiSignal] = useState(3); // 0-3 scale
   const [isOnline, setIsOnline] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
-  
+
   // ... (other states remain the same)
 
   // Single popup state - only one can be open at a time
   // Values: null | 'wifi' | 'volume' | 'battery' | 'power'
   const [activePopup, setActivePopup] = useState(null);
-  
+
   // Start Menu state
   const [startMenuOpen, setStartMenuOpen] = useState(false);
   const [userProfile, setUserProfile] = useState({});
@@ -167,7 +167,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   useEffect(() => {
     getUserProfile('en').then(setUserProfile).catch(console.error);
   }, []);
-  
+
   // Brightness & Power Saver (simulated, stored in localStorage)
   const [brightness, setBrightness] = useState(() => {
     const saved = localStorage.getItem('webos-brightness');
@@ -231,15 +231,15 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   // Simulated Wifi Fluctuation
   useEffect(() => {
     const signalInterval = setInterval(() => {
-        // Randomly change signal strength (heavily weighted towards 3 bars/full)
-        // 0: Offline, 1: Weak, 2: Good, 3: Excellent
-        const rand = Math.random();
-        let newSignal = 3;
-        if (rand < 0.05) newSignal = 1;      // 5% chance of weak signal
-        else if (rand < 0.2) newSignal = 2;  // 15% chance of good signal
-        // 80% chance of excellent signal
-        
-        setWifiSignal(newSignal);
+      // Randomly change signal strength (heavily weighted towards 3 bars/full)
+      // 0: Offline, 1: Weak, 2: Good, 3: Excellent
+      const rand = Math.random();
+      let newSignal = 3;
+      if (rand < 0.05) newSignal = 1;      // 5% chance of weak signal
+      else if (rand < 0.2) newSignal = 2;  // 15% chance of good signal
+      // 80% chance of excellent signal
+
+      setWifiSignal(newSignal);
     }, 5000); // Fluctuate every 5 seconds
 
     return () => clearInterval(signalInterval);
@@ -250,8 +250,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
     localStorage.setItem('webos-brightness', brightness.toString());
     // Apply brightness as a filter to the root element
     const effectiveBrightness = batterySaver ? Math.min(brightness, 70) : brightness;
-    document.documentElement.style.filter = effectiveBrightness < 100 
-      ? `brightness(${effectiveBrightness / 100})` 
+    document.documentElement.style.filter = effectiveBrightness < 100
+      ? `brightness(${effectiveBrightness / 100})`
       : 'none';
   }, [brightness, batterySaver]);
 
@@ -286,7 +286,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
 
   const getBatteryIcon = () => {
     const { level, charging } = battery;
-    
+
     // Changing color based on level
     let colorClass = "text-white";
     if (level <= 20) colorClass = "text-red-500";
@@ -300,12 +300,12 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
     return (
       <div className="relative flex items-center justify-center">
         {/* Fill Level */}
-        <div 
+        <div
           className={`absolute left-[2px] top-[6px] h-[8px] bg-current rounded-[1px] transition-all duration-500 ${colorClass}`}
-          style={{ 
-            width: `${Math.max(2, (level / 100) * 13)}px`, 
+          style={{
+            width: `${Math.max(2, (level / 100) * 13)}px`,
             opacity: 1
-          }} 
+          }}
         />
         {/* Outline Frame */}
         <Battery size={20} className={`relative z-10 ${colorClass}`} fillOpacity={0} />
@@ -436,7 +436,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
 
     return () => clearInterval(interval);
   }, [activePopup]);
-  
+
   // Voice Control Keyboard Shortcut (Ctrl+Shift+Space)
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -449,14 +449,14 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
           startListening();
         }
       }
-      
+
       // Escape to cancel listening
       if (e.code === 'Escape' && isListening) {
         e.preventDefault();
         stopListening();
       }
     };
-    
+
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isListening, startListening, stopListening]);
@@ -527,8 +527,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
             }}
             title="Start Menu"
             className={`w-10 h-10 rounded-xl flex items-center justify-center cursor-pointer transition-all shadow-lg group z-50
-              ${startMenuOpen 
-                ? 'bg-cyan-500 shadow-cyan-500/50 scale-105 ring-2 ring-white/20' 
+              ${startMenuOpen
+                ? 'bg-cyan-500 shadow-cyan-500/50 scale-105 ring-2 ring-white/20'
                 : 'bg-gradient-to-br from-cyan-500 to-blue-600 hover:scale-110 active:scale-95 hover:shadow-cyan-500/30'
               }`}
           >
@@ -536,20 +536,20 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
           </button>
 
           {/* Start Menu Component */}
-          <StartMenu 
-            isOpen={startMenuOpen} 
+          <StartMenu
+            isOpen={startMenuOpen}
             onClose={() => setStartMenuOpen(false)}
             shortcuts={shortcuts}
             onOpenApp={(appOrId) => {
               // Handle both full app object (from shortcuts) and simple ID string/object (from internal buttons)
               const appId = appOrId.id || appOrId;
               let fullApp = shortcuts.find(s => s.id === appId);
-              
+
               if (!fullApp) {
                 // If not in shortcuts, look in registered apps
                 fullApp = apps.find(a => a.id === appId);
               }
-              
+
               if (fullApp) {
                 handleAppClick(fullApp);
               } else {
@@ -595,27 +595,27 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   onClick={() => isListening ? stopListening() : startListening()}
                   disabled={!serviceAvailable && !isListening}
                   className={`relative w-9 h-9 ml-2 rounded-lg flex items-center justify-center transition-all duration-300 group
-                      ${isListening 
-                        ? 'bg-red-500/20 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse' 
-                        : !serviceAvailable
+                      ${isListening
+                      ? 'bg-red-500/20 text-red-400 shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse'
+                      : !serviceAvailable
                         ? 'bg-white/5 text-white/20 border border-white/5 cursor-not-allowed opacity-50'
                         : 'bg-white/5 hover:bg-white/10 text-white/50 hover:text-white border border-white/5 hover:border-white/10 hover:shadow-lg'
-                      }`}
+                    }`}
                   title={
-                    !serviceAvailable 
-                      ? "Voice unavailable - Works best in Chrome/Edge" 
-                      : isListening 
-                        ? "Stop Voice (Esc)" 
+                    !serviceAvailable
+                      ? "Voice unavailable - Works best in Chrome/Edge"
+                      : isListening
+                        ? "Stop Voice (Esc)"
                         : "Voice Control (Ctrl+Shift+Space)\nSay: 'Open Terminal', 'Close window'"
                   }
                 >
                   <Mic size={16} className={`transition-transform duration-300 ${isListening ? 'scale-110' : 'group-hover:scale-110'}`} />
-                  
+
                   {/* Live Indicator Dot */}
                   {isListening && (
                     <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-ping" />
                   )}
-                  
+
                   {/* Service Unavailable Indicator */}
                   {!serviceAvailable && !isListening && (
                     <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-orange-500 rounded-full" title="Service unavailable" />
@@ -714,10 +714,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                 }}
                 title={!isOnline ? "Offline" : `Connected (Signal: ${wifiSignal === 3 ? 'Strong' : wifiSignal === 2 ? 'Good' : 'Weak'})`}
               >
-                {!isOnline ? <WifiOff size={18} /> : 
-                 wifiSignal >= 3 ? <Wifi size={18} /> : 
-                 wifiSignal === 2 ? <Wifi size={18} className="opacity-80" /> : 
-                 <div className="relative"><Wifi size={18} className="opacity-40" /><span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-yellow-400 rounded-full"></span></div>
+                {!isOnline ? <WifiOff size={18} /> :
+                  wifiSignal >= 3 ? <Wifi size={18} /> :
+                    wifiSignal === 2 ? <Wifi size={18} className="opacity-80" /> :
+                      <div className="relative"><Wifi size={18} className="opacity-40" /><span className="absolute bottom-0 right-0 w-1.5 h-1.5 bg-yellow-400 rounded-full"></span></div>
                 }
               </div>
 
@@ -734,15 +734,15 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
                     <span className="text-white font-semibold text-sm">Wi-Fi</span>
                     <div className="relative">
-                      <input 
-                        type="checkbox" 
-                        checked={isOnline} 
+                      <input
+                        type="checkbox"
+                        checked={isOnline}
                         onChange={() => setIsOnline(!isOnline)}
-                        className="peer sr-only" 
+                        className="peer sr-only"
                         id="wifi-toggle-popup"
                       />
-                      <label 
-                        htmlFor="wifi-toggle-popup" 
+                      <label
+                        htmlFor="wifi-toggle-popup"
                         className={`block w-9 h-5 rounded-full cursor-pointer transition-colors ${isOnline ? 'bg-cyan-500' : 'bg-white/20'}`}
                       >
                         <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${isOnline ? 'translate-x-4' : ''}`}></div>
@@ -763,7 +763,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                         </div>
                         <Check size={14} className="text-cyan-400" />
                       </div>
-                      
+
                       {/* Social Networks as Wifi */}
                       {socialNetworks.map((category, idx) => (
                         <div key={idx} className="mb-2">
@@ -797,7 +797,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                     <div className="py-4 text-center">
                       <WifiOff size={24} className="mx-auto text-white/20 mb-2" />
                       <p className="text-white/50 text-sm">Wi-Fi is turned off</p>
-                      <button 
+                      <button
                         onClick={() => setIsOnline(true)}
                         className="mt-3 px-4 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-xs text-white transition-colors"
                       >
@@ -875,11 +875,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                           if (v > 0) setMuted(false);
                           else setMuted(true);
                         }}
-                        className={`flex-1 py-1.5 text-xs rounded-lg transition-colors ${
-                          volume === v && !isMuted
+                        className={`flex-1 py-1.5 text-xs rounded-lg transition-colors ${volume === v && !isMuted
                             ? 'bg-cyan-500 text-white'
                             : 'bg-white/10 text-white/70 hover:bg-white/20'
-                        }`}
+                          }`}
                       >
                         {v}%
                       </button>
@@ -889,11 +888,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   {/* Mute Toggle */}
                   <button
                     onClick={() => setMuted(!isMuted)}
-                    className={`w-full py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                      isMuted
+                    className={`w-full py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${isMuted
                         ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                         : 'bg-white/10 text-white hover:bg-white/20'
-                    }`}
+                      }`}
                   >
                     {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
                     {isMuted ? 'Unmute' : 'Mute'}
@@ -913,9 +911,9 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                 title={`${Math.round(battery.level)}%${battery.charging ? ' - Charging' : (battery.level === 100 ? ' - Fully Charged' : ' - On Battery')}${batterySaver ? ' - Power Saver ON' : ''}`}
                 aria-label={`Battery ${Math.round(battery.level)}%`}
               >
-                {battery.charging ? <BatteryCharging size={16} className="text-green-400" /> : 
-                 battery.level < 20 ? <BatteryLow size={16} className="text-red-500 animate-pulse" /> :
-                 <Battery size={16} className={battery.level > 20 ? 'text-white' : ''} />}
+                {battery.charging ? <BatteryCharging size={16} className="text-green-400" /> :
+                  battery.level < 20 ? <BatteryLow size={16} className="text-red-500 animate-pulse" /> :
+                    <Battery size={16} className={battery.level > 20 ? 'text-white' : ''} />}
                 <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level)}%</span>
               </div>
 
@@ -948,12 +946,11 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   {/* Battery Bar */}
                   <div className="mb-4">
                     <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          battery.level < 20 ? 'bg-red-500' : 
-                          battery.level < 50 ? 'bg-yellow-500' : 
-                          'bg-green-500'
-                        }`}
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${battery.level < 20 ? 'bg-red-500' :
+                            battery.level < 50 ? 'bg-yellow-500' :
+                              'bg-green-500'
+                          }`}
                         style={{ width: `${battery.level}%` }}
                       />
                     </div>
@@ -990,11 +987,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                         <button
                           key={b}
                           onClick={() => setBrightness(b)}
-                          className={`flex-1 py-1 text-xs rounded-lg transition-colors ${
-                            brightness === b
+                          className={`flex-1 py-1 text-xs rounded-lg transition-colors ${brightness === b
                               ? 'bg-yellow-500 text-black'
                               : 'bg-white/10 text-white/70 hover:bg-white/20'
-                          }`}
+                            }`}
                         >
                           {b === 20 ? <Moon size={12} className="mx-auto" /> : `${b}%`}
                         </button>
@@ -1007,11 +1003,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   {/* Battery Saver Toggle */}
                   <button
                     onClick={() => setBatterySaver(!batterySaver)}
-                    className={`w-full py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between px-4 ${
-                      batterySaver
+                    className={`w-full py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between px-4 ${batterySaver
                         ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                         : 'bg-white/10 text-white hover:bg-white/20'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <Leaf size={18} />
@@ -1058,8 +1053,8 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
               <div
                 className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 w-48 z-[10000]"
                 style={{
-                    right: isMobile ? '10px' : '10px',
-                    bottom: isMobile ? '70px' : '80px',
+                  right: isMobile ? '10px' : '10px',
+                  bottom: isMobile ? '70px' : '80px',
                 }}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -1068,11 +1063,11 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors text-left group"
                 >
                   <div className="p-2 rounded-full bg-blue-500/10 group-hover:bg-blue-500/20 text-blue-400">
-                      <Moon size={18} />
+                    <Moon size={18} />
                   </div>
                   <div>
-                      <div className="font-medium text-sm">Sleep</div>
-                      <div className="text-xs text-white/50">Lock screen</div>
+                    <div className="font-medium text-sm">Sleep</div>
+                    <div className="text-xs text-white/50">Lock screen</div>
                   </div>
                 </button>
 
@@ -1081,11 +1076,11 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors text-left group"
                 >
                   <div className="p-2 rounded-full bg-yellow-500/10 group-hover:bg-yellow-500/20 text-yellow-400">
-                      <RotateCcw size={18} />
+                    <RotateCcw size={18} />
                   </div>
                   <div>
-                      <div className="font-medium text-sm">Restart</div>
-                      <div className="text-xs text-white/50">Reboot system</div>
+                    <div className="font-medium text-sm">Restart</div>
+                    <div className="text-xs text-white/50">Reboot system</div>
                   </div>
                 </button>
 
@@ -1096,11 +1091,11 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                   className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-red-500/10 transition-colors text-left group"
                 >
                   <div className="p-2 rounded-full bg-red-500/10 group-hover:bg-red-500/20 text-red-400">
-                      <Power size={18} />
+                    <Power size={18} />
                   </div>
                   <div>
-                      <div className="font-medium text-sm text-red-400">Shut Down</div>
-                      <div className="text-xs text-white/50">Power off</div>
+                    <div className="font-medium text-sm text-red-400">Shut Down</div>
+                    <div className="text-xs text-white/50">Power off</div>
                   </div>
                 </button>
               </div>

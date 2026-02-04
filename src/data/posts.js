@@ -150,6 +150,16 @@ let cachedPosts = null;
 let cacheTimestamp = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Helper for timeout
+const withTimeout = (promise, ms) => {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Request timed out')), ms)
+        )
+    ]);
+};
+
 // Function to get posts (tries Firestore first, falls back to static)
 export const getPosts = async (currentLanguage = "en") => {
     // Check cache
@@ -158,7 +168,10 @@ export const getPosts = async (currentLanguage = "en") => {
     }
 
     try {
-        const firestoreData = await getCollection('posts', { orderByField: 'date', orderDirection: 'desc' });
+        const firestoreData = await withTimeout(
+            getCollection('posts', { orderByField: 'date', orderDirection: 'desc' }),
+            1500
+        );
 
         if (firestoreData && firestoreData.length > 0) {
             // Filter only published posts for frontend
@@ -168,7 +181,9 @@ export const getPosts = async (currentLanguage = "en") => {
             return translateData(publishedPosts, currentLanguage);
         }
     } catch (error) {
-        console.warn('Failed to fetch posts from Firestore, using fallback:', error);
+        if (error.message !== 'Request timed out') {
+            console.warn('Failed to fetch posts from Firestore, using fallback:', error);
+        }
     }
 
     // Fallback to static data
