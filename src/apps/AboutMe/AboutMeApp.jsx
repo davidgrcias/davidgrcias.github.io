@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles, Youtube, Loader2, Copy, FileText, Download } from 'lucide-react';
-import { getUserProfile } from '../../data/userProfile';
+import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles, Youtube, Loader2, Copy, FileText, Download, RefreshCw } from 'lucide-react';
+import { getUserProfile, clearProfileCache } from '../../data/userProfile';
 import { getSkills } from '../../data/skills';
 import { useOS } from '../../contexts/OSContext';
+import { toast } from 'react-hot-toast';
 
 /**
  * AboutMeApp - Personal information and bio in a beautiful card layout
@@ -22,6 +23,13 @@ const AboutMeApp = ({ id }) => {
     if (id && profile) {
       updateWindow(id, {
         contextMenuOptions: [
+          {
+            label: 'Refresh Profile',
+            icon: <RefreshCw size={16} />,
+            onClick: () => handleRefresh(),
+            shortcut: 'F5',
+          },
+          { separator: true },
           {
             label: 'Copy Contact Info',
             icon: <Copy size={16} />,
@@ -43,6 +51,31 @@ const AboutMeApp = ({ id }) => {
       });
     }
   }, [id, profile, updateWindow]);
+
+  const handleRefresh = async () => {
+    try {
+      setLoading(true);
+      clearProfileCache(); // Clear all caches
+      const [profileData, skillsData] = await Promise.all([
+        getUserProfile('en', true), // Force refresh
+        getSkills('en')
+      ]);
+      setProfile(profileData);
+      setSkills(skillsData);
+      toast.success('Profile refreshed successfully!', {
+        duration: 2000,
+        position: 'bottom-center',
+      });
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
+      toast.error('Failed to refresh profile', {
+        duration: 2000,
+        position: 'bottom-center',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCopyContact = () => {
     if (!profile) return;
@@ -66,6 +99,7 @@ const AboutMeApp = ({ id }) => {
 
       if (action === 'copy-contact') handleCopyContact();
       if (action === 'download-cv') handleDownloadCV();
+      if (action === 'refresh') handleRefresh();
     };
 
     window.addEventListener('WEBOS_APP_ACTION', handleAction);

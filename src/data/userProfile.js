@@ -91,31 +91,34 @@ const withTimeout = (promise, ms) => {
 };
 
 const STORAGE_KEY = 'webos-user-profile';
-const STORAGE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+const STORAGE_TTL = 5 * 60 * 1000; // 5 minutes (reduced from 24h for better sync)
 
-export const getUserProfile = async (currentLanguage = "en") => {
-  // 1. Check Memory Cache
-  if (cachedProfile && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TTL)) {
-    return translateData(normalizeProfile(cachedProfile), currentLanguage);
-  }
-
-  // 2. Check LocalStorage Cache (Fastest persistent)
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const { data, timestamp } = JSON.parse(saved);
-      if (Date.now() - timestamp < STORAGE_TTL) {
-        // Update memory cache
-        cachedProfile = data;
-        cacheTimestamp = Date.now();
-        // Return immediately for speed, but trigger background refresh if needed? 
-        // For now, trust storage to be fast.
-        return translateData(normalizeProfile(data), currentLanguage);
-      }
+export const getUserProfile = async (currentLanguage = "en", forceRefresh = false) => {
+  // Skip all caches if force refresh requested
+  if (!forceRefresh) {
+    // 1. Check Memory Cache
+    if (cachedProfile && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_TTL)) {
+      return translateData(normalizeProfile(cachedProfile), currentLanguage);
     }
-  } catch (e) {
-    console.warn('Failed to parse cached profile', e);
-  }
+
+    // 2. Check LocalStorage Cache (Fastest persistent)
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const { data, timestamp } = JSON.parse(saved);
+        if (Date.now() - timestamp < STORAGE_TTL) {
+          // Update memory cache
+          cachedProfile = data;
+          cacheTimestamp = Date.now();
+          // Return immediately for speed, but trigger background refresh if needed? 
+          // For now, trust storage to be fast.
+          return translateData(normalizeProfile(data), currentLanguage);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse cached profile', e);
+    }
+  } // Close if (!forceRefresh)
 
   try {
     // 3. Fetch from Firestore (Timeout increased to 10s)
