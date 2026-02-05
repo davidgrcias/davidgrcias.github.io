@@ -3,7 +3,9 @@ import { Plus, Search, Edit2, Trash2, ExternalLink, GripVertical, Eye, EyeOff, L
 import { Link, useNavigate } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
 import { seedLinkedInProjects, linkedInProjects } from '../../utils/seedProjects';
+import { seedLinkedInProjects, linkedInProjects } from '../../utils/seedProjects';
 import { getIcon } from '../../icons/iconMap';
+import OptimizedImage from '../../components/common/OptimizedImage';
 
 // Default projects data for fallback
 const defaultProjects = [
@@ -289,7 +291,14 @@ const Projects = () => {
                   {/* Icon/Image */}
                   <div className="w-16 sm:w-20 flex-shrink-0 bg-gray-800 flex items-center justify-center text-gray-400">
                     {project.image ? (
-                      <img src={project.image} alt="" className="w-full h-full object-cover" />
+                      <OptimizedImage 
+                        src={project.image} 
+                        alt={project.name}
+                        width={80}
+                        height={80}
+                        quality={80}
+                        className="w-full h-full object-cover" 
+                      />
                     ) : IconComponent ? (
                       IconComponent
                     ) : (

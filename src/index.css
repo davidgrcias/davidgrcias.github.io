@@ -21,6 +21,99 @@ body {
   /* Keep vertical scroll auto by default */
 }
 
+/* ============================================
+   GLOBAL CUSTOM SCROLLBAR - PORTFOLIO MAIN PAGE
+   ============================================ */
+
+/* Main Portfolio Page - Beautiful gradient scrollbar */
+body:not(.webos-active) {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(6, 182, 212, 0.5) rgba(15, 23, 42, 0.3);
+}
+
+body:not(.webos-active)::-webkit-scrollbar {
+  width: 10px;
+}
+
+body:not(.webos-active)::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+body:not(.webos-active)::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #06b6d4 0%, #ec4899 100%);
+  border-radius: 10px;
+  border: 2px solid rgba(15, 23, 42, 0.3);
+  transition: all 0.3s ease;
+}
+
+body:not(.webos-active)::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #22d3ee 0%, #f472b6 100%);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
+  border-color: rgba(6, 182, 212, 0.2);
+}
+
+body:not(.webos-active)::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, #0891b2 0%, #db2777 100%);
+}
+
+/* Light mode portfolio scrollbar */
+body:not(.webos-active):not(.dark) {
+  scrollbar-color: rgba(6, 182, 212, 0.6) rgba(241, 245, 249, 0.6);
+}
+
+body:not(.webos-active):not(.dark)::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.6);
+}
+
+body:not(.webos-active):not(.dark)::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(241, 245, 249, 0.4);
+}
+
+body:not(.webos-active):not(.dark)::-webkit-scrollbar-thumb:hover {
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.4);
+}
+
+/* WebOS Desktop - Minimalist blue scrollbar */
+body.webos-active {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(59, 130, 246, 0.4) transparent;
+}
+
+body.webos-active::-webkit-scrollbar {
+  width: 6px;
+}
+
+body.webos-active::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body.webos-active::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.4), rgba(37, 99, 235, 0.6));
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+body.webos-active::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.7), rgba(37, 99, 235, 0.9));
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.5);
+}
+
+/* Smooth scrolling for better UX */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Disable smooth scroll if reduced motion is preferred */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 /* Reduce motion - disables animations globally */
 .reduce-motion,
 .reduce-motion * {
@@ -90,6 +183,20 @@ body {
 
 .dark .custom-scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background: rgba(34, 211, 238, 0.7);
+}
+
+/* ============================================
+   WEBOS WINDOWS & APPS - BLUE ACCENT SCROLLBAR
+   ============================================ */
+
+/* WebOS Window/App scrollbar - Blue accent for consistency */
+.webos-active .custom-scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.4);
+}
+
+.webos-active .custom-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.7);
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
 }
 
 /* CV Modal cursor override */

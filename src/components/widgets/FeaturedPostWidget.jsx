@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Clock, ArrowRight, Loader2, Calendar, Sparkles } from 'lucide-react';
 import { getFeaturedPost } from '../../data/posts';
+import OptimizedImage from '../common/OptimizedImage';
 
 /**
  * Featured Post Widget
@@ -58,9 +59,11 @@ const FeaturedPostWidget = ({ className = '', onOpenBlog }) => {
       {/* Background Image */}
       <div className="absolute inset-0">
         {post.image && (
-          <img 
+          <OptimizedImage 
             src={post.image} 
             alt={post.title}
+            width={400}
+            quality={80}
             className={`w-full h-full object-cover transition-all duration-500 ${
               imageLoaded ? 'opacity-40 group-hover:opacity-50 group-hover:scale-105' : 'opacity-0'
             }`}

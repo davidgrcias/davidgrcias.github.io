@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider, isAdminEmail } from '../../config/firebase';
+import { auth, googleProvider, isAdminEmail } from '../../config/firebase';
 import { getUserProfile } from '../../data/userProfile';
+import OptimizedImage from '../../components/common/OptimizedImage';
 
 const Login = () => {
   const [error, setError] = useState('');
@@ -84,11 +86,14 @@ const Login = () => {
         <div className="relative z-10 flex flex-col items-center">
           {profile?.avatar ? (
             <div className="w-40 h-40 rounded-full border-4 border-white/20 shadow-2xl mb-8 overflow-hidden transform hover:scale-105 transition-transform duration-500">
-              <img
+              <OptimizedImage
                 src={profile.avatar}
                 alt={profile.name}
+                width={160}
+                height={160}
+                quality={90}
+                lazy={false}
                 className="w-full h-full object-cover"
-                onError={(e) => { e.target.src = 'https://placehold.co/400x400?text=DG'; }}
               />
             </div>
           ) : (
@@ -125,7 +130,15 @@ const Login = () => {
           <div className="text-center">
             {profile?.avatar && (
               <div className="md:hidden w-24 h-24 mx-auto rounded-full border-4 border-blue-500/20 shadow-xl mb-6 overflow-hidden">
-                <img src={profile.avatar} alt="Profile" className="w-full h-full object-cover" />
+                <OptimizedImage 
+                  src={profile.avatar} 
+                  alt="Profile" 
+                  width={96}
+                  height={96}
+                  quality={90}
+                  lazy={false}
+                  className="w-full h-full object-cover" 
+                />
               </div>
             )}
 

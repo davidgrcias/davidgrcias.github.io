@@ -2,6 +2,7 @@ import React, { useContext, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as LucideIcons from "lucide-react";
 import TikTokIcon from "../components/icons/TikTokIcon";
+import OptimizedImage from './common/OptimizedImage';
 import Header from "./Header";
 import AnimatedSection from "./AnimatedSection";
 import SectionTitle from "./SectionTitle";
@@ -318,15 +319,14 @@ const PortfolioContent = () => {
                 transition={{ duration: 1, ease: "easeOut" }}
                 className="w-32 h-32 md:w-40 md:h-40 mb-6 rounded-full overflow-hidden border-4 border-cyan-500/50 shadow-lg shadow-cyan-500/20 relative z-10"
               >
-                <img
+                <OptimizedImage
                   src={userProfile.photoUrl}
                   alt={userProfile.name}
+                  width={160}
+                  height={160}
+                  quality={90}
+                  lazy={false}
                   className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = '/profilpict.webp';
-                  }}
-                  loading="eager"
                 />
               </motion.div>
               <motion.h1
@@ -815,11 +815,13 @@ const PortfolioContent = () => {
                                         </div>
                                       ) : exp.media.thumbnail ? (
                                         <>
-                                          <img
+                                          <OptimizedImage
                                             src={exp.media.thumbnail}
                                             alt={exp.media.title}
+                                            width={80}
+                                            height={80}
+                                            quality={80}
                                             className="w-full h-full object-cover group-hover/media:scale-110 transition-transform duration-300"
-                                            loading="lazy"
                                           />
                                           {exp.media.type === 'pdf' && (
                                             <div className="absolute top-1 right-1 bg-red-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded">
@@ -828,12 +830,14 @@ const PortfolioContent = () => {
                                           )}
                                         </>
                                       ) : (
-                                        <img
-                                          src={exp.media.url}
-                                          alt={exp.media.title}
-                                          className="w-full h-full object-cover group-hover/media:scale-110 transition-transform duration-300"
-                                          loading="lazy"
-                                        />
+                                          <OptimizedImage
+                                            src={exp.media.url}
+                                            alt={exp.media.title}
+                                            width={80}
+                                            height={80}
+                                            quality={80}
+                                            className="w-full h-full object-cover group-hover/media:scale-110 transition-transform duration-300"
+                                          />
                                       )}
                                       <div className="absolute inset-0 bg-black/0 group-hover/media:bg-black/10 transition-colors duration-300 flex items-center justify-center">
                                         <div className="opacity-0 group-hover/media:opacity-100 transition-opacity duration-300 bg-white/90 dark:bg-slate-800/90 rounded-full p-1.5">

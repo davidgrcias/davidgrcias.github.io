@@ -19,6 +19,55 @@ import React, { useState, useEffect, useRef } from 'react';
  *   alt="Description"
  * />
  */
+
+// Build optimized URL using weserv.nl proxy
+export const buildOptimizedUrl = (originalUrl, options = {}) => {
+  const { width = 'auto', height = 'auto', quality = 80 } = options;
+
+  // Skip optimization for:
+  // 1. Already optimized URLs
+  // 2. Local paths
+  // 3. Data URLs
+  // 4. SVGs (already optimized)
+  if (
+    !originalUrl ||
+    originalUrl.includes('weserv.nl') ||
+    originalUrl.includes('imagekit.io') ||
+    originalUrl.startsWith('/') ||
+    originalUrl.startsWith('data:') ||
+    originalUrl.endsWith('.svg')
+  ) {
+    return originalUrl;
+  }
+
+  try {
+    // Encode the original URL
+    const encodedUrl = encodeURIComponent(originalUrl);
+
+    // Build weserv.nl proxy URL
+    // API docs: https://images.weserv.nl/docs/
+    const params = new URLSearchParams({
+      url: originalUrl, // Don't encode twice - weserv handles it
+      w: width === 'auto' ? '' : width,
+      h: height === 'auto' ? '' : height,
+      q: quality,
+      output: 'webp',
+      default: '1', // Return 404 image if original fails
+      we: '1' // Without enlargement
+    });
+
+    // Remove empty params
+    [...params.keys()].forEach(key => {
+      if (!params.get(key)) params.delete(key);
+    });
+
+    return `https://images.weserv.nl/?${params.toString()}`;
+  } catch (error) {
+    console.warn('Failed to build optimized URL, using original:', error);
+    return originalUrl;
+  }
+};
+
 const OptimizedImage = ({
   src,
   alt = '',
@@ -38,52 +87,6 @@ const OptimizedImage = ({
   const [hasError, setHasError] = useState(false);
   const [currentSrc, setCurrentSrc] = useState('');
   const imgRef = useRef(null);
-
-  // Build optimized URL using weserv.nl proxy
-  const buildOptimizedUrl = (originalUrl) => {
-    // Skip optimization for:
-    // 1. Already optimized URLs
-    // 2. Local paths
-    // 3. Data URLs
-    // 4. SVGs (already optimized)
-    if (
-      !originalUrl ||
-      originalUrl.includes('weserv.nl') ||
-      originalUrl.includes('imagekit.io') ||
-      originalUrl.startsWith('/') ||
-      originalUrl.startsWith('data:') ||
-      originalUrl.endsWith('.svg')
-    ) {
-      return originalUrl;
-    }
-
-    try {
-      // Encode the original URL
-      const encodedUrl = encodeURIComponent(originalUrl);
-
-      // Build weserv.nl proxy URL
-      // API docs: https://images.weserv.nl/docs/
-      const params = new URLSearchParams({
-        url: originalUrl, // Don't encode twice - weserv handles it
-        w: width === 'auto' ? '' : width,
-        h: height === 'auto' ? '' : height,
-        q: quality,
-        output: 'webp',
-        default: '1', // Return 404 image if original fails
-        we: '1' // Without enlargement
-      });
-
-      // Remove empty params
-      [...params.keys()].forEach(key => {
-        if (!params.get(key)) params.delete(key);
-      });
-
-      return `https://images.weserv.nl/?${params.toString()}`;
-    } catch (error) {
-      console.warn('Failed to build optimized URL, using original:', error);
-      return originalUrl;
-    }
-  };
 
   // Lazy loading with IntersectionObserver
   useEffect(() => {
@@ -117,7 +120,7 @@ const OptimizedImage = ({
     }
 
     if (isInView) {
-      const optimizedUrl = buildOptimizedUrl(src);
+      const optimizedUrl = buildOptimizedUrl(src, { width, height, quality });
       setCurrentSrc(optimizedUrl);
     }
   }, [src, isInView, width, height, quality]);

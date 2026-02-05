@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Trash2, Loader2, BookOpen, Calendar, Clock, Star, ExternalLink, Eye, EyeOff } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
+import OptimizedImage from '../../components/common/OptimizedImage';
 import MultiImageUploader from '../../components/admin/MultiImageUploader';
 import ImageUploader from '../../components/admin/ImageUploader';
 import { clearPostsCache } from '../../data/posts';
@@ -520,9 +521,12 @@ Write your content here using Markdown...
               {/* Image */}
               {post.image && (
                 <div className="md:w-48 h-32 md:h-auto flex-shrink-0">
-                  <img
+                  <OptimizedImage
                     src={post.image}
                     alt={post.title}
+                    width={200}
+                    height={150}
+                    quality={80}
                     className="w-full h-full object-cover"
                   />
                 </div>

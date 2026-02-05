@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Settings, X, Cpu, FileText, Clock } from 'lucide-react';
+import OptimizedImage from '../common/OptimizedImage';
 
 /**
  * Windows 11-Style Start Menu
@@ -147,15 +148,14 @@ const StartMenu = ({
             <div className="p-3 border-t border-white/10 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 {profile.avatar && (
-                  <img 
+                  <OptimizedImage 
                     src={profile.avatar} 
                     alt={profile.name}
+                    width={32}
+                    height={32}
+                    quality={90}
+                    lazy={false}
                     className="w-8 h-8 rounded-full object-cover border border-white/20"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = '/profilpict.webp';
-                    }}
-                    loading="eager"
                   />
                 )}
                 <div>

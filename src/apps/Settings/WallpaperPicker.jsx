@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { Image, Clock, Check } from 'lucide-react';
+import OptimizedImage from '../../components/common/OptimizedImage';
 
 const wallpapers = [
   { 
@@ -112,9 +113,11 @@ const WallpaperPicker = () => {
                     : 'border-transparent hover:border-white/30'
                 }`}
               >
-                <img 
+                <OptimizedImage 
                   src={wp.thumbnail} 
                   alt={wp.name}
+                  width={200}
+                  quality={70}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 

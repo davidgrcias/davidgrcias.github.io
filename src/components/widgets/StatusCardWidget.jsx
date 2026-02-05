@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { MapPin, Linkedin, Github, Sparkles, Loader2, Youtube } from 'lucide-react';
 import { getUserProfile, getUserProfileSync } from '../../data/userProfile';
+import OptimizedImage from '../common/OptimizedImage';
 
 /**
  * Professional Status Card Widget
@@ -115,15 +116,15 @@ const StatusCardWidget = ({ className = '' }) => {
         <div className="flex items-center gap-3 mb-3 pb-3 border-b border-white/10">
           {/* Profile Photo - Double click to access admin */}
           <div className="relative flex-shrink-0">
-            <img
+            <OptimizedImage
               src={profile.avatar}
               alt={profile.name}
+              width={80}
+              height={80}
+              quality={90}
               className="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow-lg cursor-pointer hover:border-cyan-400/50 transition-colors"
               onDoubleClick={() => window.open('/admin', '_blank')}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/profilpict.webp';
-              }}
+        
               loading="eager"
               title="Double-click for admin"
             />

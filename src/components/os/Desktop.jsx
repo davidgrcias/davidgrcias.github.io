@@ -134,6 +134,14 @@ const DesktopContent = () => {
         }).catch(console.error);
     }, []);
 
+    // Add webos-active class to body for custom scrollbar styling
+    useEffect(() => {
+        document.body.classList.add('webos-active');
+        return () => {
+            document.body.classList.remove('webos-active');
+        };
+    }, []);
+
     // Grid configuration constants - CENTERED with equal margins
     const { width, height } = useWindowSize();
     const GRID_SIZE = 120; // pixels per cell (bigger for more visible icons)
