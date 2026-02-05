@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
+import ReactMarkdown from 'react-markdown';
 import {
   BookOpen, Clock, Calendar, Search, Filter, ArrowLeft,
   ExternalLink, Loader2, Tag, ChevronRight, Sparkles,
-  Grid3X3, List, X, RefreshCw, Share2
+  Grid3X3, List, X, RefreshCw, Share2, Check
 } from 'lucide-react';
 import { getPosts, getCategories, getPostById } from '../../data/posts';
 import { useOS } from '../../contexts/OSContext';
+import { toast } from 'react-hot-toast';
 
 /**
  * Blog App
@@ -22,6 +24,35 @@ const BlogApp = ({ id }) => {
   const [selectedPost, setSelectedPost] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+
+  const markdownComponents = {
+    h1: (props) => <h1 className="text-xl font-bold mt-6 mb-3 text-white" {...props} />,
+    h2: (props) => <h2 className="text-lg font-semibold mt-5 mb-2 text-cyan-400" {...props} />,
+    h3: (props) => <h3 className="text-base font-medium mt-4 mb-2 text-white/90" {...props} />,
+    p: (props) => <p className="text-white/70 mb-2 leading-relaxed" {...props} />,
+    ul: (props) => <ul className="list-disc pl-5 text-white/70 space-y-1" {...props} />,
+    ol: (props) => <ol className="list-decimal pl-5 text-white/70 space-y-1" {...props} />,
+    li: (props) => <li className="text-white/70" {...props} />,
+    a: (props) => (
+      <a className="text-cyan-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
+    ),
+    blockquote: (props) => (
+      <blockquote className="border-l-2 border-cyan-500/40 pl-4 text-white/70 italic" {...props} />
+    ),
+    pre: (props) => (
+      <pre className="bg-zinc-950/60 border border-white/10 rounded-lg p-3 overflow-auto" {...props} />
+    ),
+    code: ({ inline, children, ...props }) =>
+      inline ? (
+        <code className="px-1 py-0.5 rounded bg-white/10 text-white/90" {...props}>
+          {children}
+        </code>
+      ) : (
+        <code className="text-xs text-white/80" {...props}>
+          {children}
+        </code>
+      ),
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -96,6 +127,50 @@ const BlogApp = ({ id }) => {
     setSelectedPost(post);
   };
 
+  const handleShare = async (post) => {
+    const shareData = {
+      title: post.title,
+      text: post.excerpt,
+      url: post.externalLink || window.location.href
+    };
+
+    try {
+      // Try Web Share API first (mobile/modern browsers)
+      if (navigator.share && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+        toast.success('Shared successfully!', {
+          duration: 2000,
+          position: 'bottom-center',
+          style: {
+            background: '#10b981',
+            color: '#fff',
+          }
+        });
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(shareData.url);
+        toast.success('Link copied to clipboard!', {
+          duration: 2000,
+          position: 'bottom-center',
+          style: {
+            background: '#10b981',
+            color: '#fff',
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      toast.error('Failed to share', {
+        duration: 2000,
+        position: 'bottom-center',
+        style: {
+          background: '#ef4444',
+          color: '#fff',
+        }
+      });
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -141,16 +216,28 @@ const BlogApp = ({ id }) => {
               </span>
             </div>
           </div>
-          {selectedPost.externalLink && (
+          <div className="flex items-center gap-2">
             <motion.button
-              onClick={() => window.open(selectedPost.externalLink, '_blank')}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors text-cyan-400"
+              onClick={() => handleShare(selectedPost)}
+              className="p-2 rounded-lg hover:bg-white/10 transition-colors text-purple-400"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              title="Share this post"
             >
-              <ExternalLink size={18} />
+              <Share2 size={18} />
             </motion.button>
-          )}
+            {selectedPost.externalLink && (
+              <motion.button
+                onClick={() => window.open(selectedPost.externalLink, '_blank')}
+                className="p-2 rounded-lg hover:bg-white/10 transition-colors text-cyan-400"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="View original post"
+              >
+                <ExternalLink size={18} />
+              </motion.button>
+            )}
+          </div>
         </div>
 
         {/* Content */}
@@ -246,40 +333,10 @@ const BlogApp = ({ id }) => {
           <div className="p-6">
             <h1 className="text-xl sm:text-2xl font-bold mb-4">{selectedPost.title}</h1>
 
-            {/* Render markdown-like content */}
             <div className="prose prose-invert prose-sm max-w-none">
-              {selectedPost.content.split('\n').map((line, idx) => {
-                if (line.startsWith('# ')) {
-                  return <h1 key={idx} className="text-xl font-bold mt-6 mb-3 text-white">{line.slice(2)}</h1>;
-                }
-                if (line.startsWith('## ')) {
-                  return <h2 key={idx} className="text-lg font-semibold mt-5 mb-2 text-cyan-400">{line.slice(3)}</h2>;
-                }
-                if (line.startsWith('### ')) {
-                  return <h3 key={idx} className="text-base font-medium mt-4 mb-2 text-white/90">{line.slice(4)}</h3>;
-                }
-                if (line.startsWith('- ')) {
-                  return <li key={idx} className="text-white/70 ml-4 mb-1">{line.slice(2)}</li>;
-                }
-                if (line.match(/^\d+\. /)) {
-                  return <li key={idx} className="text-white/70 ml-4 mb-1 list-decimal">{line.replace(/^\d+\. /, '')}</li>;
-                }
-                if (line.startsWith('```')) {
-                  return null; // Skip code fence markers
-                }
-                if (line.trim() === '') {
-                  return <div key={idx} className="h-3" />;
-                }
-                // Handle **bold** text
-                const formattedLine = line.replace(/\*\*([^*]+)\*\*/g, '<strong class="text-white">$1</strong>');
-                return (
-                  <p
-                    key={idx}
-                    className="text-white/70 mb-2 leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: formattedLine }}
-                  />
-                );
-              })}
+              <ReactMarkdown components={markdownComponents}>
+                {selectedPost.content}
+              </ReactMarkdown>
             </div>
 
             {/* External Link Button */}

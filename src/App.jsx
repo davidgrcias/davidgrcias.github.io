@@ -1,6 +1,7 @@
 // This code is designed for React 19+ and Tailwind CSS v4+
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
 import { TranslationProvider } from "./contexts/TranslationContext";
 import { MusicPlayerProvider } from "./contexts/MusicPlayerContext";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -86,6 +87,33 @@ GARCIA SARAGIH | Full-Stack Engineer
 
   return (
     <TranslationProvider>
+      <Toaster
+        position="bottom-center"
+        reverseOrder={false}
+        gutter={8}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#1e293b',
+            color: '#fff',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            fontSize: '14px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <SoundProvider>
         <MusicPlayerProvider>
           <BrowserRouter>
