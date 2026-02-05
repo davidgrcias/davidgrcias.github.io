@@ -235,7 +235,24 @@ const DesktopContent = () => {
             ),
             title: 'VS Code',
             contextMenuOptions: [
-                { label: 'New Window', onClick: () => openApp('vscode') },
+                { 
+                    label: 'New Window', 
+                    onClick: () => {
+                        // Create a new VS Code window instance
+                        openApp({
+                            id: `vscode-${Date.now()}`,
+                            title: 'VS Code',
+                            icon: <Code size={32} />,
+                            component: (
+                                <Suspense fallback={<AppLoadingFallback />}>
+                                    <ErrorBoundary componentName="VS Code">
+                                        <VSCodeApp />
+                                    </ErrorBoundary>
+                                </Suspense>
+                            )
+                        });
+                    }
+                },
                 {
                     label: 'Open Projects JSON',
                     onClick: () => triggerAppAction('vscode', 'open-file', { id: 'projects', name: 'projects.json', content: '// Project list here...' })
@@ -300,7 +317,23 @@ const DesktopContent = () => {
             title: 'File Manager',
             contextMenuOptions: [
                 { label: 'New Folder', onClick: () => alert('Feature coming soon') },
-                { label: 'Open Terminal Here', onClick: () => openApp('terminal') },
+                { 
+                    label: 'Open Terminal Here', 
+                    onClick: () => {
+                        openApp({
+                            id: `terminal-${Date.now()}`,
+                            title: 'Terminal',
+                            icon: <Terminal size={32} />,
+                            component: (
+                                <Suspense fallback={<AppLoadingFallback />}>
+                                    <ErrorBoundary componentName="Terminal">
+                                        <TerminalApp />
+                                    </ErrorBoundary>
+                                </Suspense>
+                            )
+                        });
+                    }
+                },
             ]
         },
         {

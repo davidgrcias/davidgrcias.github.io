@@ -5,6 +5,7 @@ import { getUserProfile, clearProfileCache } from '../../data/userProfile';
 import { getSkills } from '../../data/skills';
 import { useOS } from '../../contexts/OSContext';
 import { toast } from 'react-hot-toast';
+import OptimizedImage from '../../components/common/OptimizedImage';
 
 /**
  * AboutMeApp - Personal information and bio in a beautiful card layout
@@ -165,16 +166,13 @@ const AboutMeApp = ({ id }) => {
           className="text-center mb-8"
         >
           <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl ring-4 ring-blue-500/20">
-            <img
+            <OptimizedImage
               src={profile.avatar || "/profilpict.webp"}
               alt={profile.name}
-              onError={(e) => {
-                e.target.onerror = null;
-                e.target.src = '/profilpict.webp';
-              }}
-              loading="eager"
-              width="128"
-              height="128"
+              width={128}
+              height={128}
+              quality={90}
+              lazy={false}
               className="w-full h-full object-cover"
             />
           </div>

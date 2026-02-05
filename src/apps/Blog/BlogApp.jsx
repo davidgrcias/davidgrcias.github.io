@@ -10,6 +10,7 @@ import {
 import { getPosts, getCategories, getPostById } from '../../data/posts';
 import { useOS } from '../../contexts/OSContext';
 import { toast } from 'react-hot-toast';
+import OptimizedImage from '../../components/common/OptimizedImage';
 
 /**
  * Blog App
@@ -255,9 +256,11 @@ const BlogApp = ({ id }) => {
             if (allImages.length === 1) {
               return (
                 <div className="relative h-48 sm:h-64">
-                  <img
+                  <OptimizedImage
                     src={allImages[0]}
                     alt={selectedPost.title}
+                    width={800}
+                    quality={85}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 to-transparent" />
@@ -291,10 +294,10 @@ const BlogApp = ({ id }) => {
                     // To fill height, we can unset grid-rows-2 or just let them span row-span-2
                     <>
                       <div className="relative col-span-1 row-span-2 h-full">
-                        <img src={allImages[0]} className="w-full h-full object-cover" alt="" />
+                        <OptimizedImage src={allImages[0]} width={600} quality={85} className="w-full h-full object-cover" alt={`${selectedPost.title} - Image 1`} />
                       </div>
                       <div className="relative col-span-1 row-span-2 h-full">
-                        <img src={allImages[1]} className="w-full h-full object-cover" alt="" />
+                        <OptimizedImage src={allImages[1]} width={600} quality={85} className="w-full h-full object-cover" alt={`${selectedPost.title} - Image 2`} />
                       </div>
                     </>
                   ) : (
@@ -302,13 +305,13 @@ const BlogApp = ({ id }) => {
                     <>
                       {/* Main Image (Top) */}
                       <div className={`relative ${isFourOrMore ? 'col-span-3' : 'col-span-2'} row-span-1 h-full`}>
-                        <img src={allImages[0]} className="w-full h-full object-cover" alt="" />
+                        <OptimizedImage src={allImages[0]} width={800} quality={85} className="w-full h-full object-cover" alt={selectedPost.title} />
                       </div>
 
                       {/* Sub Images (Bottom Row) */}
                       {allImages.slice(1, 4).map((img, idx) => (
                         <div key={idx} className="relative col-span-1 row-span-1 h-full">
-                          <img src={img} className="w-full h-full object-cover" alt="" />
+                          <OptimizedImage src={img} width={400} quality={80} className="w-full h-full object-cover" alt={`${selectedPost.title} - Image ${idx + 2}`} />
                           {/* Overlay on last item if there are more than 4 */}
                           {idx === 2 && allImages.length > 4 && (
                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-xl font-bold">
