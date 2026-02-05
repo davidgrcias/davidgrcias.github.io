@@ -62,6 +62,7 @@ const MusicPlayer = () => {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         className="fixed bottom-20 right-4 z-[9997] pointer-events-auto max-w-[calc(100vw-2rem)] max-h-[calc(100vh-6rem)]"
+        onClick={(e) => e.stopPropagation()}
       >
         <motion.div
           animate={{

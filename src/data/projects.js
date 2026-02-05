@@ -5,6 +5,21 @@ import { getCollection } from "../services/firestore";
 // Static fallback data
 const projectsBase = [
   {
+    name: "WebOS Portfolio & AI Agent",
+    role: "Solo Project",
+    description:
+      "Futuristic OS simulation with a RAG-powered Gemini Agent for context-aware answers and autonomous UI control.",
+    tech: ["React 19", "Gemini API", "Vector Search", "Tailwind CSS v4", "WebOS"],
+    highlights: [
+      "Architected a Desktop UI with window management, virtual filesystem, and voice interaction.",
+      "Engineered a hybrid Agent merging Vector Search RAG with regex-based system automation.",
+    ],
+    link: "https://davidgrcias.github.io",
+    icon: "Bot",
+    tiers: ["Showcase", "AI Integration", "Advanced"],
+    date: "2025-12",
+  },
+  {
     name: "Komilet (JakLingko Management System)",
     role: "Full-Stack Web & Systems Engineer",
     description:
@@ -68,7 +83,7 @@ export const getProjects = async (currentLanguage = "en") => {
 
   try {
     const firestoreData = await getCollection('projects', { orderByField: 'order' });
-    
+
     if (firestoreData && firestoreData.length > 0) {
       cachedProjects = firestoreData;
       cacheTimestamp = Date.now();
@@ -77,7 +92,7 @@ export const getProjects = async (currentLanguage = "en") => {
   } catch (error) {
     console.warn('Failed to fetch projects from Firestore, using fallback:', error);
   }
-  
+
   // Fallback to static data
   return translateData(projectsBase, currentLanguage);
 };
@@ -97,4 +112,4 @@ const translateData = (data, language) => {
 };
 
 // Initialize cache on module load
-getProjects().catch(() => {});
+getProjects().catch(() => { });

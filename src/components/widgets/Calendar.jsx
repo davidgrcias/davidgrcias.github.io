@@ -106,6 +106,7 @@ const Calendar = ({ isOpen, onClose, isPopover = false, wrapperClassName = '', p
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         className={wrapperClasses}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-zinc-900/95 backdrop-blur-xl border border-zinc-700 rounded-2xl shadow-2xl w-80 max-w-[calc(100vw-3rem)] overflow-hidden">
           {/* Header */}

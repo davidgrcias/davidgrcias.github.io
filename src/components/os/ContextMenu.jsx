@@ -17,6 +17,8 @@ const ContextMenu = ({ x, y, onClose, options }) => {
         className="fixed bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10000] min-w-[200px]"
         style={{ left: x, top: y }}
         onMouseLeave={onClose}
+        onClick={(e) => e.stopPropagation()}
+        onContextMenu={(e) => e.preventDefault()}
       >
         <div className="py-2">
           {options.map((option, index) => (
@@ -25,7 +27,8 @@ const ContextMenu = ({ x, y, onClose, options }) => {
                 <div className="h-px bg-white/10 my-1 mx-2" />
               ) : (
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     option.onClick();
                     onClose();
                   }}

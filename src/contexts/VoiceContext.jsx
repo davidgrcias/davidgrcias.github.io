@@ -68,6 +68,24 @@ const APP_ALIASES = {
     'messanger', 'msg', 'chatting', 'inbox', 'dm', 'direct message',
     'percakapan', 'ngobrol', 'massage', 'mesej'
   ],
+  settings: [
+    'settings', 'setting', 'preferences', 'pengaturan', 'setelan', 'config'
+  ],
+  'about-me': [
+    'about', 'about me', 'profil', 'profile', 'tentang', 'tentang saya'
+  ],
+  'file-manager': [
+    'files', 'file manager', 'file', 'folder', 'berkas', 'dokumen'
+  ],
+  blog: [
+    'blog', 'artikel', 'post', 'posts', 'tulisan'
+  ],
+  notes: [
+    'notes', 'note', 'catatan', 'memo'
+  ],
+  'cv-download': [
+    'cv', 'resume', 'curriculum vitae', 'my cv', 'riwayat hidup'
+  ],
 };
 
 // Similarity check
@@ -94,7 +112,7 @@ function similarity(s1, s2) {
 }
 
 export function VoiceProvider({ children }) {
-  const { openApp, closeApp, minimizeApp, maximizeApp, windows } = useOS();
+  const { closeWindow, minimizeWindow, maximizeWindow, windows } = useOS();
   
   // State
   const [isSupported, setIsSupported] = useState(false);
@@ -181,8 +199,8 @@ export function VoiceProvider({ children }) {
     if (hasCommand(text, 'open')) {
       const app = findApp(text);
       if (app) {
-        openApp(app);
-        const appName = app.charAt(0).toUpperCase() + app.slice(1);
+        window.dispatchEvent(new CustomEvent('VOICE_OPEN_APP', { detail: { appId: app } }));
+        const appName = app.charAt(0).toUpperCase() + app.slice(1).replace('-', ' ');
         setResponse(lang.responses.opening(appName));
         speak(lang.responses.opening(appName));
         setVoiceState('success');
@@ -194,10 +212,10 @@ export function VoiceProvider({ children }) {
     if (hasCommand(text, 'close')) {
       const app = findApp(text);
       if (app) {
-        const win = Object.values(windows).find(w => w.appId === app);
+        const win = windows.find(w => w.id === app);
         if (win) {
-          closeApp(win.id);
-          const appName = app.charAt(0).toUpperCase() + app.slice(1);
+          closeWindow(win.id);
+          const appName = app.charAt(0).toUpperCase() + app.slice(1).replace('-', ' ');
           setResponse(lang.responses.closing(appName));
           speak(lang.responses.closing(appName));
           setVoiceState('success');
@@ -210,9 +228,9 @@ export function VoiceProvider({ children }) {
     if (hasCommand(text, 'minimize')) {
       const app = findApp(text);
       if (app) {
-        const win = Object.values(windows).find(w => w.appId === app);
+        const win = windows.find(w => w.id === app);
         if (win) {
-          minimizeApp(win.id);
+          minimizeWindow(win.id);
           setResponse(`Minimizing ${app}`);
           setVoiceState('success');
           resetState();
@@ -224,9 +242,9 @@ export function VoiceProvider({ children }) {
     if (hasCommand(text, 'maximize')) {
       const app = findApp(text);
       if (app) {
-        const win = Object.values(windows).find(w => w.appId === app);
+        const win = windows.find(w => w.id === app);
         if (win) {
-          maximizeApp(win.id);
+          maximizeWindow(win.id);
           setResponse(`Maximizing ${app}`);
           setVoiceState('success');
           resetState();
@@ -239,7 +257,7 @@ export function VoiceProvider({ children }) {
     setVoiceState('error');
     resetState(3000);
     return false;
-  }, [getLang, hasCommand, findApp, openApp, closeApp, minimizeApp, maximizeApp, windows, speak, resetState]);
+  }, [getLang, hasCommand, findApp, closeWindow, minimizeWindow, maximizeWindow, windows, speak, resetState]);
 
   const handleKeyboardSubmit = useCallback((text) => {
     if (!text.trim()) return;

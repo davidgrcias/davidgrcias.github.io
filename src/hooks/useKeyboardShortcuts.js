@@ -15,6 +15,16 @@ export const useKeyboardShortcuts = (shortcuts, enabled = true) => {
     if (!enabled) return;
 
     const handleKeyDown = (event) => {
+      const target = event.target;
+      const tag = target?.tagName;
+      const isEditable =
+        target?.isContentEditable ||
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT';
+
+      if (isEditable) return;
+
       // Build the key combination string
       const keys = [];
       

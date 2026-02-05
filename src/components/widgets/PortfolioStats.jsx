@@ -150,6 +150,7 @@ const PortfolioStats = ({ isOpen, onClose }) => {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 300 }}
         className="fixed top-20 right-4 bottom-20 z-50 w-80 max-w-[calc(100vw-2rem)]"
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-zinc-900 rounded-xl border border-zinc-700 shadow-2xl overflow-hidden max-h-full flex flex-col">
           {/* Header */}

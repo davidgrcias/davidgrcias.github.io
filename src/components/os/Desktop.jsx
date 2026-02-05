@@ -7,7 +7,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useKonamiCode } from '../../hooks/useKonamiCode';
 import { useAchievements } from '../../hooks/useAchievements';
-import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Camera, FileText, BookOpen } from 'lucide-react';
+import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Camera, FileText, BookOpen, Music, Calendar as CalendarIcon, TrendingUp } from 'lucide-react';
 import Taskbar from './Taskbar';
 import WindowFrame from './WindowFrame';
 import ContextMenu from './ContextMenu';
@@ -69,6 +69,7 @@ const DesktopContent = () => {
     const [windowContextMenu, setWindowContextMenu] = useState(null);
     // Removed local boot/lock states
     const hasShownWelcomeRef = React.useRef(false);
+    const desktopScrollRef = React.useRef(null);
     const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
     const [windowSwitcherOpen, setWindowSwitcherOpen] = useState(false);
     const [spotlightOpen, setSpotlightOpen] = useState(false);
@@ -146,17 +147,10 @@ const DesktopContent = () => {
     const availableWidth = width - (MIN_MARGIN * 2) - WIDGET_SIDEBAR_WIDTH;
     const availableHeight = height - TASKBAR_HEIGHT - (MIN_MARGIN * 2);
     const GRID_COLS = Math.max(1, Math.floor(availableWidth / GRID_SIZE));
-    const GRID_ROWS = Math.max(1, Math.floor(availableHeight / GRID_SIZE));
+    const BASE_GRID_ROWS = Math.max(1, Math.floor(availableHeight / GRID_SIZE));
 
     // Calculate actual margins to center the grid perfectly in the available space
     const GRID_WIDTH = GRID_COLS * GRID_SIZE;
-    const GRID_HEIGHT = GRID_ROWS * GRID_SIZE;
-
-    // Center logic: (AvailableSpace - GridWidth) / 2
-    // We treat the "AvailableSpace" as the full width minus the widget sidebar.
-    // So the grid centers in the "empty" area on the left.
-    const MARGIN_X = Math.floor((width - WIDGET_SIDEBAR_WIDTH - GRID_WIDTH) / 2);
-    const MARGIN_Y = Math.floor((height - TASKBAR_HEIGHT - GRID_HEIGHT) / 2);
 
     // Icon Grid Positions State (stored as {row, col} indices)
     // Validates saved positions and removes invalid ones
@@ -332,6 +326,19 @@ const DesktopContent = () => {
 
     const allShortcuts = [...desktopShortcuts, cvShortcut];
 
+    // Ensure enough rows for all shortcuts (prevents overlap on small screens)
+    const REQUIRED_ROWS = Math.ceil(allShortcuts.length / GRID_COLS);
+    const GRID_ROWS = Math.max(BASE_GRID_ROWS, REQUIRED_ROWS);
+    const GRID_HEIGHT = GRID_ROWS * GRID_SIZE;
+
+    // Center logic: (AvailableSpace - GridWidth) / 2
+    // We treat the "AvailableSpace" as the full width minus the widget sidebar.
+    // So the grid centers in the "empty" area on the left.
+    const MARGIN_X = Math.floor((width - WIDGET_SIDEBAR_WIDTH - GRID_WIDTH) / 2);
+    const needsScroll = GRID_HEIGHT > availableHeight;
+    const MARGIN_Y = needsScroll ? MIN_MARGIN : Math.floor((height - TASKBAR_HEIGHT - GRID_HEIGHT) / 2);
+    const gridContentHeight = GRID_HEIGHT + (MARGIN_Y * 2) + (needsScroll ? TASKBAR_HEIGHT + MIN_MARGIN : 0);
+
     const settingsApp = {
         id: 'settings',
         title: 'Settings',
@@ -428,15 +435,19 @@ const DesktopContent = () => {
     useEffect(() => {
         const handleVoiceOpenApp = (event) => {
             const { appId } = event.detail;
-
-            // Find the app from desktopShortcuts or settingsApp
-            let targetApp = desktopShortcuts.find(app => app.id === appId);
+            
+            // Find the app from shortcuts or settingsApp
+            let targetApp = allShortcuts.find(app => app.id === appId);
             if (!targetApp && appId === 'settings') {
                 targetApp = settingsApp;
             }
-
+            
             if (targetApp) {
-                openApp(targetApp);
+                if (targetApp.onClick) {
+                    targetApp.onClick();
+                } else {
+                    openApp(targetApp);
+                }
             }
         };
 
@@ -453,7 +464,7 @@ const DesktopContent = () => {
             window.removeEventListener('VOICE_OPEN_APP', handleVoiceOpenApp);
             window.removeEventListener('VOICE_OPEN_SPOTLIGHT', handleVoiceSpotlight);
         };
-    }, [desktopShortcuts, settingsApp, openApp]);
+    }, [allShortcuts, settingsApp, openApp]);
 
     // Right-click context menu (Desktop Background)
     const handleContextMenu = (e) => {
@@ -546,7 +557,8 @@ const DesktopContent = () => {
         // Use mouse position to determine target cell
         // info.point is the absolute position of the pointer
         const mouseX = info.point.x;
-        const mouseY = info.point.y;
+        const scrollTop = desktopScrollRef.current?.scrollTop || 0;
+        const mouseY = info.point.y + scrollTop;
 
         // Convert mouse position to grid indices
         const targetCol = Math.floor((mouseX - MARGIN_X) / GRID_SIZE);
@@ -592,18 +604,24 @@ const DesktopContent = () => {
         { separator: true },
         {
             label: 'Music Player',
-            icon: <Info size={16} />,
-            onClick: () => setPlayerOpen(!isPlayerOpen),
+            icon: <Music size={16} />,
+            onClick: () => {
+                setPlayerOpen(true);
+            },
         },
         {
             label: 'Calendar',
-            icon: <Info size={16} />,
-            onClick: () => setCalendarOpen(!calendarOpen),
+            icon: <CalendarIcon size={16} />,
+            onClick: () => {
+                setCalendarOpen(true);
+            },
         },
         {
             label: 'Portfolio Stats',
-            icon: <Info size={16} />,
-            onClick: () => setStatsOpen(!statsOpen),
+            icon: <TrendingUp size={16} />,
+            onClick: () => {
+                setStatsOpen(true);
+            },
         },
         { separator: true },
         {
@@ -663,38 +681,46 @@ const DesktopContent = () => {
             <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
 
             {/* Desktop Icons Area */}
-            <div className="relative z-10 w-full h-full">
-                {allShortcuts.map((shortcut, index) => {
-                    // Get grid position from state or use default based on index
-                    const gridPos = iconGridPositions[shortcut.id] || {
-                        row: Math.floor(index / GRID_COLS),
-                        col: index % GRID_COLS
-                    };
+            <div
+                ref={desktopScrollRef}
+                className={`relative z-10 w-full h-full ${needsScroll ? 'overflow-y-auto' : ''}`}
+            >
+                <div
+                    className="relative w-full"
+                    style={{ height: needsScroll ? gridContentHeight : '100%' }}
+                >
+                    {allShortcuts.map((shortcut, index) => {
+                        // Get grid position from state or use default based on index
+                        const gridPos = iconGridPositions[shortcut.id] || {
+                            row: Math.floor(index / GRID_COLS),
+                            col: index % GRID_COLS
+                        };
+                        
+                        // CLAMP position to ensure it fits within current grid (responsiveness)
+                        // This prevents icons from overlapping with the widget area or going off-screen
+                        const validCol = Math.min(gridPos.col, GRID_COLS - 1);
+                        const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
 
-                    // CLAMP position to ensure it fits within current grid (responsiveness)
-                    // This prevents icons from overlapping with the widget area or going off-screen
-                    const validCol = Math.min(gridPos.col, GRID_COLS - 1);
-                    const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
+                        // Convert grid position to pixel coordinates (using centered margins)
+                        const x = MARGIN_X + validCol * GRID_SIZE;
+                        const y = MARGIN_Y + validRow * GRID_SIZE;
 
-                    // Convert grid position to pixel coordinates (using centered margins)
-                    const x = MARGIN_X + validCol * GRID_SIZE;
-                    const y = MARGIN_Y + validRow * GRID_SIZE;
-
-                    return (
-                        <DesktopIcon
-                            key={`${shortcut.id}-${dragKeyCounter}`}
-                            dragKey={`${shortcut.id}-${dragKeyCounter}`}
-                            gridSize={GRID_SIZE}
-                            icon={shortcut.icon}
-                            label={shortcut.label}
-                            onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
-                            onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
-                            onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
-                            isDragging={draggingId === shortcut.id}
-                            style={{ left: x, top: y }}
-                        />
-                    );
-                })}
+                        return (
+                            <DesktopIcon
+                                key={`${shortcut.id}-${dragKeyCounter}`}
+                                dragKey={`${shortcut.id}-${dragKeyCounter}`}
+                                gridSize={GRID_SIZE}
+                                icon={shortcut.icon}
+                                label={shortcut.label}
+                                onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
+                                onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
+                                onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
+                                isDragging={draggingId === shortcut.id}
+                                style={{ left: x, top: y }}
+                            />
+                        );
+                    })}
+                </div>
             </div>
 
             {/* Windows Layer */}

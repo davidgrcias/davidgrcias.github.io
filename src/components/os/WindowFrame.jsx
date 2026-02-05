@@ -84,6 +84,10 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
     // If no options, just prevent default (no menu shown)
   };
 
+  const renderedContent = React.isValidElement(window.component)
+    ? React.cloneElement(window.component, { id: window.id })
+    : window.component;
+
   return (
     <motion.div
       data-window-id={window.id}
@@ -191,7 +195,7 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
         onPointerDown={(e) => e.stopPropagation()}
         onContextMenu={handleWindowContextMenu}
       >
-        {window.component}
+        {renderedContent}
       </div>
     </motion.div>
   );
