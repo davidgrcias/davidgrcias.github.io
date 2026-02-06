@@ -262,7 +262,7 @@ async function callGeminiFallback(prompt) {
   const genAI = new GoogleGenerativeAI(API_KEY);
 
   // Try multiple model names for compatibility
-  const modelNames = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-flash'];
+  const modelNames = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-flash'];
   let lastError = null;
 
   for (const modelName of modelNames) {

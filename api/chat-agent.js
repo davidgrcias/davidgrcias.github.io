@@ -67,7 +67,7 @@ export default async function handler(req, res) {
     };
 
     // Try models in order of preference
-    const modelNames = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-flash"];
+    const modelNames = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-flash"];
 
     const startTime = Date.now();
 

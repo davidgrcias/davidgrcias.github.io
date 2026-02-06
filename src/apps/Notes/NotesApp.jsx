@@ -131,7 +131,7 @@ const NotesApp = ({ id }) => {
   );
 
   const filteredNotes = allNotes.filter(note =>
-    note.content.toLowerCase().includes(searchQuery.toLowerCase())
+    (note.content || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   // Actions

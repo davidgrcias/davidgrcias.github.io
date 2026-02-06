@@ -453,31 +453,31 @@ const BlogApp = ({ id }) => {
                 whileHover={{ scale: 1.02, y: -2 }}
               >
                 {/* Thumbnail */}
-                {post.image && (
-                  <div className="relative h-32 overflow-hidden">
-                    <img
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
+                <div className="relative h-32 overflow-hidden">
+                  <OptimizedImage
+                    src={post.image || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80'}
+                    alt={post.title}
+                    width={800}
+                    quality={85}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
 
-                    {/* Featured Badge */}
-                    {post.featured && (
-                      <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30">
-                        <Sparkles size={10} className="text-yellow-400" />
-                        <span className="text-[9px] font-medium text-yellow-400">FEATURED</span>
-                      </div>
-                    )}
-
-                    {/* Category */}
-                    <div className="absolute bottom-2 left-2">
-                      <span className="px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-300 text-[10px] font-medium">
-                        {post.category}
-                      </span>
+                  {/* Featured Badge */}
+                  {post.featured && (
+                    <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/30">
+                      <Sparkles size={10} className="text-yellow-400" />
+                      <span className="text-[9px] font-medium text-yellow-400">FEATURED</span>
                     </div>
+                  )}
+
+                  {/* Category */}
+                  <div className="absolute bottom-2 left-2">
+                    <span className="px-2 py-0.5 rounded-full bg-purple-500/30 text-purple-300 text-[10px] font-medium">
+                      {post.category}
+                    </span>
                   </div>
-                )}
+                </div>
 
                 {/* Content */}
                 <div className="p-3">
@@ -513,20 +513,20 @@ const BlogApp = ({ id }) => {
                 whileHover={{ x: 4 }}
               >
                 {/* Thumbnail */}
-                {post.image && (
-                  <div className="relative w-24 h-20 flex-shrink-0 rounded-lg overflow-hidden">
-                    <img
-                      src={post.image}
-                      alt={post.title}
-                      className="w-full h-full object-cover"
-                    />
-                    {post.featured && (
-                      <div className="absolute top-1 right-1">
-                        <Sparkles size={12} className="text-yellow-400" />
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="relative w-24 h-20 flex-shrink-0 rounded-lg overflow-hidden">
+                  <OptimizedImage
+                    src={post.image || 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80'}
+                    alt={post.title}
+                    width={400}
+                    quality={85}
+                    className="w-full h-full object-cover"
+                  />
+                  {post.featured && (
+                    <div className="absolute top-1 right-1">
+                      <Sparkles size={12} className="text-yellow-400" />
+                    </div>
+                  )}
+                </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
