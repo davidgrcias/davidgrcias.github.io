@@ -5,34 +5,8 @@ import { firestoreService } from '../../services/firestore';
 import { seedLinkedInExperiences, linkedInExperiences } from '../../utils/seedExperiences';
 
 // Default experiences data
-const defaultExperiences = [
-  {
-    id: 'default-1',
-    role: "Coordinator of Web Division (Full Stack Developer)",
-    company: "UMN FESTIVAL 2025",
-    type: "Contract",
-    location: "Tangerang, Banten, Indonesia",
-    locationType: "Hybrid",
-    description: "Led the end-to-end development of UMN Festival's official website using Laravel, React, and Midtrans.",
-    skills: ["Laravel", "React.js", "Payment Gateways"],
-    startDate: "2025-02",
-    endDate: "present",
-    isDefault: true
-  },
-  {
-    id: 'default-2',
-    role: "Full Stack Developer",
-    company: "Koperasi Mikrolet Jakarta Raya (Komilet)",
-    type: "Contract",
-    location: "Jakarta Metropolitan Area",
-    locationType: "Remote",
-    description: "Built and deployed a full-stack TypeScript platform for JakLingko angkot operator.",
-    skills: ["Full-Stack Development", "TypeScript", "PostgreSQL", "Prisma ORM"],
-    startDate: "2025-07",
-    endDate: "present",
-    isDefault: true
-  }
-];
+// Default experiences data
+const defaultExperiences = [];
 
 const Experiences = () => {
   const navigate = useNavigate();
@@ -52,10 +26,10 @@ const Experiences = () => {
     try {
       setLoading(true);
       const data = await firestoreService.getCollection('experiences', { orderByField: 'startDate', orderDirection: 'desc' });
-      setExperiences(data && data.length > 0 ? data : defaultExperiences);
+      setExperiences(data || []);
     } catch (error) {
       console.error("Error fetching experiences:", error);
-      setExperiences(defaultExperiences);
+      setExperiences([]);
     } finally {
       setLoading(false);
     }

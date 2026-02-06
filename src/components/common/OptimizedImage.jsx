@@ -112,10 +112,13 @@ const OptimizedImage = ({
     };
   }, [lazy, isInView]);
 
+  // Transparent 1x1 pixel — avoids browser empty-src re-fetch
+  const TRANSPARENT_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
   // Update src when props change or lazy loading triggers
   useEffect(() => {
     if (!src) {
-      setCurrentSrc('');
+      setCurrentSrc(TRANSPARENT_PIXEL);
       return;
     }
 
@@ -151,8 +154,8 @@ const OptimizedImage = ({
   // Blur placeholder SVG (tiny, loads instantly)
   const blurDataUrl = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Cfilter id="b"%3E%3CfeGaussianBlur stdDeviation="20"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" fill="%23334155" filter="url(%23b)"/%3E%3C/svg%3E';
 
-  // Determine which src to display
-  const displaySrc = isInView ? currentSrc : (blur ? blurDataUrl : '');
+  // Determine which src to display — never use empty string
+  const displaySrc = isInView ? (currentSrc || TRANSPARENT_PIXEL) : (blur ? blurDataUrl : TRANSPARENT_PIXEL);
 
   return (
     <img

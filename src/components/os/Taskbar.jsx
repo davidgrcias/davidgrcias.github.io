@@ -515,7 +515,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
       <div
         className={`taskbar-container absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'
           } h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${isMobile ? 'px-2' : 'px-4'
-          } z-[9999] shadow-2xl transition-all duration-300 hover:opacity-95
+          } z-[2147483647] shadow-2xl transition-all duration-300 hover:opacity-95 pointer-events-auto
           ${taskbarSettings.autoHide && !isHovered && !contextMenu && !taskbarContextMenu && !activePopup ? 'translate-y-[85%]' : 'translate-y-0'}
         `}
         onContextMenu={handleTaskbarContextMenu}
@@ -694,8 +694,11 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
           } text-white/90`}>
           {isPlaying && (
             <button
-              onClick={() => setPlayerOpen(true)}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-white/10 rounded-full border border-white/10 hover:bg-white/20 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPlayerOpen(true);
+              }}
+              className="relative z-50 pointer-events-auto flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 bg-white/10 rounded-full border border-white/10 hover:bg-white/20 transition-colors cursor-pointer"
               title={`${track?.title || 'Now Playing'} — ${track?.artist || ''}`}
               aria-label="Music playing"
             >

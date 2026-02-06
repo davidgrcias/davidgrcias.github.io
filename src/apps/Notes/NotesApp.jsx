@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Edit3, Save, X, Search, StickyNote, Clock, Palette } from 'lucide-react';
+import { Plus, Trash2, Edit3, Save, X, Search, StickyNote, Clock, Lightbulb, Sparkles, Lock } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
+import { firestoreService } from '../../services/firestore';
 
 /**
  * NotesApp - Simple sticky notes app for quick thoughts
  * Features: Create, edit, delete notes with local storage persistence
+ * + Sync: Displays Fun Facts and Insights from Admin Panel as read-only notes
  */
 const NotesApp = ({ id }) => {
   const { updateWindow } = useOS();
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useState([]); // Local notes
+  const [syncedNotes, setSyncedNotes] = useState([]); // Remote notes (Fun Facts/Insights)
   const [searchQuery, setSearchQuery] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState('');
@@ -27,16 +30,16 @@ const NotesApp = ({ id }) => {
           },
           { separator: true },
           {
-            label: 'Clear All Notes',
+            label: 'Clear All Local Notes',
             icon: <Trash2 size={16} />,
             onClick: () => {
-              if (confirm('Delete all notes?')) setNotes([]);
+              if (confirm('Delete all local notes? Synced content will remain.')) setNotes([]);
             },
           }
         ]
       });
     }
-  }, [id, updateWindow]); // Start of component logic
+  }, [id, updateWindow]);
 
   // Handle External Actions
   useEffect(() => {
@@ -45,18 +48,9 @@ const NotesApp = ({ id }) => {
       if (appId !== 'notes') return;
 
       if (action === 'new-note') {
-        const newNote = {
-          id: Date.now(),
-          content: '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        // Use functional update to avoid dependency issues
-        setNotes(prev => [newNote, ...prev]);
-        setEditingId(newNote.id);
-        setEditContent('');
+        createNote();
       } else if (action === 'clear-all') {
-        if (confirm('Delete all notes?')) setNotes([]);
+        if (confirm('Delete all local notes?')) setNotes([]);
       }
     };
 
@@ -64,27 +58,83 @@ const NotesApp = ({ id }) => {
     return () => window.removeEventListener('WEBOS_APP_ACTION', handleAction);
   }, []);
 
-  // Load notes from localStorage on mount
+  // Load local notes
   useEffect(() => {
     const savedNotes = localStorage.getItem('portfolio-notes');
     if (savedNotes) {
       try {
         setNotes(JSON.parse(savedNotes));
       } catch (error) {
-        // Failed to load notes - reset to empty
         setNotes([]);
       }
     }
   }, []);
 
-  // Save notes to localStorage whenever they change
+  // Save local notes
   useEffect(() => {
     if (notes.length > 0) {
       localStorage.setItem('portfolio-notes', JSON.stringify(notes));
     }
   }, [notes]);
 
-  // Create new note
+  // Fetch Synced Content (Fun Facts & Insights)
+  useEffect(() => {
+    const fetchSyncedContent = async () => {
+      try {
+        const [facts, insights] = await Promise.all([
+          firestoreService.getCollection('funFacts'),
+          firestoreService.getCollection('insights')
+        ]);
+
+        const convertDate = (val) => {
+          if (!val) return new Date().toISOString();
+          // Handle Firestore Timestamp
+          if (val && typeof val.toDate === 'function') {
+            return val.toDate().toISOString();
+          }
+          // Handle string or date object
+          return new Date(val).toISOString();
+        };
+
+        const factNotes = (facts || []).map(f => ({
+          id: `fact-${f.id}`,
+          content: `${f.title}\n\n${f.text}`,
+          createdAt: convertDate(f.createdAt),
+          updatedAt: convertDate(f.updatedAt),
+          isSynced: true,
+          type: 'fun-fact',
+          icon: <Lightbulb size={16} />
+        }));
+
+        const insightNotes = (insights || []).map(i => ({
+          id: `insight-${i.id}`,
+          content: `${i.title}\n\n${i.text}`,
+          createdAt: convertDate(i.createdAt),
+          updatedAt: convertDate(i.updatedAt),
+          isSynced: true,
+          type: 'insight',
+          icon: <Sparkles size={16} />
+        }));
+
+        setSyncedNotes([...factNotes, ...insightNotes]);
+      } catch (error) {
+        console.error("Failed to sync admin content:", error);
+      }
+    };
+
+    fetchSyncedContent();
+  }, []);
+
+  // Combine and Sort Notes
+  const allNotes = [...notes, ...syncedNotes].sort((a, b) => 
+    new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0)
+  );
+
+  const filteredNotes = allNotes.filter(note =>
+    note.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Actions
   const createNote = () => {
     const newNote = {
       id: Date.now(),
@@ -97,7 +147,6 @@ const NotesApp = ({ id }) => {
     setEditContent('');
   };
 
-  // Delete note
   const deleteNote = (id) => {
     setNotes(notes.filter(note => note.id !== id));
     if (editingId === id) {
@@ -106,13 +155,12 @@ const NotesApp = ({ id }) => {
     }
   };
 
-  // Start editing
   const startEditing = (note) => {
+    if (note.isSynced) return;
     setEditingId(note.id);
     setEditContent(note.content);
   };
 
-  // Save edit
   const saveEdit = (id) => {
     setNotes(notes.map(note =>
       note.id === id
@@ -123,9 +171,7 @@ const NotesApp = ({ id }) => {
     setEditContent('');
   };
 
-  // Cancel edit
   const cancelEdit = () => {
-    // If note is empty, delete it
     const note = notes.find(n => n.id === editingId);
     if (note && !note.content) {
       deleteNote(editingId);
@@ -134,35 +180,45 @@ const NotesApp = ({ id }) => {
     setEditContent('');
   };
 
-  // Filter notes by search query
-  const filteredNotes = notes.filter(note =>
-    note.content.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Format date
   const formatDate = (isoString) => {
-    const date = new Date(isoString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
+    if (!isoString) return '';
+    try {
+      const date = new Date(isoString);
+      if (isNaN(date.getTime())) return '';
+      
+      const now = new Date();
+      const diffMs = now - date;
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString();
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString();
+    } catch (e) {
+      return '';
+    }
   };
 
-  // Note colors
-  const noteColors = [
-    'from-yellow-400/20 to-yellow-600/20 border-yellow-500/30',
-    'from-pink-400/20 to-pink-600/20 border-pink-500/30',
-    'from-blue-400/20 to-blue-600/20 border-blue-500/30',
-    'from-green-400/20 to-green-600/20 border-green-500/30',
-    'from-purple-400/20 to-purple-600/20 border-purple-500/30',
-  ];
+  const getNoteStyle = (note, index) => {
+    if (note.type === 'fun-fact') {
+      return 'from-blue-500/20 to-blue-700/20 border-blue-500/40 ring-1 ring-blue-500/20';
+    }
+    if (note.type === 'insight') {
+      return 'from-purple-500/20 to-purple-700/20 border-purple-500/40 ring-1 ring-purple-500/20';
+    }
+    // Local note colors
+    const colors = [
+      'from-yellow-400/20 to-yellow-600/20 border-yellow-500/30',
+      'from-pink-400/20 to-pink-600/20 border-pink-500/30',
+      'from-emerald-400/20 to-emerald-600/20 border-emerald-500/30',
+      'from-orange-400/20 to-orange-600/20 border-orange-500/30',
+      'from-cyan-400/20 to-cyan-600/20 border-cyan-500/30',
+    ];
+    return colors[index % colors.length];
+  };
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 overflow-auto">
@@ -180,7 +236,9 @@ const NotesApp = ({ id }) => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-white">Quick Notes</h1>
-                <p className="text-zinc-400 text-sm">{notes.length} {notes.length === 1 ? 'note' : 'notes'} total</p>
+                <p className="text-zinc-400 text-sm">
+                  {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
+                </p>
               </div>
             </div>
             <button
@@ -241,15 +299,17 @@ const NotesApp = ({ id }) => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ duration: 0.2 }}
+                onClick={() => !editingId && startEditing(note)}
                 className={`
-                  bg-gradient-to-br ${noteColors[index % noteColors.length]}
-                  border rounded-xl p-4 shadow-lg relative
+                  bg-gradient-to-br ${getNoteStyle(note, index)}
+                  border rounded-xl p-4 shadow-lg relative group cursor-default
                   ${editingId === note.id ? 'ring-2 ring-yellow-500' : ''}
+                  ${!note.isSynced && !editingId ? 'hover:-translate-y-1 hover:shadow-xl transition-all cursor-pointer' : ''}
                 `}
               >
                 {/* Note Content */}
                 {editingId === note.id ? (
-                  <div className="space-y-3">
+                  <div className="space-y-3" onClick={e => e.stopPropagation()}>
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
@@ -277,6 +337,16 @@ const NotesApp = ({ id }) => {
                 ) : (
                   <>
                     <div className="mb-3 min-h-[120px]">
+                      {/* Synced Badge */}
+                      {note.isSynced && (
+                        <div className="flex items-center gap-2 mb-2 pb-2 border-b border-white/10">
+                          {note.icon}
+                          <span className="text-xs font-bold uppercase tracking-wider opacity-70">
+                            {note.type === 'fun-fact' ? 'Fun Fact' : 'Insight'}
+                          </span>
+                        </div>
+                      )}
+
                       {note.content ? (
                         <p className="text-white whitespace-pre-wrap break-words">
                           {note.content}
@@ -292,21 +362,26 @@ const NotesApp = ({ id }) => {
                         <Clock size={12} />
                         <span>{formatDate(note.updatedAt)}</span>
                       </div>
+                      
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => startEditing(note)}
-                          className="p-1.5 rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
-                          title="Edit note"
-                        >
-                          <Edit3 size={16} />
-                        </button>
-                        <button
-                          onClick={() => deleteNote(note.id)}
-                          className="p-1.5 rounded hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-colors"
-                          title="Delete note"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {!note.isSynced && (
+                          <>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); startEditing(note); }}
+                              className="p-1.5 rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                              title="Edit note"
+                            >
+                              <Edit3 size={16} />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); deleteNote(note.id); }}
+                              className="p-1.5 rounded hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                              title="Delete note"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </>

@@ -7,128 +7,8 @@ import ImageUploader from '../../components/admin/ImageUploader';
 import { clearPostsCache } from '../../data/posts';
 
 // Default posts for fallback
-const defaultPosts = [
-  {
-    id: 'post-1',
-    title: 'How I Built This OS-Style Portfolio',
-    excerpt: 'A deep dive into creating an interactive desktop experience using React, Framer Motion, and modern web technologies.',
-    content: `# Building an OS-Style Portfolio
-
-This portfolio was built with the goal of creating something unique and memorable. Instead of a traditional portfolio layout, I wanted to recreate the familiar experience of using a desktop operating system.
-
-## Tech Stack
-- **React 18** for component architecture
-- **Framer Motion** for smooth animations
-- **Tailwind CSS** for styling
-- **Vite** for blazing fast development
-
-## Key Features
-1. Draggable windows with minimize/maximize
-2. Functional taskbar with system tray
-3. Desktop icons with context menus
-4. Voice commands integration
-5. Achievement system for engagement
-
-Stay tuned for more technical deep-dives!`,
-    image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80',
-    category: 'Tech',
-    date: '2026-01-30',
-    readTime: 5,
-    featured: true,
-    published: true,
-    externalLink: null,
-  },
-  {
-    id: 'post-2',
-    title: 'My Journey as a Software Developer',
-    excerpt: 'From learning HTML basics to building full-stack applications — lessons learned along the way.',
-    content: `# My Journey as a Developer
-
-It all started with curiosity about how websites work. Today, I'm building complex systems that serve real users.
-
-## The Beginning
-I remember my first "Hello World" — it felt magical seeing code come to life in the browser.
-
-## Key Milestones
-- First freelance project
-- Building real-world applications
-- Contributing to open source
-- Leading development teams
-
-## What I've Learned
-1. **Never stop learning** — technology evolves fast
-2. **Build, build, build** — experience beats theory
-3. **Community matters** — connect with other developers
-4. **Soft skills count** — communication is key
-
-The journey continues...`,
-    image: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
-    category: 'Life',
-    date: '2026-01-25',
-    readTime: 4,
-    featured: false,
-    published: true,
-    externalLink: null,
-  },
-  {
-    id: 'post-3',
-    title: 'Building Scalable Systems with Next.js',
-    excerpt: 'Best practices for architecting Next.js applications that can handle thousands of users.',
-    content: `# Scalable Next.js Architecture
-
-After building several production applications, here are patterns that work.
-
-## Key Principles
-1. **Separation of Concerns** — keep logic modular
-2. **Caching Strategy** — leverage ISR and SWR
-3. **Database Optimization** — index wisely
-4. **Error Boundaries** — fail gracefully
-
-## Performance Tips
-- Use dynamic imports for code splitting
-- Optimize images with next/image
-- Implement skeleton loading states
-- Monitor with analytics
-
-Happy coding!`,
-    image: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
-    category: 'Tech',
-    date: '2026-01-20',
-    readTime: 6,
-    featured: false,
-    published: true,
-    externalLink: null,
-  },
-  {
-    id: 'post-4',
-    title: 'Why I Love Open Source',
-    excerpt: 'Contributing to open source has transformed my career and connected me with amazing developers worldwide.',
-    content: `# Open Source Changed My Life
-
-Open source is more than free software — it's a community and a mindset.
-
-## Benefits I've Experienced
-- **Learning** from world-class developers
-- **Networking** with the global community
-- **Building** a public portfolio
-- **Giving back** to tools I use daily
-
-## Getting Started
-1. Find projects you use and love
-2. Start with documentation fixes
-3. Move to small bug fixes
-4. Eventually tackle features
-
-Join the movement! 🚀`,
-    image: 'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=800&q=80',
-    category: 'Life',
-    date: '2026-01-15',
-    readTime: 3,
-    featured: false,
-    published: true,
-    externalLink: null,
-  },
-];
+// Default posts for fallback
+const defaultPosts = [];
 
 const categoryOptions = ['Tech', 'Life', 'Tutorial', 'News', 'Personal'];
 
@@ -155,11 +35,11 @@ const Blog = () => {
       if (data && data.length > 0) {
         setPosts(data);
       } else {
-        setPosts(defaultPosts);
+        setPosts([]);
       }
     } catch (error) {
       console.error("Error fetching posts:", error);
-      setPosts(defaultPosts);
+      setPosts([]);
     } finally {
       setLoading(false);
     }

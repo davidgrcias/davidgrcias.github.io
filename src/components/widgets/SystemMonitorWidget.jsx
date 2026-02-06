@@ -14,6 +14,14 @@ const SystemMonitorWidget = ({ className = '' }) => {
     fps: 0,
   });
 
+  // Target metrics for smooth interpolation
+  const [targetMetrics, setTargetMetrics] = useState({
+    memory: { used: 0, total: 0, percent: 0 },
+    network: { latency: 0, type: 'unknown', downlink: 0 },
+    disk: { usedKV: 0 },
+    fps: 0,
+  });
+
   const [memHistory, setMemHistory] = useState(Array(20).fill(0));
   const [latencyHistory, setLatencyHistory] = useState(Array(20).fill(0));
   const [activeTab, setActiveTab] = useState('perf'); // 'perf' | 'stack'
@@ -28,6 +36,43 @@ const SystemMonitorWidget = ({ className = '' }) => {
   useEffect(() => {
     localStorage.setItem('webos-devmonitor-expanded', isExpanded.toString());
   }, [isExpanded]);
+
+  // Smooth interpolation effect - animate metrics changes at 60fps
+  useEffect(() => {
+    let animationFrame;
+    const interpolationSpeed = 0.15; // Lower = smoother but slower, higher = faster but less smooth
+
+    const animate = () => {
+      setMetrics(current => {
+        const smoothLerp = (from, to, speed) => from + (to - from) * speed;
+        
+        // Only animate numeric values
+        const newMetrics = {
+          memory: {
+            used: Math.round(smoothLerp(current.memory.used, targetMetrics.memory.used, interpolationSpeed)),
+            total: targetMetrics.memory.total, // Total doesn't change often
+            percent: Math.round(smoothLerp(current.memory.percent, targetMetrics.memory.percent, interpolationSpeed))
+          },
+          network: {
+            latency: Math.round(smoothLerp(current.network.latency, targetMetrics.network.latency, interpolationSpeed)),
+            type: targetMetrics.network.type, // String, no interpolation
+            downlink: parseFloat(smoothLerp(current.network.downlink, targetMetrics.network.downlink, interpolationSpeed).toFixed(1))
+          },
+          disk: {
+            usedKV: parseFloat(smoothLerp(parseFloat(current.disk.usedKV), parseFloat(targetMetrics.disk.usedKV), interpolationSpeed).toFixed(2))
+          },
+          fps: Math.round(smoothLerp(current.fps, targetMetrics.fps, interpolationSpeed))
+        };
+
+        return newMetrics;
+      });
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [targetMetrics]);
 
   useEffect(() => {
     let lastTime = performance.now();
@@ -77,12 +122,13 @@ const SystemMonitorWidget = ({ className = '' }) => {
         lastTime = now;
       }
 
-      setMetrics(prev => ({
+      // Update TARGET metrics instead of direct state - let interpolation handle the smooth transition
+      setTargetMetrics({
         memory: memData,
         network: netData,
         disk: { usedKV: diskUsed },
         fps: fpsValue
-      }));
+      });
 
       setMemHistory(prev => [...prev.slice(1), memData.percent]);
       // Normalize latency for the graph (0-200ms range mapped to 0-100%)

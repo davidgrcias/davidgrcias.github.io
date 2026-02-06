@@ -1,15 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, Loader, MessageSquare, Trash2, MessageCircle, Download, ThumbsUp, ThumbsDown, Sparkles, Zap, AlertCircle, X, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Send, Bot, Loader, MessageSquare, Trash2, MessageCircle, Download, ThumbsUp, ThumbsDown, Sparkles, Zap, AlertCircle, X, Mic, MicOff, Volume2, VolumeX, Brain, ExternalLink } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useTranslation } from '../../contexts/TranslationContext';
-import { searchSimilarKnowledge } from '../../services/vectorStore';
-import { hybridSearch } from '../../services/hybridSearch';
-import { logChatAnalytics, saveChatSession, updateChatFeedback } from '../../services/chatAnalytics';
+import { sendAgentMessage, getAgentMemory, resetAgentMemory } from '../../services/aiAgent';
+import { updateChatFeedback } from '../../services/chatAnalytics';
 
 const MessengerApp = ({ id }) => {
     const { updateWindow } = useOS();
     const { currentLanguage } = useTranslation();
+    const agentMemory = useRef(getAgentMemory());
+    const abortRef = useRef(null);
     const [messages, setMessages] = useState([
         {
             type: 'bot',
@@ -18,7 +19,6 @@ const MessengerApp = ({ id }) => {
     ]);
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
-    const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
     const [useRAG, setUseRAG] = useState(true);
     const [suggestedQuestions, setSuggestedQuestions] = useState([
         "What are David's technical skills?",
@@ -28,13 +28,13 @@ const MessengerApp = ({ id }) => {
     ]);
     const [error, setError] = useState(null);
     const [streamingText, setStreamingText] = useState('');
-    const [enableStreaming, setEnableStreaming] = useState(true);
+    const [enableStreaming, setEnableStreaming] = useState(false);
     const [useHybridSearch, setUseHybridSearch] = useState(true);
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(false);
+    const [actionBadges, setActionBadges] = useState([]);
     const messagesEndRef = useRef(null);
-    const eventSourceRef = useRef(null);
     const recognitionRef = useRef(null);
     const synthRef = useRef(null);
 
@@ -46,17 +46,33 @@ const MessengerApp = ({ id }) => {
                     {
                         label: 'New Chat',
                         icon: <MessageCircle size={16} />,
-                        onClick: () => setMessages([{
-                            type: 'bot',
-                            content: "Hello! 👋 I'm David's AI Assistant.\n\nAsk me about his projects, skills, or just say hi! I can tell you all about his journey.",
-                        }]),
+                        onClick: () => {
+                            resetAgentMemory();
+                            agentMemory.current = getAgentMemory();
+                            setMessages([{
+                                type: 'bot',
+                                content: "Hello! 👋 I'm David's AI Assistant.\n\nAsk me about his projects, skills, or just say hi! I can tell you all about his journey.",
+                            }]);
+                            setSuggestedQuestions([
+                                "What are David's technical skills?",
+                                "Tell me about his projects",
+                                "What's his experience?",
+                                "How can I contact him?"
+                            ]);
+                            setActionBadges([]);
+                        },
                         shortcut: 'Ctrl+N',
                     },
                     { separator: true },
                     {
                         label: 'Clear History',
                         icon: <Trash2 size={16} />,
-                        onClick: () => setMessages([]),
+                        onClick: () => {
+                            resetAgentMemory();
+                            agentMemory.current = getAgentMemory();
+                            setMessages([]);
+                            setActionBadges([]);
+                        },
                     },
                     {
                         label: 'Export Chat',
@@ -109,12 +125,12 @@ const MessengerApp = ({ id }) => {
         scrollToBottom();
     }, [messages, streamingText]);
 
-    // Cleanup EventSource and Speech on unmount
+    // Cleanup Speech on unmount
     useEffect(() => {
         return () => {
-            if (eventSourceRef.current) {
-                eventSourceRef.current.close();
-                eventSourceRef.current = null;
+            if (abortRef.current) {
+                abortRef.current();
+                abortRef.current = null;
             }
             if (recognitionRef.current) {
                 recognitionRef.current.stop();
@@ -220,139 +236,62 @@ const MessengerApp = ({ id }) => {
         setIsTyping(true);
         setError(null);
         setStreamingText('');
+        setActionBadges([]);
 
-        // Close any existing EventSource
-        if (eventSourceRef.current) {
-            eventSourceRef.current.close();
-            eventSourceRef.current = null;
+        // Abort any existing stream
+        if (abortRef.current) {
+            abortRef.current();
+            abortRef.current = null;
         }
 
-        const startTime = Date.now();
-
         try {
-            let response = '';
-            let sources = [];
-            let retrievedDocs = [];
-            let analyticsId = null;
-
-            if (useRAG) {
-                // Step 1: Search for relevant knowledge using hybrid or vector search
-                if (useHybridSearch) {
-                    retrievedDocs = await hybridSearch(question, {
-                        topK: 5,
-                        language: currentLanguage,
-                        threshold: 0.2,
-                        vectorWeight: 0.6,
-                        keywordWeight: 0.4
-                    });
-                } else {
-                    retrievedDocs = await searchSimilarKnowledge(question, {
-                        topK: 5,
-                        language: currentLanguage,
-                        threshold: 0.3
-                    });
-                }
-
-                // Step 2: Use streaming or non-streaming based on settings
-                if (enableStreaming) {
-                    // Streaming mode
-                    const streamUrl = new URL(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/api/chat-stream`);
-                    streamUrl.searchParams.set('message', question);
-                    streamUrl.searchParams.set('language', currentLanguage);
-                    streamUrl.searchParams.set('useRAG', 'true');
-                    streamUrl.searchParams.set('context', JSON.stringify(messages.slice(-5)));
-                    streamUrl.searchParams.set('retrievedDocs', JSON.stringify(retrievedDocs.map(doc => ({
-                        id: doc.id,
-                        title: doc.title,
-                        content: doc.content,
-                        similarity: doc.similarity
-                    }))));
-
-                    const eventSource = new EventSource(streamUrl.toString());
-                    eventSourceRef.current = eventSource;
-
-                    eventSource.onmessage = (event) => {
-                        const data = JSON.parse(event.data);
-
-                        if (data.type === 'chunk') {
-                            setStreamingText(prev => prev + data.chunk);
-                        } else if (data.type === 'done') {
-                            response = data.fullText;
-                            sources = data.sources || [];
-                            eventSource.close();
-                            eventSourceRef.current = null;
-
-                            const responseTime = Date.now() - startTime;
-                            finalizeBotMessage(response, sources, retrievedDocs, responseTime);
-                        }
-                    };
-
-                    eventSource.onerror = (error) => {
-                        console.error('EventSource error:', error);
-                        eventSource.close();
-                        eventSourceRef.current = null;
-                        throw new Error('Streaming connection failed');
-                    };
-
-                    return; // Exit early for streaming mode
-                } else {
-                    // Non-streaming mode (original RAG)
-                    const ragResponse = await fetch('https://davidgrcias-github-io-davidgrcias-projects-cc8794a2.vercel.app/api/chat-rag', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            message: question,
-                            context: messages.slice(-5),
-                            retrievedDocs: retrievedDocs.map(doc => ({
-                                id: doc.id,
-                                title: doc.title,
-                                content: doc.content,
-                                similarity: doc.similarity
-                            })),
-                            language: currentLanguage,
-                            useRAG: true
-                        })
-                    });
-
-                    if (!ragResponse.ok) {
-                        throw new Error('RAG API failed');
-                    }
-
-                    const data = await ragResponse.json();
-                    response = data.response;
-                    sources = data.sources || [];
-                }
-            } else {
-                // Fallback to basic chat
-                const basicResponse = await fetch('https://davidgrcias-github-io-davidgrcias-projects-cc8794a2.vercel.app/api/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: question })
+            if (enableStreaming) {
+                // Streaming mode via AI Agent
+                await sendAgentMessage(question, {
+                    language: currentLanguage,
+                    useRAG,
+                    useHybrid: useHybridSearch,
+                    streaming: true,
+                    onChunk: (chunk, fullText) => {
+                        setStreamingText(fullText);
+                    },
+                    onDone: (result) => {
+                        finalizeBotMessage(result);
+                    },
+                    onError: (error) => {
+                        console.error('Stream error:', error);
+                        setError(error.message || 'Streaming failed');
+                        setIsTyping(false);
+                        setStreamingText('');
+                    },
+                    onActionExecuted: (action, result) => {
+                        console.log('🤖 Agent Action:', action.label);
+                    },
                 });
-
-                if (!basicResponse.ok) {
-                    throw new Error('Chat API failed');
-                }
-
-                const data = await basicResponse.json();
-                response = data.text;
+            } else {
+                // Non-streaming mode via AI Agent
+                const result = await sendAgentMessage(question, {
+                    language: currentLanguage,
+                    useRAG,
+                    useHybrid: useHybridSearch,
+                    streaming: false,
+                    onActionExecuted: (action, result) => {
+                        console.log('🤖 Agent Action:', action.label);
+                    },
+                });
+                finalizeBotMessage(result);
             }
-
-            const responseTime = Date.now() - startTime;
-            finalizeBotMessage(response, sources, retrievedDocs, responseTime);
-
         } catch (error) {
             console.error('Chat error:', error);
 
-            // Better error messages based on error type
             let errorMessage = "Sorry, I encountered an error. Please try again.";
             let userMessage = error.message || "Unknown error";
 
             if (error.message?.includes('Failed to fetch')) {
-                errorMessage = "⚠️ Development Mode: Using fallback responses.\n\nAPI connection failed (CORS or network issue). The chatbot will work with limited functionality.";
-                userMessage = "API connection failed - using fallback mode";
+                errorMessage = "⚠️ API connection failed. Please check your network and try again.";
+                userMessage = "API connection failed";
             } else if (error.message?.includes('embedding')) {
-                errorMessage = "Could not generate embeddings. Try asking in a different way.";
+                errorMessage = "Could not process your question. Try rephrasing it.";
             }
 
             setError(userMessage);
@@ -367,52 +306,38 @@ const MessengerApp = ({ id }) => {
         }
     };
 
-    const finalizeBotMessage = async (response, sources, retrievedDocs, responseTime) => {
-        // Add bot response with metadata
+    const finalizeBotMessage = (result) => {
         const botMsg = {
             type: 'bot',
-            content: response,
-            sources: sources,
+            content: result.text,
+            sources: result.sources || [],
             timestamp: new Date(),
             id: `msg_${Date.now()}`,
             feedback: null,
-            analyticsId: null
+            actions: result.actions || [],
+            actionSuggestions: result.actionSuggestions || [],
+            responseTime: result.responseTime,
         };
 
         setMessages(prev => [...prev, botMsg]);
         setStreamingText('');
         setIsTyping(false);
 
+        // Update suggested questions from agent memory
+        if (result.suggestions && result.suggestions.length > 0) {
+            setSuggestedQuestions(result.suggestions.slice(0, 4));
+        }
+
+        // Show action badges if any were executed
+        if (result.actions && result.actions.length > 0) {
+            setActionBadges(result.actions.map(a => a.label));
+            setTimeout(() => setActionBadges([]), 3000);
+        }
+
         // Auto-speak response if voice is enabled
         if (voiceEnabled && synthRef.current) {
-            speakText(response);
+            speakText(result.text);
         }
-
-        // Log analytics
-        const analytics = await logChatAnalytics({
-            sessionId,
-            question: messages[messages.length - 1]?.content || '',
-            answer: response,
-            retrievedDocs: retrievedDocs.map(d => d.id),
-            responseTime,
-            language: currentLanguage
-        });
-
-        // Update message with analytics ID for feedback
-        if (analytics?.id) {
-            setMessages(prev => prev.map(msg =>
-                msg.id === botMsg.id ? { ...msg, analyticsId: analytics.id } : msg
-            ));
-        }
-
-        // Save session
-        await saveChatSession(sessionId, [...messages, botMsg], {
-            language: currentLanguage,
-            useRAG
-        });
-
-        // Update suggested questions based on response
-        updateSuggestedQuestions(retrievedDocs);
     };
 
     const handleFeedback = async (messageId, feedback) => {
@@ -432,46 +357,6 @@ const MessengerApp = ({ id }) => {
         }
     };
 
-    const updateSuggestedQuestions = (retrievedDocs) => {
-        // Generate smart suggestions based on retrieved docs
-        const suggestions = [];
-
-        if (retrievedDocs.length > 0) {
-            const categories = [...new Set(retrievedDocs.map(d => d.category))];
-
-            const categoryQuestions = {
-                'skills': "What other skills does David have?",
-                'projects': "Show me more of his projects",
-                'experience': "What's his work experience?",
-                'education': "Tell me about his education",
-                'certifications': "What certifications does he have?",
-                'personal': "Tell me more about David"
-            };
-
-            categories.forEach(cat => {
-                if (categoryQuestions[cat]) {
-                    suggestions.push(categoryQuestions[cat]);
-                }
-            });
-        }
-
-        // Add default suggestions if not enough
-        const defaults = [
-            "How can I contact David?",
-            "What technologies does he use?",
-            "Tell me about his achievements"
-        ];
-
-        while (suggestions.length < 3) {
-            const random = defaults[Math.floor(Math.random() * defaults.length)];
-            if (!suggestions.includes(random)) {
-                suggestions.push(random);
-            }
-        }
-
-        setSuggestedQuestions(suggestions.slice(0, 3));
-    };
-
     return (
         <div className="flex flex-col h-full w-full bg-zinc-900 text-white font-sans">
             {/* Error Banner */}
@@ -487,6 +372,18 @@ const MessengerApp = ({ id }) => {
 
             {/* Chat Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-zinc-800/50">
+                {/* Action Badges (show when agent performs actions) */}
+                {actionBadges.length > 0 && (
+                    <div className="flex gap-2 justify-center animate-pulse">
+                        {actionBadges.map((label, i) => (
+                            <span key={i} className="px-3 py-1 text-[11px] bg-cyan-500/20 text-cyan-400 rounded-full border border-cyan-500/30 flex items-center gap-1">
+                                <ExternalLink size={10} />
+                                {label}
+                            </span>
+                        ))}
+                    </div>
+                )}
+
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`flex flex-col ${msg.type === 'user' ? 'items-end' : 'items-start'} group`}>
                         <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm transition-all ${msg.type === 'user'
@@ -507,6 +404,31 @@ const MessengerApp = ({ id }) => {
                                     <span key={i} className="text-[10px] px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded-full border border-zinc-700 hover:bg-zinc-750 transition-colors">
                                         📚 {source.title}
                                     </span>
+                                ))}
+                                {msg.responseTime && (
+                                    <span className="text-[10px] px-2 py-0.5 bg-zinc-800 text-zinc-500 rounded-full border border-zinc-700">
+                                        ⚡ {(msg.responseTime / 1000).toFixed(1)}s
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Action Suggestion Badges */}
+                        {msg.actionSuggestions && msg.actionSuggestions.length > 0 && (
+                            <div className="flex gap-1 mt-1 flex-wrap max-w-[70%]">
+                                {msg.actionSuggestions.map((action, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => {
+                                            import('../../services/agentActions').then(mod => {
+                                                mod.executeAgentActions([action]);
+                                            });
+                                        }}
+                                        className="text-[10px] px-2 py-0.5 bg-cyan-500/10 text-cyan-400 rounded-full border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors cursor-pointer flex items-center gap-1"
+                                    >
+                                        <ExternalLink size={10} />
+                                        {action.label}
+                                    </button>
                                 ))}
                             </div>
                         )}
@@ -580,8 +502,13 @@ const MessengerApp = ({ id }) => {
 
             {/* Input Area */}
             <div className="p-4 bg-zinc-900 border-t border-zinc-700">
-                {/* RAG Toggle & Streaming Toggle */}
+                {/* RAG Toggle & Mode Controls */}
                 <div className="flex items-center gap-3 mb-2 text-xs text-zinc-400 flex-wrap">
+                    <span className="flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/30">
+                        <Brain size={12} />
+                        <span>AI Agent</span>
+                    </span>
+
                     <button
                         onClick={() => setUseRAG(!useRAG)}
                         className={`flex items-center gap-1 px-2 py-1 rounded transition-all ${useRAG ? 'bg-blue-500/20 text-blue-400 ring-1 ring-blue-500/30' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-750'

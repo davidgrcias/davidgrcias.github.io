@@ -167,6 +167,14 @@ export const getPosts = async (currentLanguage = "en") => {
         return translateData(cachedPosts, currentLanguage);
     }
 
+    // Default placeholder images for posts without images
+    const defaultImages = [
+        'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80',
+        'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&q=80',
+        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
+        'https://images.unsplash.com/photo-1556075798-4825dfaaf498?w=800&q=80',
+    ];
+
     try {
         const firestoreData = await withTimeout(
             getCollection('posts', { orderByField: 'date', orderDirection: 'desc' }),
@@ -176,9 +184,16 @@ export const getPosts = async (currentLanguage = "en") => {
         if (firestoreData && firestoreData.length > 0) {
             // Filter only published posts for frontend
             const publishedPosts = firestoreData.filter(post => post.published !== false);
-            cachedPosts = publishedPosts;
+
+            // Add default images to posts without images
+            const postsWithImages = publishedPosts.map((post, index) => ({
+                ...post,
+                image: post.image || defaultImages[index % defaultImages.length]
+            }));
+
+            cachedPosts = postsWithImages;
             cacheTimestamp = Date.now();
-            return translateData(publishedPosts, currentLanguage);
+            return translateData(postsWithImages, currentLanguage);
         }
     } catch (error) {
         if (error.message !== 'Request timed out') {

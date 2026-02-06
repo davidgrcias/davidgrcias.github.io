@@ -37,6 +37,7 @@ import WelcomeTutorial from './WelcomeTutorial';
 import AchievementToast from '../achievements/AchievementToast';
 import PDFViewer from '../tools/PDFViewer';
 import { getUserProfile } from '../../data/userProfile';
+import CustomScrollbar from '../common/CustomScrollbar';
 
 // Lazy load apps for better performance
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -721,48 +722,84 @@ const DesktopContent = () => {
             {/* Overlay for depth */}
             <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
 
-            {/* Desktop Icons Area */}
-            <div
-                ref={desktopScrollRef}
-                className={`relative z-10 w-full h-full ${needsScroll ? 'overflow-y-auto' : ''}`}
-            >
-                <div
-                    className="relative w-full"
-                    style={{ height: needsScroll ? gridContentHeight : '100%' }}
+            {/* Desktop Icons Area - Custom Scrollbar for cross-browser consistency */}
+            {needsScroll ? (
+                <CustomScrollbar
+                    className="relative z-10 w-full h-full"
+                    thumbColor="rgba(96, 165, 250, 0.35)"
+                    thumbHoverColor="rgba(147, 197, 253, 0.6)"
+                    trackColor="rgba(255, 255, 255, 0.05)"
+                    thumbWidth={2}
+                    autoHide={true}
+                    autoHideDelay={800}
+                    scrollThreshold={10}
                 >
-                    {allShortcuts.map((shortcut, index) => {
-                        // Get grid position from state or use default based on index
-                        const gridPos = iconGridPositions[shortcut.id] || {
-                            row: Math.floor(index / GRID_COLS),
-                            col: index % GRID_COLS
-                        };
-                        
-                        // CLAMP position to ensure it fits within current grid (responsiveness)
-                        // This prevents icons from overlapping with the widget area or going off-screen
-                        const validCol = Math.min(gridPos.col, GRID_COLS - 1);
-                        const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
+                    <div
+                        ref={desktopScrollRef}
+                        className="relative w-full"
+                        style={{ height: gridContentHeight }}
+                    >
+                        {allShortcuts.map((shortcut, index) => {
+                            const gridPos = iconGridPositions[shortcut.id] || {
+                                row: Math.floor(index / GRID_COLS),
+                                col: index % GRID_COLS
+                            };
+                            const validCol = Math.min(gridPos.col, GRID_COLS - 1);
+                            const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
+                            const x = MARGIN_X + validCol * GRID_SIZE;
+                            const y = MARGIN_Y + validRow * GRID_SIZE;
 
-                        // Convert grid position to pixel coordinates (using centered margins)
-                        const x = MARGIN_X + validCol * GRID_SIZE;
-                        const y = MARGIN_Y + validRow * GRID_SIZE;
+                            return (
+                                <DesktopIcon
+                                    key={`${shortcut.id}-${dragKeyCounter}`}
+                                    dragKey={`${shortcut.id}-${dragKeyCounter}`}
+                                    gridSize={GRID_SIZE}
+                                    icon={shortcut.icon}
+                                    label={shortcut.label}
+                                    onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
+                                    onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
+                                    onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
+                                    isDragging={draggingId === shortcut.id}
+                                    style={{ left: x, top: y }}
+                                />
+                            );
+                        })}
+                    </div>
+                </CustomScrollbar>
+            ) : (
+                <div
+                    ref={desktopScrollRef}
+                    className="relative z-10 w-full h-full"
+                >
+                    <div className="relative w-full h-full">
+                        {allShortcuts.map((shortcut, index) => {
+                            const gridPos = iconGridPositions[shortcut.id] || {
+                                row: Math.floor(index / GRID_COLS),
+                                col: index % GRID_COLS
+                            };
+                            const validCol = Math.min(gridPos.col, GRID_COLS - 1);
+                            const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
+                            const x = MARGIN_X + validCol * GRID_SIZE;
+                            const y = MARGIN_Y + validRow * GRID_SIZE;
 
-                        return (
-                            <DesktopIcon
-                                key={`${shortcut.id}-${dragKeyCounter}`}
-                                dragKey={`${shortcut.id}-${dragKeyCounter}`}
-                                gridSize={GRID_SIZE}
-                                icon={shortcut.icon}
-                                label={shortcut.label}
-                                onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
-                                onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
-                                onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
-                                isDragging={draggingId === shortcut.id}
-                                style={{ left: x, top: y }}
-                            />
-                        );
-                    })}
+                            return (
+                                <DesktopIcon
+                                    key={`${shortcut.id}-${dragKeyCounter}`}
+                                    dragKey={`${shortcut.id}-${dragKeyCounter}`}
+                                    gridSize={GRID_SIZE}
+                                    icon={shortcut.icon}
+                                    label={shortcut.label}
+                                    onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
+                                    onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
+                                    onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
+                                    isDragging={draggingId === shortcut.id}
+                                    style={{ left: x, top: y }}
+                                />
+                            );
+                        })}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Windows Layer */}
             {windows.map((window) => (

@@ -4,14 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
 
 // Default certifications data
-const defaultCertifications = [
-  { id: 'default-1', name: "HCIA-AI V3.5 Course", provider: "Huawei ICT Academy", date: "May 2025", icon: "BrainCircuitIcon", isDefault: true },
-  { id: 'default-2', name: "Python Intermediate Course", provider: "Sololearn", date: "June 2025", icon: "CodeIcon", isDefault: true },
-  { id: 'default-3', name: "PHP Course", provider: "Progate", date: "Jan 2022", icon: "FileCode", isDefault: true },
-  { id: 'default-4', name: "React Course", provider: "Progate", date: "Jan 2022", icon: "Code2", isDefault: true },
-  { id: 'default-5', name: "SQL Course", provider: "Progate", date: "Jan 2022", icon: "Database", isDefault: true },
-  { id: 'default-6', name: "GIT Course", provider: "Progate", date: "Dec 2021", icon: "GitBranch", isDefault: true }
-];
+// Default certifications data
+const defaultCertifications = [];
 
 const Certifications = () => {
   const navigate = useNavigate();
@@ -28,10 +22,10 @@ const Certifications = () => {
     try {
       setLoading(true);
       const data = await firestoreService.getCollection('certifications', { orderByField: 'order' });
-      setCertifications(data && data.length > 0 ? data : defaultCertifications);
+      setCertifications(data || []);
     } catch (error) {
       console.error("Error fetching certifications:", error);
-      setCertifications(defaultCertifications);
+      setCertifications([]);
     } finally {
       setLoading(false);
     }

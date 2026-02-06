@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithPopup, onAuthStateChanged } from 'firebase/auth';
 import { auth, googleProvider, isAdminEmail } from '../../config/firebase';
-import { auth, googleProvider, isAdminEmail } from '../../config/firebase';
 import { getUserProfile } from '../../data/userProfile';
 import OptimizedImage from '../../components/common/OptimizedImage';
 

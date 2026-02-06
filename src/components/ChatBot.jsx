@@ -10,29 +10,11 @@ import {
   Maximize2,
   Minimize2,
 } from "lucide-react";
-import { generateAIResponse } from "../api/gemini";
-import { getUserProfile } from "../data/userProfile";
-import { getExperiences } from "../data/experiences";
-import { getSkills } from "../data/skills";
-import { getProjects } from "../data/projects";
-import { getInsights } from "../data/insights";
-import { getEducation } from "../data/education";
-import { getCertifications } from "../data/certifications";
-import { getFunFacts } from "../data/funFacts";
+import { sendWidgetMessage } from "../services/aiAgent";
 import { useTranslation } from "../contexts/TranslationContext";
 
 const ChatBot = () => {
   const { currentLanguage, translateText } = useTranslation();
-
-  // Get translated data based on current language
-  const userProfile = getUserProfile(currentLanguage);
-  const experiences = getExperiences(currentLanguage);
-  const skills = getSkills(currentLanguage);
-  const projects = getProjects(currentLanguage);
-  const insights = getInsights(currentLanguage);
-  const education = getEducation(currentLanguage);
-  const certifications = getCertifications(currentLanguage);
-  const funFacts = getFunFacts(currentLanguage);
 
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -69,292 +51,40 @@ const ChatBot = () => {
     setIsFullscreen(!isFullscreen);
   };
 
-  // Create knowledge base
-  const personalityInsights = {
-    funFacts: funFacts.map((fact) => `${fact.title}: ${fact.text}`).join("\n"),
-    insights: insights
-      .map((insight) => `${insight.title}: ${insight.text}`)
-      .join("\n"),
-  };
-
-  // Enhanced knowledge base with personal information
-  const knowledge = {
-    personal: {
-      name: userProfile.name,
-      headline: userProfile.headline,
-      about: userProfile.aboutText,
-      location: userProfile.contact.location,
-      personality: personalityInsights,
-    },
-    contact: {
-      email: userProfile.contact.email,
-      whatsapp: userProfile.contact.whatsapp,
-      location: userProfile.contact.location,
-      socials: Object.entries(userProfile.socials)
-        .map(([platform, data]) => `${platform}: ${data.url}`)
-        .join("\n"),
-    },
-    personality: personalityInsights,
-    professional: {
-      skills: `Technical Skills:\n${skills.technical
-        ?.map(
-          (category) =>
-            `${category.category}: ${category.skills.join(", ")}`
-        )
-        .join("\n")}\n\nSoft Skills:\n${skills.soft?.join(", ")}`,
-      certifications: certifications
-        .map((cert) => `${cert.name} from ${cert.provider} (${cert.date})`)
-        .join("\n"),
-      education: education
-        .map(
-          (edu) =>
-            `${edu.degree} at ${edu.institution} (${edu.period})` +
-            (edu.grade ? ` - GPA: ${edu.grade}` : "")
-        )
-        .join("\n"),
-      experience: experiences
-        .map(
-          (exp) =>
-            `${exp.role} at ${exp.company} (${exp.type}) - ${
-              exp.startDate
-            } to ${exp.endDate}\nSkills used: ${exp.skills.join(", ")}`
-        )
-        .join("\n\n"),
-    },
-  };
-
-  const findBestMatch = (input, keywords) => {
-    const inputWords = input.toLowerCase().split(" ");
-    return keywords.some((keyword) =>
-      inputWords.some(
-        (word) =>
-          word.length > 3 &&
-          (keyword.includes(word) ||
-            word.includes(keyword) ||
-            levenshteinDistance(word, keyword) <= 2)
-      )
-    );
-  };
-
-  const levenshteinDistance = (a, b) => {
-    if (a.length === 0) return b.length;
-    if (b.length === 0) return a.length;
-
-    const matrix = [];
-
-    for (let i = 0; i <= b.length; i++) {
-      matrix[i] = [i];
-    }
-
-    for (let j = 0; j <= a.length; j++) {
-      matrix[0][j] = j;
-    }
-
-    for (let i = 1; i <= b.length; i++) {
-      for (let j = 1; j <= a.length; j++) {
-        if (b.charAt(i - 1) === a.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
-      }
-    }
-
-    return matrix[b.length][a.length];
-  };
-  /* 
-    REFACTORED: Removed hardcoded keyword interceptors to allow Gemini AI 
-    to handle all conversational logic using the RAG context.
-  */
-
+  // ============================================
+  // AI Agent — Generate Response via Agent Service
+  // ============================================
   const generateResponse = async (input) => {
     try {
-      const inputLower = input.toLowerCase().trim();
-      setIsTyping(true); // Ensure typing state is valid
+      setIsTyping(true);
 
-      // Create COMPREHENSIVE context using ALL data sources
-      const comprehensiveContext = `
-COMPLETE PROFILE OF DAVID GARCIA SARAGIH:
+      const result = await sendWidgetMessage(input, {
+        language: currentLanguage,
+        conversationHistory: messages.slice(-8),
+        onActionExecuted: (action, result) => {
+          console.log("🤖 Widget Action:", action.label);
+        },
+      });
 
-=== BASIC INFORMATION ===
-${userProfile.name}
-Headline: ${userProfile.headline}
-Location: ${userProfile.contact.location}
-Email: ${userProfile.contact.email}
-WhatsApp: ${userProfile.contact.whatsapp}
-
-About: ${userProfile.aboutText}
-
-=== TECHNICAL SKILLS ===
-${skills.technical
-  .map(
-    (cat) =>
-      `• ${cat.category}: ${cat.skills.join(", ")}`
-  )
-  .join("\n")}
-
-=== PROFESSIONAL EXPERIENCE ===
-${experiences
-  .map(
-    (exp) =>
-      `• ${exp.role} at ${exp.company} (${exp.type}) - ${exp.startDate} to ${
-        exp.endDate
-      }
-    Description: ${exp.description || ""}
-    Skills used: ${exp.skills.join(", ")}`
-  )
-  .join("\n\n")}
-
-=== EDUCATION ===
-${education
-  .map(
-    (edu) =>
-      `• ${edu.degree} at ${edu.institution} (${edu.period})${
-        edu.grade ? ` - GPA: ${edu.grade}` : ""
-      }`
-  )
-  .join("\n")}
-
-=== CERTIFICATIONS ===
-${certifications
-  .map((cert) => `• ${cert.name} from ${cert.provider} (${cert.date})`)
-  .join("\n")}
-
-=== PERSONALITY INSIGHTS & FUN FACTS ===
-${insights.map((insight) => `• ${insight.title}: ${insight.text}`).join("\n")}
-${funFacts.map((fact) => `• ${fact.title}: ${fact.text}`).join("\n")}
-
-=== SOCIAL MEDIA PRESENCE ===
-• YouTube: ${userProfile.socials.youtube.url} (${userProfile.socials.youtube.handle})
-• TikTok: ${userProfile.socials.tiktok.url} (${userProfile.socials.tiktok.handle})
-• GitHub: ${userProfile.socials.github.url} (${userProfile.socials.github.handle})
-• LinkedIn: ${userProfile.socials.linkedin.url} (${userProfile.socials.linkedin.handle})
-• Instagram: ${userProfile.socials.instagram.url} (${userProfile.socials.instagram.handle})
-
-=== CURRENT PROJECTS ===
-${projects.slice(0, 3).map(p => `• ${p.title}: ${p.description}`).join("\n")}
-`;
-
-      const contextPrompt = `You are David Garcia Saragih's advanced AI assistant. Your goal is to represent David (a Full-Stack Web & Systems Engineer) professionally, enthusiastically, and smartly.
-
-TODAY'S DATE: ${new Date().toLocaleDateString("en-US", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })}
-
-=== CHAMELEON PERSONALITY MODE (CRITICAL) ===
-You must ADAPT your tone AND LANGUAGE to match the user's vibe.
-
-STEP 1: DETECT LANGUAGE (HIGHEST PRIORITY)
-- is the user speaking mostly English? -> YOU MUST REPLY IN ENGLISH.
-- is the user speaking mostly Indonesian? -> YOU MUST REPLY IN INDONESIA.
-
-STEP 2: DETECT TONE (Apply AFTER Language is set)
-- **IF ENGLISH + SLANG (e.g. "bro", "cool", "lit"):** Reply in Casual/Cool English.
-- **IF INDONESIA + SLANG (e.g. "gw", "lu", "bro", "kocak"):** Reply in "Jakarta South (Jaksel)" style.
-- **IF FORMAL:** Reply in standard, professional language.
-
-⚠️ CRITICAL FAILURE PREVENTION:
-- DO NOT reply in Indo/Jaksel if the user asks in English, even if they use "bro".
-- Example: "Is he smart bro?" -> Reply: "He is incredibly smart, bro! Let me tell you..." (English)
-- Example: "Pinter gak dia bro?" -> Reply: "Gacor parah bro!..." (Indo)
-
-=== MAGIC ACTIONS (HIDDEN COMMANDS) ===
-You can CONTROL the website to help the user. Append these tags at the end of your response (invisible to user) to trigger actions:
-- User asks to see projects? -> Append [ACTION: SCROLL_PROJECTS]
-- User asks to see skills/stack? -> Append [ACTION: SCROLL_SKILLS]
-- User wants to contact/hire? -> Append [ACTION: SCROLL_CONTACT]
-- User wants to see CV/Resume? -> Append [ACTION: DOWNLOAD_CV]
-- User wants to see experiences? -> Append [ACTION: SCROLL_EXPERIENCE]
-- User asks about "About Me"? -> Append [ACTION: SCROLL_ABOUT]
-- User wants to WhatsApp? -> Append [ACTION: OPEN_WHATSAPP]
-- User wants to Email? -> Append [ACTION: OPEN_EMAIL]
-
-Example Response: "Sure bro! Cek project-project gw di bawah ini ya, keren-keren semua! 😎 [ACTION: SCROLL_PROJECTS]"
-
-CONTEXT DATA (Review this carefully):
-${comprehensiveContext}
-
-CONVERSATION HISTORY:
-${messages
-  .slice(-5)
-  .map((m) => `${m.type.toUpperCase()}: ${m.content}`)
-  .join("\n")}
-
-USER INPUT: "${input}"
-
-ANSWER:`;
-
-      const aiResponse = await generateAIResponse(contextPrompt);
-
-      // --- MAGIC ACTION HANDLER ---
-      const actionRegex = /\[ACTION: ([^\]]+)\]/;
-      const match = aiResponse.match(actionRegex);
-      let cleanResponse = aiResponse;
-
-      if (match) {
-        const action = match[1];
-        cleanResponse = aiResponse.replace(match[0], "").trim(); // Remove tag from chat
-        console.log("🤖 Magic Action Triggered:", action);
-
-        // Execute Action with small delay to allow UI to update
-        setTimeout(() => {
-          switch (action) {
-            case "SCROLL_PROJECTS":
-              document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" });
-              break;
-            case "SCROLL_SKILLS":
-              document.getElementById("skills")?.scrollIntoView({ behavior: "smooth" });
-              break;
-            case "SCROLL_CONTACT":
-              document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
-              break;
-            case "SCROLL_EXPERIENCE":
-              document.getElementById("experience")?.scrollIntoView({ behavior: "smooth" });
-              break;
-            case "SCROLL_ABOUT":
-              document.getElementById("about")?.scrollIntoView({ behavior: "smooth" });
-              break;
-            case "DOWNLOAD_CV":
-               // Click the header CV button if available
-               const cvBtn = document.querySelector('button[title="Preview CV"]');
-               if(cvBtn) cvBtn.click(); 
-               else window.open("/CV_DavidGarciaSaragih.pdf", "_blank");
-              break;
-            case "OPEN_WHATSAPP":
-               if(userProfile?.contact?.whatsapp) window.open(`https://wa.me/${userProfile.contact.whatsapp}`, "_blank");
-              break;
-             case "OPEN_EMAIL":
-               if(userProfile?.contact?.email) window.open(`mailto:${userProfile.contact.email}`, "_blank");
-              break;
-            default:
-              console.warn("Unknown action:", action);
-          }
-        }, 100);
-      }
-
-      // Intelligent suggestion update based on input/response analysis
+      // Update suggested replies based on conversation context
+      const inputLower = input.toLowerCase();
       let responseContext = "welcome";
       if (inputLower.includes("youtube") || inputLower.includes("video")) responseContext = "youtube";
       else if (inputLower.includes("project") || inputLower.includes("work")) responseContext = "projects";
       else if (inputLower.includes("skill") || inputLower.includes("tech")) responseContext = "skills";
-      else if (inputLower.includes("contact") || inputLower.includes("email")) responseContext = "contact";
+      else if (inputLower.includes("contact") || inputLower.includes("email") || inputLower.includes("hire")) responseContext = "contact";
+      else if (inputLower.includes("experience") || inputLower.includes("job")) responseContext = "experience";
+      else if (inputLower.includes("education") || inputLower.includes("university")) responseContext = "education";
       
       updateSuggestedReplies(responseContext);
 
-      return cleanResponse;
-
+      return result.text;
     } catch (error) {
       console.error("Error getting AI response:", error);
       return "I'm having a bit of trouble connecting to my brain right now! 🧠 Please try asking again in a moment.";
     }
-  }; // Update suggested replies with more comprehensive options
+  };
+
   const updateSuggestedReplies = (context) => {
     const repliesMap = {
       welcome: [
@@ -364,109 +94,35 @@ ANSWER:`;
         "What projects is he working on?",
         "How can I contact him?",
       ],
-      greeting: [
-        "Tell me about his achievements",
-        "What makes him unique?",
-        "Show me his technical expertise",
-        "His content creation journey",
-        "What's his educational background?",
-      ],
-      affirmative: [
-        "Tell me about his business ventures",
-        "What programming languages does he know?",
-        "Show me his social media stats",
-        "What certifications does he have?",
-        "How did he achieve all this at 19?",
-      ],
-      clarify: [
-        "His technical skills breakdown",
-        "Educational achievements and GPA",
-        "Content creation statistics",
-        "Professional work experience",
-        "Personal interests and hobbies",
-      ],
-      thanks: [
-        "What's his biggest achievement?",
-        "Tell me about his learning approach",
-        "Show me his future goals",
-        "How can I connect with him?",
-        "What inspired his career path?",
-      ],
-      personal: [
-        "What are his biggest achievements?",
-        "Tell me about his entrepreneurship",
-        "Show me his educational background",
-        "What are his future goals?",
-        "How did he start content creation?",
-      ],
       skills: [
         "What's he currently learning?",
         "Show me his work experience",
         "Tell me about his certifications",
-        "What tools does he master?",
         "How proficient is he in React?",
       ],
       education: [
-        "What's his GPA and achievements?",
+        "What's his GPA?",
         "Tell me about his work experience",
-        "Show me his content creation stats",
         "What certifications does he have?",
-        "How does he balance everything?",
-      ],
-      goals: [
-        "What are his biggest achievements?",
-        "Tell me about his current projects",
-        "How can I work with him?",
-        "Show me his business ventures",
-        "What's his content creation like?",
       ],
       experience: [
         "Tell me about his business ventures",
         "What are his technical strengths?",
-        "Show me his educational journey",
         "How many followers does he have?",
-        "What programming languages does he know?",
       ],
       contact: [
         "Check out his YouTube channel",
-        "Tell me about his business",
         "Download his complete CV",
-        "What are his social media stats?",
         "Show me his latest projects",
       ],
-      cv: [
-        "What are his main technical skills?",
-        "Tell me about his work experience",
-        "How can I connect with David?",
-        "Show me his content creation journey",
-        "What are his educational achievements?",
-      ],
-      content: [
-        "How many YouTube subscribers?",
-        "Tell me about his TikTok success",
-        "What type of content does he create?",
-        "When did he start creating content?",
-        "Show me his technical skills",
-      ],
-      business: [
-        "What business does he run?",
-        "Tell me about his technical roles",
-        "How does he balance everything?",
-        "Show me his educational background",
-        "What are his future business plans?",
-      ],
       youtube: [
-        "How many total views does he have?",
         "What type of content does he create?",
-        "When did he start his channel?",
         "Show me his other social platforms",
         "Tell me about his technical skills",
       ],
       projects: [
         "What's his role in UMN Festival?",
-        "Tell me about his business",
         "Show me his technical expertise",
-        "What are his current goals?",
         "How can I collaborate with him?",
       ],
     };

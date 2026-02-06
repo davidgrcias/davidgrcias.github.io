@@ -9,6 +9,7 @@ const userProfileBase = {
   title: "Full-Stack Web & Systems Engineer · Content Creator",
   photoUrl: "https://placehold.co/400x400?text=David+Garcia",
   avatar: "/profilpict.webp",
+  // CV is now HARDCODED for instant loading (no Firestore override)
   cvUrl: "/CV_DavidGarciaSaragih.pdf",
   aboutText:
     "I'm driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity",
@@ -65,8 +66,8 @@ const normalizeProfile = (data) => {
     // Ensure avatar/photoUrl aliases work both ways
     avatar: data.avatar || data.photoUrl,
     photoUrl: data.photoUrl || data.avatar,
-    // Ensure CV URL exists
-    cvUrl: data.cvUrl || userProfileBase.cvUrl,
+    // Ensure CV URL is ALWAYS local (hardcoded for performance)
+    cvUrl: userProfileBase.cvUrl, // Force local path, ignore Firestore
     // Ensure flat email/location from contact
     email: data.email || data.contact?.email,
     location: data.location || data.contact?.location,

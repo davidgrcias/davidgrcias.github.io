@@ -2,30 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { Save, Loader2, Plus, X } from 'lucide-react';
 import { firestoreService } from '../../services/firestore';
 import ImageUploader from '../../components/admin/ImageUploader';
-import PDFUploader from '../../components/admin/PDFUploader';
 
 // Static fallback data
+// Static fallback data (Empty structure)
 const defaultProfile = {
-  name: "David Garcia Saragih",
-  headline: "Full-Stack Web & Systems Engineer · Content Creator",
-  photoUrl: "/profilpict.webp",
-  cvUrl: "/CV_DavidGarciaSaragih.pdf", // Default CV URL
-  aboutText: "I'm driven by curiosity and the excitement of learning something new, especially when it comes to technology. What started as a hobby has grown into a habit of building, exploring, and bringing ideas to life through code and creativity",
+  name: "",
+  headline: "",
+  photoUrl: "",
+  cvUrl: "/CV_DavidGarciaSaragih.pdf", // Keep hardcoded as requested
+  aboutText: "",
   // Status card settings
-  status: "open", // 'open' | 'employed' | 'busy'
-  availableFor: ["Full-time", "Freelance"],
+  status: "open", 
+  availableFor: [],
   contact: {
-    email: "davidgarciasaragih7@gmail.com",
-    location: "Jakarta, Indonesia",
-    whatsapp: "+6287776803957",
+    email: "",
+    location: "",
+    whatsapp: "",
     phone: ""
   },
   socials: {
-    youtube: { url: "https://www.youtube.com/c/DavidGTech", handle: "@DavidGTech" },
-    tiktok: { url: "https://www.tiktok.com/@davidgtech", handle: "@davidgtech" },
-    github: { url: "https://github.com/davidgrcias", handle: "davidgrcias" },
-    linkedin: { url: "https://www.linkedin.com/in/davidgrcias/", handle: "davidgrcias" },
-    instagram: { url: "https://www.instagram.com/davidgrcias/", handle: "@davidgrcias" }
+    youtube: { url: "", handle: "" },
+    tiktok: { url: "", handle: "" },
+    github: { url: "", handle: "" },
+    linkedin: { url: "", handle: "" },
+    instagram: { url: "", handle: "" }
   }
 };
 
@@ -205,18 +205,6 @@ const Profile = () => {
                 />
               </div>
             </div>
-          </div>
-
-          {/* CV/Resume Upload */}
-          <div>
-            <PDFUploader
-              initialPDF={profile.cvUrl}
-              onPDFUploaded={(url) => setProfile(prev => ({ ...prev, cvUrl: url }))}
-              label="CV / Resume (PDF)"
-            />
-            <p className="mt-2 text-xs text-gray-500">
-              Upload your latest CV/Resume. This will be used for the "My CV" download button.
-            </p>
           </div>
 
           {/* About */}

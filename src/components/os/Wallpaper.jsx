@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
+import { buildOptimizedUrl } from '../common/OptimizedImage';
 
 /**
  * Wallpaper Component
@@ -39,7 +40,7 @@ const Wallpaper = ({ children, onContextMenu, onClick, className = '' }) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
             className="absolute inset-0 bg-cover bg-center z-0"
-            style={{ backgroundImage: `url(${wallpaperImage})` }}
+            style={{ backgroundImage: `url(${buildOptimizedUrl(wallpaperImage, { width: 1920, quality: 80 })})` }}
           />
         )}
       </AnimatePresence>

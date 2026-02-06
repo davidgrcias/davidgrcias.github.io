@@ -4,23 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { firestoreService } from '../../services/firestore';
 
 // Default education data
-const defaultEducation = [
-  {
-    id: 'default-1',
-    degree: "Undergraduate Student, Informatics",
-    institution: "Universitas Multimedia Nusantara",
-    period: "2023 - 2027",
-    grade: "3.87",
-    isDefault: true
-  },
-  {
-    id: 'default-2',
-    degree: "Software Engineering",
-    institution: "SMK Cinta Kasih Tzu Chi",
-    period: "2020 - 2023",
-    isDefault: true
-  }
-];
+// Default education data
+const defaultEducation = [];
 
 const Education = () => {
   const navigate = useNavigate();
@@ -37,10 +22,10 @@ const Education = () => {
     try {
       setLoading(true);
       const data = await firestoreService.getCollection('education', { orderByField: 'order' });
-      setEducation(data && data.length > 0 ? data : defaultEducation);
+      setEducation(data || []);
     } catch (error) {
       console.error("Error fetching education:", error);
-      setEducation(defaultEducation);
+      setEducation([]);
     } finally {
       setLoading(false);
     }
