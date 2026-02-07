@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSound } from '../../contexts/SoundContext';
 
 /**
  * Boot Sequence / Splash Screen
  * Fake OS loading screen on first visit
  */
 const BootSequence = ({ onComplete }) => {
+  const { playBootChime } = useSound();
   const [progress, setProgress] = useState(0);
   const [stage, setStage] = useState('init');
 
@@ -49,6 +51,7 @@ const BootSequence = ({ onComplete }) => {
         if (currentStageIndex < bootStages.length) {
           runBootSequence();
         } else {
+          playBootChime();
           setTimeout(onComplete, 300);
         }
       }, currentStage.duration);

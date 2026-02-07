@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Star, Zap, Crown, Award, Sparkles, Target, Rocket } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { useWindowSize } from '../../hooks/useWindowSize';
+import { useSound } from '../../contexts/SoundContext';
 
 const AchievementToast = ({ achievement, isVisible, onClose }) => {
     const { width, height } = useWindowSize();
+    const { playAchievement } = useSound();
+
+    // Play achievement sound when toast appears
+    useEffect(() => {
+        if (isVisible && achievement) {
+            playAchievement();
+        }
+    }, [isVisible, achievement, playAchievement]);
 
     if (!achievement) return null;
 

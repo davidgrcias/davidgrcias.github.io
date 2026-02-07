@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Settings, X, Cpu, FileText, Clock } from 'lucide-react';
 import OptimizedImage from '../common/OptimizedImage';
+import { useSound } from '../../contexts/SoundContext';
 
 /**
  * Windows 11-Style Start Menu
@@ -17,6 +18,7 @@ const StartMenu = ({
   const [searchQuery, setSearchQuery] = useState('');
   const menuRef = useRef(null);
   const searchRef = useRef(null);
+  const { playMenuSelect, playMenuClose } = useSound();
 
   // Filter shortcuts based on search
   const filteredShortcuts = shortcuts.filter(shortcut =>
@@ -53,6 +55,7 @@ const StartMenu = ({
   }, [isOpen, onClose]);
 
   const handleAppClick = (shortcut) => {
+    playMenuSelect();
     onOpenApp(shortcut);
     onClose();
     setSearchQuery('');

@@ -7,6 +7,7 @@ import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
 import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
+import { useSound } from '../../contexts/SoundContext';
 import StartMenu from './StartMenu';
 import { getUserProfile } from '../../data/userProfile';
 
@@ -33,6 +34,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   const { theme, batterySaver, setBatterySaver } = useTheme();
   const { isMobile } = useDeviceDetection();
   const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
+  const { playMenuOpen, playMenuClose, playSliderTick, playToggleOn, playToggleOff, playClick } = useSound();
 
   // ============================================
   // BATTERY SIMULATION - Realistic Laptop Style
@@ -529,6 +531,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (!startMenuOpen) playMenuOpen(); else playMenuClose();
               setStartMenuOpen(!startMenuOpen);
             }}
             title="Start Menu"
@@ -719,6 +722,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                 className={`cursor-pointer hover:text-cyan-400 transition-colors ${!isOnline ? 'text-red-400' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (activePopup === 'wifi') playMenuClose(); else playMenuOpen();
                   setActivePopup(activePopup === 'wifi' ? null : 'wifi');
                 }}
                 title={!isOnline ? "Offline" : `Connected (Signal: ${wifiSignal === 3 ? 'Strong' : wifiSignal === 2 ? 'Good' : 'Weak'})`}
@@ -823,6 +827,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                 className={`cursor-pointer hover:text-cyan-400 transition-colors hover:scale-110 active:scale-95 ${isMuted ? 'text-red-400' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (activePopup === 'volume') playMenuClose(); else playMenuOpen();
                   setActivePopup(activePopup === 'volume' ? null : 'volume');
                 }}
                 title={isMuted ? "Unmute" : `Volume: ${volume}%`}
@@ -859,6 +864,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                       onChange={(e) => {
                         const newVol = parseInt(e.target.value);
                         setVolume(newVol);
+                        playSliderTick();
                         if (newVol > 0 && isMuted) {
                           setMuted(false);
                         }
@@ -896,7 +902,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
 
                   {/* Mute Toggle */}
                   <button
-                    onClick={() => setMuted(!isMuted)}
+                    onClick={() => {
+                      if (!isMuted) playToggleOff(); else playToggleOn();
+                      setMuted(!isMuted);
+                    }}
                     className={`w-full py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2 ${isMuted
                       ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
                       : 'bg-white/10 text-white hover:bg-white/20'
@@ -915,6 +924,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                 className={`flex items-center gap-1 cursor-pointer hover:text-cyan-400 transition-colors ${batterySaver ? 'text-green-400' : ''}`}
                 onClick={(e) => {
                   e.stopPropagation();
+                  if (activePopup === 'battery') playMenuClose(); else playMenuOpen();
                   setActivePopup(activePopup === 'battery' ? null : 'battery');
                 }}
                 title={`${Math.round(battery.level)}%${battery.charging ? ' - Charging' : (battery.level === 100 ? ' - Fully Charged' : ' - On Battery')}${batterySaver ? ' - Power Saver ON' : ''}`}
@@ -979,7 +989,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                       min="20"
                       max="100"
                       value={brightness}
-                      onChange={(e) => setBrightness(parseInt(e.target.value))}
+                      onChange={(e) => { setBrightness(parseInt(e.target.value)); playSliderTick(); }}
                       className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
                         [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 
                         [&::-webkit-slider-thumb]:bg-yellow-400 [&::-webkit-slider-thumb]:rounded-full 
@@ -1009,7 +1019,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
 
                   {/* Battery Saver Toggle */}
                   <button
-                    onClick={() => setBatterySaver(!batterySaver)}
+                    onClick={() => { if (!batterySaver) playToggleOn(); else playToggleOff(); setBatterySaver(!batterySaver); }}
                     className={`w-full py-3 rounded-lg text-sm font-medium transition-all flex items-center justify-between px-4 ${batterySaver
                       ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                       : 'bg-white/10 text-white hover:bg-white/20'
@@ -1048,6 +1058,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                if (activePopup === 'power') playMenuClose(); else playMenuOpen();
                 setActivePopup(activePopup === 'power' ? null : 'power');
               }}
               className={`p-2 rounded-lg transition-colors ${activePopup === 'power' ? 'bg-red-500/20 text-red-400' : 'hover:bg-white/10 text-white/80 hover:text-white'}`}

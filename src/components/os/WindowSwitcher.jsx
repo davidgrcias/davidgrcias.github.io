@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOS } from '../../contexts/OSContext';
+import { useSound } from '../../contexts/SoundContext';
 import { X } from 'lucide-react';
 
 /**
@@ -9,6 +10,7 @@ import { X } from 'lucide-react';
  */
 const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
   const { windows, focusWindow } = useOS();
+  const { playTabSwitch, playMenuClose } = useSound();
   const [selectedIndex, setSelectedIndex] = useState(0);
   const openWindows = windows.filter(w => !w.minimized);
 
@@ -16,8 +18,9 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
   useEffect(() => {
     if (isOpen && openWindows.length > 0) {
       setSelectedIndex(0);
+      playTabSwitch();
     }
-  }, [isOpen, openWindows.length]);
+  }, [isOpen, openWindows.length, playTabSwitch]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -26,6 +29,7 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
     const handleKeyDown = (e) => {
       if (e.key === 'Tab') {
         e.preventDefault();
+        playTabSwitch();
         if (e.shiftKey) {
           // Shift+Tab - go backwards
           setSelectedIndex(prev => 
@@ -45,14 +49,17 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        playMenuClose();
         onClose();
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
+        playTabSwitch();
         setSelectedIndex(prev => 
           prev >= openWindows.length - 1 ? 0 : prev + 1
         );
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
+        playTabSwitch();
         setSelectedIndex(prev => 
           prev <= 0 ? openWindows.length - 1 : prev - 1
         );

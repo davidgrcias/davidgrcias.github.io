@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, ChevronRight, ChevronLeft, Rocket, Keyboard, Mouse, Sparkles, Trophy } from 'lucide-react';
+import { useSound } from '../../contexts/SoundContext';
 
 /**
  * WelcomeTutorial - First-time user onboarding
@@ -9,6 +10,7 @@ import { X, ChevronRight, ChevronLeft, Rocket, Keyboard, Mouse, Sparkles, Trophy
  */
 const WelcomeTutorial = ({ isOpen, onClose }) => {
   const [currentStep, setCurrentStep] = useState(0);
+  const { playClick, playAchievement, playMenuClose } = useSound();
 
   const steps = [
     {
@@ -81,22 +83,26 @@ const WelcomeTutorial = ({ isOpen, onClose }) => {
     if (isLast) {
       handleFinish();
     } else {
+      playClick();
       setCurrentStep(prev => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (!isFirst) {
+      playClick();
       setCurrentStep(prev => prev - 1);
     }
   };
 
   const handleFinish = () => {
+    playAchievement();
     localStorage.setItem('webos-has-seen-welcome', 'true');
     onClose('completed');
   };
 
   const handleSkip = () => {
+    playMenuClose();
     localStorage.setItem('webos-has-seen-welcome', 'true');
     onClose('skipped');
   };

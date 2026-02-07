@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Trophy, Zap, Star } from 'lucide-react';
 import Confetti from 'react-confetti';
+import { useSound } from '../../contexts/SoundContext';
 
 /**
  * KonamiSecret - Easter egg activated by Konami Code
@@ -9,6 +10,7 @@ import Confetti from 'react-confetti';
  */
 const KonamiSecret = ({ isOpen, onClose }) => {
   const [showConfetti, setShowConfetti] = useState(true);
+  const { playEasterEgg } = useSound();
   const [windowSize, setWindowSize] = useState({
     width: window.innerWidth,
     height: window.innerHeight,
@@ -17,10 +19,11 @@ const KonamiSecret = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       setShowConfetti(true);
+      playEasterEgg();
       const timer = setTimeout(() => setShowConfetti(false), 5000);
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, playEasterEgg]);
 
   useEffect(() => {
     const handleResize = () => {

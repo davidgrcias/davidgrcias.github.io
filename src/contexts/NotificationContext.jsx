@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { useSound } from './SoundContext';
 
 const NotificationContext = createContext();
 
@@ -13,6 +14,7 @@ export const useNotification = () => useContext(NotificationContext);
 export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const recentNotificationsRef = React.useRef(new Set());
+  const { playNotification, playError } = useSound();
 
   const showNotification = useCallback(({ title, message, type = 'info', duration = 4000 }) => {
     // Deduplication - prevent same notification within 2 seconds
@@ -30,6 +32,13 @@ export const NotificationProvider = ({ children }) => {
       type, // 'success', 'error', 'warning', 'info'
       duration,
     };
+
+    // Play appropriate sound
+    if (type === 'error') {
+      playError();
+    } else {
+      playNotification();
+    }
 
     setNotifications(prev => {
       // Dynamic Island style: Only show ONE notification at a time (replace current)

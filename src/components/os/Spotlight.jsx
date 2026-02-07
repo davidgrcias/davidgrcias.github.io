@@ -2,6 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, File, Folder, User, Code, Terminal, MessageSquare, StickyNote, Settings, Clock, Sparkles } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
+import { useSound } from '../../contexts/SoundContext';
 import ErrorBoundary from '../ErrorBoundary';
 
 // Lazy load apps
@@ -25,6 +26,7 @@ const AppLoadingFallback = () => (
  */
 const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
   const { openApp } = useOS();
+  const { playSearchOpen, playMenuSelect, playMenuClose } = useSound();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [results, setResults] = useState([]);
@@ -34,7 +36,10 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
     if (isOpen && initialQuery) {
       setQuery(initialQuery);
     }
-  }, [isOpen, initialQuery]);
+    if (isOpen) {
+      playSearchOpen();
+    }
+  }, [isOpen, initialQuery, playSearchOpen]);
 
   // Searchable content database
   const searchableItems = [
@@ -233,9 +238,11 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
         setSelectedIndex(prev => Math.max(prev - 1, 0));
       } else if (e.key === 'Enter' && results[selectedIndex]) {
         e.preventDefault();
+        playMenuSelect();
         executeAction(results[selectedIndex]);
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        playMenuClose();
         handleClose();
       }
     };
@@ -307,7 +314,7 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.03 }}
-                      onClick={() => executeAction(item)}
+                      onClick={() => { playMenuSelect(); executeAction(item); }}
                       className={`
                         flex items-center gap-4 px-6 py-4 cursor-pointer transition-all
                         ${selectedIndex === index

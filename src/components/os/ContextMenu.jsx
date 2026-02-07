@@ -1,12 +1,15 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Settings, Info, Wallpaper } from 'lucide-react';
+import { useSound } from '../../contexts/SoundContext';
 
 /**
  * Context Menu Component
  * Reusable right-click menu for desktop and windows
  */
 const ContextMenu = ({ x, y, onClose, options }) => {
+  const { playMenuSelect } = useSound();
+
   return (
     <AnimatePresence>
       <motion.div
@@ -29,6 +32,7 @@ const ContextMenu = ({ x, y, onClose, options }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    playMenuSelect();
                     option.onClick();
                     onClose();
                   }}

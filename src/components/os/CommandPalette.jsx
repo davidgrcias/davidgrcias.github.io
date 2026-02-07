@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Code, Terminal, MessageSquare, FolderOpen, Settings, X, User, StickyNote, Gamepad2 } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
+import { useSound } from '../../contexts/SoundContext';
 import ErrorBoundary from '../ErrorBoundary';
 
 /**
@@ -26,6 +27,7 @@ const AppLoadingFallback = () => (
 
 const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
   const { openApp, windows, closeWindow } = useOS();
+  const { playSearchOpen, playMenuSelect, playMenuClose } = useSound();
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -139,11 +141,13 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
       } else if (e.key === 'Enter') {
         e.preventDefault();
         if (filteredCommands[selectedIndex]) {
+          playMenuSelect();
           filteredCommands[selectedIndex].action();
           handleClose();
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
+        playMenuClose();
         handleClose();
       }
     };
@@ -157,8 +161,9 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
     if (isOpen) {
       setQuery('');
       setSelectedIndex(0);
+      playSearchOpen();
     }
-  }, [isOpen]);
+  }, [isOpen, playSearchOpen]);
 
   const handleClose = useCallback(() => {
     setQuery('');
@@ -219,6 +224,7 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
                   <motion.button
                     key={command.id}
                     onClick={() => {
+                      playMenuSelect();
                       command.action();
                       handleClose();
                     }}

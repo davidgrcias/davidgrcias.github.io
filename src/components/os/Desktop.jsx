@@ -64,7 +64,7 @@ const DesktopContent = () => {
     const { showNotification } = useNotification();
     const { unlockAchievement, trackMetric, currentAchievement, clearAchievement } = useAchievements();
     const { theme } = useTheme();
-    const { playUnlock, playOpen, playClose } = useSound();
+    const { playUnlock, playRightClick, playScreenshot, playMenuSelect, playEasterEgg } = useSound();
     const [contextMenu, setContextMenu] = useState(null);
     const [shortcutContextMenu, setShortcutContextMenu] = useState(null);
     const [windowContextMenu, setWindowContextMenu] = useState(null);
@@ -521,6 +521,7 @@ const DesktopContent = () => {
         }
 
         e.preventDefault();
+        playRightClick();
         // Close other menus
         setShortcutContextMenu(null);
         setWindowContextMenu(null);
@@ -640,7 +641,7 @@ const DesktopContent = () => {
         {
             label: 'Take Screenshot',
             icon: <Camera size={16} />,
-            onClick: () => setScreenshotToolOpen(true),
+            onClick: () => { playScreenshot(); setScreenshotToolOpen(true); },
             shortcut: 'Ctrl+Shift+S',
         },
         { separator: true },

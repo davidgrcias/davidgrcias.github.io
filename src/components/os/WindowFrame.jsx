@@ -11,7 +11,7 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
   const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
   const { theme } = useTheme();
   const { isMobile, isTablet, width, height } = useDeviceDetection();
-  const { playClose, playClick } = useSound();
+  const { playWindowClose, playWindowMinimize, playWindowMaximize } = useSound();
   const dragControls = useDragControls();
   const [isDragging, setIsDragging] = useState(false);
 
@@ -160,7 +160,7 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
           onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking buttons
         >
           <motion.button
-            onClick={(e) => { e.stopPropagation(); playClick(); minimizeWindow(window.id); }}
+            onClick={(e) => { e.stopPropagation(); playWindowMinimize(); minimizeWindow(window.id); }}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-yellow-500/20 rounded-full transition-colors group"
@@ -169,7 +169,7 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
             <Minus size={14} className="text-yellow-400" />
           </motion.button>
           <motion.button
-            onClick={(e) => { e.stopPropagation(); playClick(); maximizeWindow(window.id); }}
+            onClick={(e) => { e.stopPropagation(); playWindowMaximize(); maximizeWindow(window.id); }}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-green-500/20 rounded-full transition-colors group"
@@ -178,7 +178,7 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
             <Maximize2 size={13} className="text-green-400" />
           </motion.button>
           <motion.button
-            onClick={(e) => { e.stopPropagation(); playClose(); closeWindow(window.id); }}
+            onClick={(e) => { e.stopPropagation(); playWindowClose(); closeWindow(window.id); }}
             whileHover={{ scale: 1.15, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
             className="p-1.5 hover:bg-red-500/20 rounded-full transition-colors group"

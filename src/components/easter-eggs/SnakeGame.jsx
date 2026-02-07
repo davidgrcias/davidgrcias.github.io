@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, RotateCcw, Trophy, Gamepad2 } from 'lucide-react';
 import { useAchievements } from '../../hooks/useAchievements';
+import { useSound } from '../../contexts/SoundContext';
 
 const GRID_SIZE = 20;
 const CELL_SIZE = 20;
@@ -9,6 +10,7 @@ const INITIAL_SPEED = 150;
 
 const SnakeGame = ({ isOpen, onClose }) => {
   const { unlockAchievement } = useAchievements();
+  const { playGameSound } = useSound();
   const [snake, setSnake] = useState([[10, 10]]);
   const [food, setFood] = useState([15, 15]);
   const [direction, setDirection] = useState('RIGHT');
@@ -67,12 +69,14 @@ const SnakeGame = ({ isOpen, onClose }) => {
       // Check wall collision
       if (head[0] < 0 || head[0] >= GRID_SIZE || head[1] < 0 || head[1] >= GRID_SIZE) {
         setGameOver(true);
+        playGameSound('die');
         return prevSnake;
       }
 
       // Check self collision
       if (newSnake.some(([x, y]) => x === head[0] && y === head[1])) {
         setGameOver(true);
+        playGameSound('die');
         return prevSnake;
       }
 
@@ -80,6 +84,7 @@ const SnakeGame = ({ isOpen, onClose }) => {
 
       // Check food collision
       if (head[0] === food[0] && head[1] === food[1]) {
+        playGameSound('eat');
         const newScore = score + 10;
         setScore(newScore);
         setFood(generateFood());

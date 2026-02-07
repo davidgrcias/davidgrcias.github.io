@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Calendar from '../widgets/Calendar';
+import { useSound } from '../../contexts/SoundContext';
 
 const SystemClock = () => {
   const [time, setTime] = useState(new Date());
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const wrapperRef = useRef(null);
+  const { playMenuOpen, playMenuClose } = useSound();
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
@@ -27,7 +29,11 @@ const SystemClock = () => {
   return (
     <div ref={wrapperRef} className="relative flex flex-col items-end leading-tight select-none">
       <button
-        onClick={() => setIsCalendarOpen((prev) => !prev)}
+        onClick={() => {
+          const next = !isCalendarOpen;
+          if (next) playMenuOpen(); else playMenuClose();
+          setIsCalendarOpen(next);
+        }}
         className="flex flex-col items-end cursor-pointer group"
         aria-label="Toggle calendar"
       >
