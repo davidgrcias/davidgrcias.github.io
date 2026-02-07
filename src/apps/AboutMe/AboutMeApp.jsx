@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles, Youtube, Loader2, Copy, FileText, Download, RefreshCw } from 'lucide-react';
+import { User, MapPin, Globe, Code, Mail, Linkedin, Github, TrendingUp, Sparkles, Youtube, Loader2, Copy, FileText, Download, RefreshCw, Briefcase, GraduationCap, FolderOpen, ExternalLink, Calendar, Award, ChevronRight } from 'lucide-react';
 import { getUserProfile, clearProfileCache } from '../../data/userProfile';
 import { getSkills } from '../../data/skills';
+import { getProjects } from '../../data/projects';
+import { getExperiences } from '../../data/experiences';
+import { getEducation } from '../../data/education';
+import { getCertifications } from '../../data/certifications';
 import { useOS } from '../../contexts/OSContext';
 import { toast } from 'react-hot-toast';
 import OptimizedImage from '../../components/common/OptimizedImage';
@@ -18,6 +22,10 @@ const AboutMeApp = ({ id }) => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [skills, setSkills] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [experiences, setExperiences] = useState([]);
+  const [education, setEducation] = useState([]);
+  const [certifications, setCertifications] = useState([]);
 
   // Context Menu & External Actions
   useEffect(() => {
@@ -57,12 +65,20 @@ const AboutMeApp = ({ id }) => {
     try {
       setLoading(true);
       clearProfileCache(); // Clear all caches
-      const [profileData, skillsData] = await Promise.all([
+      const [profileData, skillsData, projectsData, experiencesData, educationData, certificationsData] = await Promise.all([
         getUserProfile('en', true), // Force refresh
-        getSkills('en')
+        getSkills('en'),
+        getProjects('en'),
+        getExperiences('en'),
+        getEducation('en'),
+        getCertifications('en'),
       ]);
       setProfile(profileData);
       setSkills(skillsData);
+      setProjects(projectsData || []);
+      setExperiences(experiencesData || []);
+      setEducation(educationData || []);
+      setCertifications(certificationsData || []);
       toast.success('Profile refreshed successfully!', {
         duration: 2000,
         position: 'bottom-center',
@@ -92,15 +108,18 @@ const AboutMeApp = ({ id }) => {
     }
   };
 
-  // Listen for external actions
+  // Listen for external actions (including switch-tab from AI Smart Action Shortcuts)
   useEffect(() => {
     const handleAction = (e) => {
-      const { appId, action } = e.detail;
+      const { appId, action, payload } = e.detail;
       if (appId !== 'about-me') return;
 
       if (action === 'copy-contact') handleCopyContact();
       if (action === 'download-cv') handleDownloadCV();
       if (action === 'refresh') handleRefresh();
+      if (action === 'switch-tab' && payload?.tab) {
+        setActiveTab(payload.tab);
+      }
     };
 
     window.addEventListener('WEBOS_APP_ACTION', handleAction);
@@ -111,12 +130,20 @@ const AboutMeApp = ({ id }) => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [profileData, skillsData] = await Promise.all([
+        const [profileData, skillsData, projectsData, experiencesData, educationData, certificationsData] = await Promise.all([
           getUserProfile('en'),
-          getSkills('en')
+          getSkills('en'),
+          getProjects('en'),
+          getExperiences('en'),
+          getEducation('en'),
+          getCertifications('en'),
         ]);
         setProfile(profileData);
         setSkills(skillsData);
+        setProjects(projectsData || []);
+        setExperiences(experiencesData || []);
+        setEducation(educationData || []);
+        setCertifications(certificationsData || []);
       } catch (error) {
         console.error('Error loading data:', error);
       } finally {
@@ -145,6 +172,9 @@ const AboutMeApp = ({ id }) => {
   const tabs = [
     { id: 'personal', label: 'Personal', icon: <User size={16} /> },
     { id: 'skills', label: 'Skills', icon: <Code size={16} /> },
+    { id: 'projects', label: 'Projects', icon: <FolderOpen size={16} /> },
+    { id: 'experience', label: 'Experience', icon: <Briefcase size={16} /> },
+    { id: 'education', label: 'Education', icon: <GraduationCap size={16} /> },
     { id: 'contact', label: 'Contact', icon: <Mail size={16} /> },
   ];
 
@@ -185,13 +215,13 @@ const AboutMeApp = ({ id }) => {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 p-1 bg-zinc-800/50 rounded-xl">
+        <div className="flex gap-1 mb-6 p-1 bg-zinc-800/50 rounded-xl overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-200
+                flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg font-medium transition-all duration-200 text-sm whitespace-nowrap min-w-0
                 ${activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-700/50'
@@ -240,6 +270,193 @@ const AboutMeApp = ({ id }) => {
               <SkillSection title="Backend Development" skills={formattedSkills.backend} color="green" />
               <SkillSection title="Tools & Technologies" skills={formattedSkills.tools} color="purple" />
               <SkillSection title="Soft Skills" skills={formattedSkills.soft} color="orange" />
+            </div>
+          )}
+
+          {/* Projects Tab */}
+          {activeTab === 'projects' && (
+            <div className="space-y-4">
+              {projects.length === 0 ? (
+                <div className="text-center text-zinc-500 py-10">No projects available.</div>
+              ) : (
+                projects.map((project, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.08 }}
+                    className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-5 hover:border-blue-500/30 transition-all duration-200"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex-1">
+                        <h3 className="text-white font-semibold text-lg">{project.name || project.title}</h3>
+                        <p className="text-blue-400 text-sm">{project.role || 'Developer'}</p>
+                      </div>
+                      {project.date && (
+                        <span className="text-zinc-500 text-xs flex items-center gap-1 shrink-0">
+                          <Calendar size={12} />
+                          {project.date}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-zinc-400 text-sm mb-3 leading-relaxed">{project.description}</p>
+                    {/* Tech Stack */}
+                    <div className="flex flex-wrap gap-1.5 mb-3">
+                      {(project.tech || project.technologies || []).map((tech, i) => (
+                        <span key={i} className="px-2 py-0.5 text-xs bg-blue-600/10 text-blue-400 border border-blue-500/20 rounded-md">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                    {/* Highlights */}
+                    {project.highlights && project.highlights.length > 0 && (
+                      <ul className="space-y-1">
+                        {project.highlights.map((h, i) => (
+                          <li key={i} className="text-zinc-400 text-xs flex items-start gap-2">
+                            <ChevronRight size={12} className="text-blue-400 mt-0.5 shrink-0" />
+                            <span>{h}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {/* Link */}
+                    {project.link && project.link !== '#' && (
+                      <a
+                        href={project.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 mt-3 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                      >
+                        <ExternalLink size={12} />
+                        Visit Project
+                      </a>
+                    )}
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Experience Tab */}
+          {activeTab === 'experience' && (
+            <div className="space-y-4">
+              {experiences.length === 0 ? (
+                <div className="text-center text-zinc-500 py-10">No experience data available.</div>
+              ) : (
+                experiences.map((exp, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.08 }}
+                    className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-5 hover:border-green-500/30 transition-all duration-200"
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <h3 className="text-white font-semibold">{exp.role}</h3>
+                      <span className="text-zinc-500 text-xs shrink-0 flex items-center gap-1">
+                        <Calendar size={12} />
+                        {exp.startDate} — {exp.endDate || 'Present'}
+                      </span>
+                    </div>
+                    <p className="text-green-400 text-sm mb-1">{exp.company}</p>
+                    <div className="flex items-center gap-2 text-zinc-500 text-xs mb-3">
+                      <span className="px-1.5 py-0.5 bg-zinc-700/50 rounded">{exp.type}</span>
+                      {exp.location && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1"><MapPin size={10} />{exp.location}</span>
+                        </>
+                      )}
+                      {exp.locationType && (
+                        <>
+                          <span>•</span>
+                          <span>{exp.locationType}</span>
+                        </>
+                      )}
+                    </div>
+                    <p className="text-zinc-400 text-sm leading-relaxed mb-3">{exp.description}</p>
+                    {exp.skills && exp.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {exp.skills.map((skill, i) => (
+                          <span key={i} className="px-2 py-0.5 text-xs bg-green-600/10 text-green-400 border border-green-500/20 rounded-md">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
+
+          {/* Education Tab (Education + Certifications) */}
+          {activeTab === 'education' && (
+            <div className="space-y-6">
+              {/* Education */}
+              <div>
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <GraduationCap size={18} className="text-purple-400" />
+                  Education
+                </h3>
+                <div className="space-y-3">
+                  {education.length === 0 ? (
+                    <div className="text-center text-zinc-500 py-4">No education data available.</div>
+                  ) : (
+                    education.map((edu, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.08 }}
+                        className="bg-zinc-800/50 border border-zinc-700 rounded-xl p-5 hover:border-purple-500/30 transition-all duration-200"
+                      >
+                        <h4 className="text-white font-semibold">{edu.degree}</h4>
+                        <p className="text-purple-400 text-sm">{edu.institution}</p>
+                        <div className="flex items-center gap-3 mt-2 text-zinc-500 text-xs">
+                          <span className="flex items-center gap-1"><Calendar size={12} />{edu.period}</span>
+                          {edu.grade && (
+                            <span className="px-2 py-0.5 bg-purple-600/10 text-purple-400 border border-purple-500/20 rounded-md font-medium">
+                              GPA: {edu.grade}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Certifications */}
+              <div>
+                <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                  <Award size={18} className="text-amber-400" />
+                  Certifications ({certifications.length})
+                </h3>
+                <div className="space-y-2">
+                  {certifications.length === 0 ? (
+                    <div className="text-center text-zinc-500 py-4">No certifications available.</div>
+                  ) : (
+                    certifications.map((cert, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center gap-3 bg-zinc-800/50 border border-zinc-700 rounded-lg p-3 hover:border-amber-500/30 transition-all duration-200"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-amber-600/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                          <Award size={16} className="text-amber-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-sm font-medium truncate">{cert.name}</p>
+                          <p className="text-zinc-500 text-xs">{cert.provider} • {cert.date}</p>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
           )}
 

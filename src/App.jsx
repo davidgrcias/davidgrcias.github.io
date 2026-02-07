@@ -26,6 +26,7 @@ import Blog from "./pages/admin/Blog";
 import VSCodeFiles from "./pages/admin/VSCodeFiles";
 import FileManagerAdmin from "./pages/admin/FileManagerAdmin";
 import Knowledge from "./pages/admin/Knowledge";
+import AdditionalInfo from "./pages/admin/AdditionalInfo";
 import ChatAnalytics from "./pages/admin/ChatAnalytics";
 import Desktop from "./components/os/Desktop";
 
@@ -160,7 +161,8 @@ GARCIA SARAGIH | Full-Stack Engineer
                 <Route path="vscode" element={<VSCodeFiles />} />
                 <Route path="files" element={<FileManagerAdmin />} />
 
-                {/* AI Knowledge Base & Analytics */}
+                {/* AI & Analytics */}
+                <Route path="additional-info" element={<AdditionalInfo />} />
                 <Route path="knowledge" element={<Knowledge />} />
                 <Route path="chat-analytics" element={<ChatAnalytics />} />
               </Route>

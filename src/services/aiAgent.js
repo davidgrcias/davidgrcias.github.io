@@ -14,8 +14,9 @@
 import { assembleAgentPrompt, assembleWidgetPrompt } from './agentPromptBuilder';
 import { parseAgentActions, executeAgentActions, suggestActions } from './agentActions';
 import { getAgentMemory, resetAgentMemory } from './agentMemory';
-import { searchSimilarKnowledge } from './vectorStore';
-import { hybridSearch } from './hybridSearch';
+// RAG infrastructure kept but disabled — portfolio data is now injected directly
+// import { searchSimilarKnowledge } from './vectorStore';
+// import { hybridSearch } from './hybridSearch';
 import { logChatAnalytics, saveChatSession, updateChatFeedback } from './chatAnalytics';
 
 // ============================================================
@@ -32,6 +33,8 @@ async function loadPortfolioData(language = 'en') {
     certifications: () => import('../data/certifications').then(m => m.getCertifications(language)),
     funFacts: () => import('../data/funFacts').then(m => m.getFunFacts(language)),
     insights: () => import('../data/insights').then(m => m.getInsights(language)),
+    posts: () => import('../data/posts').then(m => m.getPosts(language)),
+    additionalInfo: () => import('../data/additionalInfo').then(m => m.getAdditionalInfo(language)),
   };
 
   const results = {};
@@ -74,40 +77,25 @@ async function getPortfolioData(language = 'en') {
 }
 
 // ============================================================
-// RAG SEARCH — Smart knowledge retrieval
+// RAG SEARCH — Disabled (portfolio data is injected directly into prompt)
+// Kept for reference / future re-activation if needed.
 // ============================================================
 
-async function searchKnowledge(query, options = {}) {
-  const {
-    language = 'en',
-    useHybrid = true,
-    topK = 5,
-    threshold = 0.2,
-  } = options;
-
-  try {
-    let results;
-    if (useHybrid) {
-      results = await hybridSearch(query, {
-        topK,
-        language,
-        threshold,
-        vectorWeight: 0.6,
-        keywordWeight: 0.4,
-      });
-    } else {
-      results = await searchSimilarKnowledge(query, {
-        topK,
-        language,
-        threshold,
-      });
-    }
-    return results;
-  } catch (error) {
-    console.error('Knowledge search failed:', error);
-    return [];
-  }
-}
+// async function searchKnowledge(query, options = {}) {
+//   const { language = 'en', useHybrid = true, topK = 5, threshold = 0.2 } = options;
+//   try {
+//     let results;
+//     if (useHybrid) {
+//       results = await hybridSearch(query, { topK, language, threshold, vectorWeight: 0.6, keywordWeight: 0.4 });
+//     } else {
+//       results = await searchSimilarKnowledge(query, { topK, language, threshold });
+//     }
+//     return results;
+//   } catch (error) {
+//     console.error('Knowledge search failed:', error);
+//     return [];
+//   }
+// }
 
 // ============================================================
 // API CALLERS — Call Gemini via Vercel serverless functions
@@ -318,19 +306,13 @@ export async function sendAgentMessage(userMessage, options = {}) {
   memory.addMessage('user', userMessage);
 
   try {
-    // 2. Load portfolio data
+    // 2. Load portfolio data (includes all data sources — single source of truth)
     const portfolioData = await getPortfolioData(language);
 
-    // 3. Search knowledge base (RAG)
-    let retrievedDocs = [];
-    if (useRAG) {
-      retrievedDocs = await searchKnowledge(userMessage, {
-        language: memory.userProfile.language || language,
-        useHybrid,
-        topK: 6,
-        threshold: 0.15,
-      });
-    }
+    // 3. RAG search disabled — all portfolio data is injected directly into the prompt
+    // via buildPortfolioContext(). This eliminates double work of maintaining
+    // a separate Firestore knowledge_base. The AI gets ALL data every time.
+    const retrievedDocs = [];
 
     // 4. Get memory context
     const memoryContext = memory.getMemoryContext();

@@ -255,7 +255,7 @@ const FORMAT_RULES = `
  * Build the portfolio context section from data
  */
 export function buildPortfolioContext(data = {}) {
-  const { profile, projects, skills, experiences, education, certifications, funFacts, insights } = data;
+  const { profile, projects, skills, experiences, education, certifications, funFacts, insights, posts, additionalInfo } = data;
 
   let context = '\n=== 📋 DAVID\'S COMPLETE PORTFOLIO DATA ===\n\n';
 
@@ -363,6 +363,30 @@ export function buildPortfolioContext(data = {}) {
     context += '\n';
   }
 
+  // Blog Posts (titles + excerpts for context, not full content)
+  if (posts && posts.length > 0) {
+    context += `### BLOG POSTS (${posts.length} total)\n`;
+    posts.forEach(post => {
+      context += `• "${post.title}" (${post.category || 'General'}, ${post.date || 'N/A'}) — ${post.excerpt || ''}\n`;
+    });
+    context += '\n';
+  }
+
+  // Additional Personal Info (extra details not in portfolio sections)
+  if (additionalInfo && additionalInfo.length > 0) {
+    context += `### ADDITIONAL PERSONAL INFO\n`;
+    context += `(Extra details about David beyond his professional portfolio)\n\n`;
+    additionalInfo.forEach(cat => {
+      context += `**${cat.category}:**\n`;
+      if (cat.items) {
+        cat.items.forEach(item => {
+          context += `• ${item.label}: ${item.context || item.value}\n`;
+        });
+      }
+      context += '\n';
+    });
+  }
+
   return context;
 }
 
@@ -467,11 +491,14 @@ export function assembleAgentPrompt({
   // 8. Format Rules
   prompt += FORMAT_RULES;
 
-  // 9. Portfolio Context (static data)
+  // 9. Portfolio Context (all data — single source of truth)
   prompt += buildPortfolioContext(portfolioData);
 
-  // 10. RAG Context (dynamic retrieved docs)
-  prompt += buildRAGContext(retrievedDocs);
+  // 10. RAG Context (disabled — portfolio data is injected directly above)
+  // Previously used Firestore knowledge_base + vector search. Now all data
+  // comes from src/data/ files, injected in buildPortfolioContext().
+  // Keeping buildRAGContext() available for future use if needed.
+  // prompt += buildRAGContext(retrievedDocs);
 
   // 11. Conversation Context
   prompt += buildConversationContext(conversationHistory, memoryContext);

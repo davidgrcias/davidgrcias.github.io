@@ -7,3 +7,5 @@ export { getSkills, getSkillsSync, default as skillsBase } from './skills';
 export { getUserProfile, getUserProfileSync, default as userProfileBase } from './userProfile';
 export { getFunFacts, getFunFactsSync, default as funFactsBase } from './funFacts';
 export { getInsights, getInsightsSync, default as insightsBase } from './insights';
+export { getAdditionalInfo, getAdditionalInfoSync, default as additionalInfoBase } from './additionalInfo';
+export { getPosts, getPostsSync } from './posts';

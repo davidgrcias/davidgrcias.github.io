@@ -10,57 +10,54 @@
 // ============================================================
 
 const ACTION_REGISTRY = {
-  // Navigation Actions
+  // Navigation Actions — open apps in WebOS and switch to relevant tab
   NAVIGATE_PROJECTS: {
     id: 'NAVIGATE_PROJECTS',
     type: 'navigation',
     label: 'View Projects',
-    execute: () => scrollToSection('projects'),
+    execute: () => openWebOSApp('about-me', { tab: 'projects' }),
   },
   NAVIGATE_SKILLS: {
     id: 'NAVIGATE_SKILLS',
     type: 'navigation',
     label: 'View Skills',
-    execute: () => scrollToSection('skills'),
+    execute: () => openWebOSApp('about-me', { tab: 'skills' }),
   },
   NAVIGATE_EXPERIENCE: {
     id: 'NAVIGATE_EXPERIENCE',
     type: 'navigation',
     label: 'View Experience',
-    execute: () => scrollToSection('experience'),
+    execute: () => openWebOSApp('about-me', { tab: 'experience' }),
   },
   NAVIGATE_EDUCATION: {
     id: 'NAVIGATE_EDUCATION',
     type: 'navigation',
     label: 'View Education',
-    execute: () => scrollToSection('education'),
+    execute: () => openWebOSApp('about-me', { tab: 'education' }),
   },
   NAVIGATE_CERTIFICATIONS: {
     id: 'NAVIGATE_CERTIFICATIONS',
     type: 'navigation',
     label: 'View Certifications',
-    execute: () => scrollToSection('certifications'),
+    execute: () => openWebOSApp('about-me', { tab: 'education' }),
   },
   NAVIGATE_CONTACT: {
     id: 'NAVIGATE_CONTACT',
     type: 'navigation',
     label: 'View Contact',
-    execute: () => scrollToSection('contact'),
+    execute: () => openWebOSApp('about-me', { tab: 'contact' }),
   },
   NAVIGATE_ABOUT: {
     id: 'NAVIGATE_ABOUT',
     type: 'navigation',
     label: 'About David',
-    execute: () => scrollToSection('about'),
+    execute: () => openWebOSApp('about-me', { tab: 'personal' }),
   },
   NAVIGATE_BLOG: {
     id: 'NAVIGATE_BLOG',
     type: 'navigation',
     label: 'View Blog',
-    execute: () => {
-      // Try to open blog app in WebOS
-      window.dispatchEvent(new CustomEvent('WEBOS_OPEN_APP', { detail: { appId: 'blog' } }));
-    },
+    execute: () => openWebOSApp('blog'),
   },
 
   // External Link Actions
@@ -174,20 +171,28 @@ const ACTION_REGISTRY = {
 // ============================================================
 
 /**
- * Smooth scroll to a section by ID
+ * Open a WebOS app and optionally switch to a specific tab.
+ * Uses the VOICE_OPEN_APP event (already listened to by Desktop.jsx)
+ * and WEBOS_APP_ACTION for tab switching within apps.
  */
-function scrollToSection(sectionId) {
-  // Try direct DOM scroll first
-  const element = document.getElementById(sectionId);
-  if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    return;
-  }
-  
-  // Try dispatching a WebOS navigation event
-  window.dispatchEvent(new CustomEvent('WEBOS_NAVIGATE', { 
-    detail: { section: sectionId } 
+function openWebOSApp(appId, options = {}) {
+  // Open the app (reuses existing VOICE_OPEN_APP listener in Desktop.jsx)
+  window.dispatchEvent(new CustomEvent('VOICE_OPEN_APP', {
+    detail: { appId }
   }));
+
+  // If a specific tab is requested, dispatch tab switch after app is mounted
+  if (options.tab) {
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('WEBOS_APP_ACTION', {
+        detail: {
+          appId,
+          action: 'switch-tab',
+          payload: { tab: options.tab }
+        }
+      }));
+    }, 300);
+  }
 }
 
 // ============================================================

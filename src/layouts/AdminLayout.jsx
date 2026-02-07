@@ -19,7 +19,8 @@ import {
   Code2,
   FolderTree,
   Database,
-  TrendingUp
+  TrendingUp,
+  Sparkles
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -77,9 +78,11 @@ const AdminLayout = () => {
     { label: 'Skills', path: '/admin/skills', icon: Wrench },
     { label: 'Profile', path: '/admin/profile', icon: User },
     { label: 'Content', path: '/admin/content', icon: Lightbulb },
+    { label: 'Additional Info', path: '/admin/additional-info', icon: Sparkles },
     { label: 'VS Code Files', path: '/admin/vscode', icon: Code2 },
     { label: 'File Manager', path: '/admin/files', icon: FolderTree },
-    { label: 'AI Knowledge', path: '/admin/knowledge', icon: Database },
+    // AI Knowledge - DEPRECATED: Now uses src/data/ directly, no separate knowledge base
+    // { label: 'AI Knowledge', path: '/admin/knowledge', icon: Database },
     { label: 'Chat Analytics', path: '/admin/chat-analytics', icon: TrendingUp },
   ];
 
