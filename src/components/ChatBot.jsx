@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -9,27 +9,68 @@ import {
   Loader,
   Maximize2,
   Minimize2,
+  ChevronDown,
+  User,
+  Users,
+  Heart,
+  GraduationCap,
 } from "lucide-react";
 import { sendWidgetMessage } from "../services/aiAgent";
 import { useTranslation } from "../contexts/TranslationContext";
+import ThinkingProcess from "./ThinkingProcess";
+import { generateThinkingSteps } from "../utils/thinkingSteps";
 
 const ChatBot = () => {
   const { currentLanguage, translateText } = useTranslation();
 
+  // ============================================
+  // Persona System
+  // ============================================
+  const PERSONAS = [
+    { id: 'assistant', name: "David's Assistant", shortName: 'Assistant', icon: <Bot size={14} />, description: 'Professional AI assistant' },
+    { id: 'david', name: 'David', shortName: 'David', icon: <User size={14} />, description: 'Speaks as David himself' },
+    { id: 'bestfriend', name: "Best Friend", shortName: 'Best Friend', icon: <Users size={14} />, description: 'Casual bro perspective' },
+    { id: 'girlfriend', name: "Girlfriend", shortName: 'Girlfriend', icon: <Heart size={14} />, description: 'Warm partner perspective' },
+    { id: 'teacher', name: "Professor", shortName: 'Professor', icon: <GraduationCap size={14} />, description: 'Academic mentor perspective' },
+  ];
+
+  const WELCOME_MESSAGES = {
+    assistant: "👋 Hi! I'm David's AI assistant. Ask me anything about David's skills, projects, experience, or just say hi!",
+    david: "👋 Hey there! I'm David. Feel free to ask me anything — about my projects, skills, background, or whatever you're curious about!",
+    bestfriend: "👋 Yo! I'm David's best friend. Want to know what makes this guy so awesome? Just ask!",
+    girlfriend: "💕 Hi! I know David pretty well. Ask me anything about him — I'd love to share!",
+    teacher: "🎓 Hello! I'm David's professor at UMN. I'd be happy to discuss his academic journey and potential.",
+  };
+
+  const HEADER_TITLES = {
+    assistant: "David's Portfolio Assistant",
+    david: "Chat with David",
+    bestfriend: "David's Best Friend",
+    girlfriend: "David's Girlfriend",
+    teacher: "David's Professor",
+  };
+
+  // ============================================
+  // State
+  // ============================================
   const [isOpen, setIsOpen] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [activePersona, setActivePersona] = useState('assistant');
+  const [showPersonaMenu, setShowPersonaMenu] = useState(false);
   const [messages, setMessages] = useState([
     {
       type: "bot",
       content: translateText(
-        "👋 Hi! I'm David's assistant. How can I help you?",
+        WELCOME_MESSAGES.assistant,
         currentLanguage
       ),
       timestamp: new Date(),
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
+  const [thinkingSteps, setThinkingSteps] = useState([]);
+  const [responseReady, setResponseReady] = useState(false);
   const [suggestedReplies, setSuggestedReplies] = useState([
     translateText("What's David's age and background?", currentLanguage),
     translateText("Show me his technical skills", currentLanguage),
@@ -39,13 +80,45 @@ const ChatBot = () => {
   ]);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const pendingResponseRef = useRef(null);
+  const personaMenuRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, isThinking]);
+
+  // Close persona menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (personaMenuRef.current && !personaMenuRef.current.contains(e.target)) {
+        setShowPersonaMenu(false);
+      }
+    };
+    if (showPersonaMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showPersonaMenu]);
+
+  // Safety timeout — if thinking takes more than 30 seconds, force complete
+  useEffect(() => {
+    if (isThinking) {
+      const timeout = setTimeout(() => {
+        const response = pendingResponseRef.current;
+        if (response !== null) {
+          setMessages(prev => [...prev, { type: 'bot', content: response, timestamp: new Date() }]);
+          pendingResponseRef.current = null;
+        }
+        setIsThinking(false);
+        setThinkingSteps([]);
+        setResponseReady(false);
+      }, 30000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isThinking]);
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
@@ -56,14 +129,10 @@ const ChatBot = () => {
   // ============================================
   const generateResponse = async (input) => {
     try {
-      setIsTyping(true);
-
       const result = await sendWidgetMessage(input, {
         language: currentLanguage,
         conversationHistory: messages.slice(-8),
-        onActionExecuted: (action, result) => {
-          console.log("🤖 Widget Action:", action.label);
-        },
+        persona: activePersona,
       });
 
       // Update suggested replies based on conversation context
@@ -130,72 +199,97 @@ const ChatBot = () => {
     setSuggestedReplies(repliesMap[context] || repliesMap.welcome);
   };
 
+  // ============================================
+  // Thinking Process Complete Callback
+  // ============================================
+  const onThinkingComplete = useCallback(() => {
+    const response = pendingResponseRef.current;
+    if (response !== null) {
+      setMessages(prev => [...prev, { type: 'bot', content: response, timestamp: new Date() }]);
+      pendingResponseRef.current = null;
+    }
+    setIsThinking(false);
+    setThinkingSteps([]);
+    setResponseReady(false);
+  }, []);
+
+  // ============================================
+  // Persona Change Handler
+  // ============================================
+  const handlePersonaChange = (newPersona) => {
+    setActivePersona(newPersona);
+    setShowPersonaMenu(false);
+    // Reset conversation with persona-appropriate welcome
+    setMessages([{
+      type: 'bot',
+      content: WELCOME_MESSAGES[newPersona] || WELCOME_MESSAGES.assistant,
+      timestamp: new Date(),
+    }]);
+    updateSuggestedReplies('welcome');
+    // Clear any in-progress thinking
+    setIsThinking(false);
+    setThinkingSteps([]);
+    setResponseReady(false);
+    pendingResponseRef.current = null;
+  };
+
+  // ============================================
+  // Submit Handler with Thinking Process
+  // ============================================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!inputMessage.trim()) return;
+    if (!inputMessage.trim() || isThinking) return;
+
+    const userInput = inputMessage.trim();
 
     // Add user message
-    const userMessage = {
+    setMessages(prev => [...prev, {
       type: "user",
-      content: inputMessage,
+      content: userInput,
       timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
+    }]);
     setInputMessage("");
-    setIsTyping(true);
+
+    // Start thinking process
+    const steps = generateThinkingSteps(userInput);
+    setThinkingSteps(steps);
+    setIsThinking(true);
+    setResponseReady(false);
+    pendingResponseRef.current = null;
 
     try {
-      // Get response from chatbot
-      const response = await generateResponse(inputMessage.trim());
-
-      // Add bot message
-      const botMessage = {
-        type: "bot",
-        content: response,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, botMessage]);
+      const response = await generateResponse(userInput);
+      pendingResponseRef.current = response;
+      setResponseReady(true);
     } catch (error) {
-      // Add error message if something goes wrong
-      const errorMessage = {
-        type: "bot",
-        content:
-          "Sorry, I'm having trouble responding right now. Please try again.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
+      pendingResponseRef.current = "Sorry, I'm having trouble responding right now. Please try again.";
+      setResponseReady(true);
     }
   };
 
   const handleSuggestedReply = async (reply) => {
-    const userMessage = {
+    if (isThinking) return;
+
+    setMessages(prev => [...prev, {
       type: "user",
       content: reply,
       timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setIsTyping(true);
+    }]);
+
+    // Start thinking process
+    const steps = generateThinkingSteps(reply);
+    setThinkingSteps(steps);
+    setIsThinking(true);
+    setResponseReady(false);
+    pendingResponseRef.current = null;
 
     try {
       const response = await generateResponse(reply);
-      const botMessage = {
-        type: "bot",
-        content: response,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, botMessage]);
+      pendingResponseRef.current = response;
+      setResponseReady(true);
     } catch (error) {
-      const errorMessage = {
-        type: "bot",
-        content:
-          "Sorry, I'm having trouble responding right now. Please try again.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
+      pendingResponseRef.current = "Sorry, I'm having trouble responding right now. Please try again.";
+      setResponseReady(true);
     }
   };
 
@@ -250,30 +344,79 @@ const ChatBot = () => {
         bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col`}
           >
             {/* Header */}
-            <div className="p-6 bg-cyan-500 text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot size={24} />
-                <h3 className="font-semibold">David's Portfolio Assistant</h3>
+            <div className="p-4 bg-cyan-500 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bot size={24} />
+                  <h3 className="font-semibold text-sm">{HEADER_TITLES[activePersona] || HEADER_TITLES.assistant}</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleFullscreen}
+                    className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                    title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                  >
+                    {isFullscreen ? (
+                      <Minimize2 size={20} />
+                    ) : (
+                      <Maximize2 size={20} />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setIsOpen(false)}
+                    className="p-1 hover:bg-white/20 rounded-full transition-colors"
+                    title="Close chat"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* Persona Selector */}
+              <div className="mt-2 relative" ref={personaMenuRef}>
                 <button
-                  onClick={toggleFullscreen}
-                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
-                  title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                  onClick={() => setShowPersonaMenu(!showPersonaMenu)}
+                  className="flex items-center gap-1.5 px-2.5 py-1 bg-white/15 hover:bg-white/25 rounded-lg transition-colors text-xs w-full"
                 >
-                  {isFullscreen ? (
-                    <Minimize2 size={20} />
-                  ) : (
-                    <Maximize2 size={20} />
+                  <span className="flex items-center gap-1">
+                    {PERSONAS.find(p => p.id === activePersona)?.icon}
+                    <span>{PERSONAS.find(p => p.id === activePersona)?.name}</span>
+                  </span>
+                  <ChevronDown size={12} className={`ml-auto transition-transform ${showPersonaMenu ? 'rotate-180' : ''}`} />
+                </button>
+
+                <AnimatePresence>
+                  {showPersonaMenu && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -5, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -5, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-600 overflow-hidden z-50"
+                    >
+                      {PERSONAS.map((persona) => (
+                        <button
+                          key={persona.id}
+                          onClick={() => handlePersonaChange(persona.id)}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${
+                            activePersona === persona.id
+                              ? 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400'
+                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700'
+                          }`}
+                        >
+                          <span className="flex-shrink-0">{persona.icon}</span>
+                          <div className="min-w-0">
+                            <div className="font-medium">{persona.name}</div>
+                            <div className="text-[10px] text-slate-400 dark:text-slate-500 truncate">{persona.description}</div>
+                          </div>
+                          {activePersona === persona.id && (
+                            <span className="ml-auto text-cyan-500 flex-shrink-0">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </motion.div>
                   )}
-                </button>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-white/20 rounded-full transition-colors"
-                  title="Close chat"
-                >
-                  <X size={20} />
-                </button>
+                </AnimatePresence>
               </div>
             </div>
             {/* Messages */}
@@ -312,16 +455,14 @@ const ChatBot = () => {
                   </div>
                 </motion.div>
               ))}
-              {isTyping && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="flex justify-start mb-4"
-                >
-                  <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-2xl rounded-bl-none">
-                    <Loader className="w-4 h-4 animate-spin" />
-                  </div>
-                </motion.div>
+              {/* Thinking Process Visualization */}
+              {isThinking && thinkingSteps.length > 0 && (
+                <ThinkingProcess
+                  steps={thinkingSteps}
+                  responseReady={responseReady}
+                  onComplete={onThinkingComplete}
+                  compact={true}
+                />
               )}
               <div ref={messagesEndRef} />
             </div>
@@ -334,7 +475,8 @@ const ChatBot = () => {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleSuggestedReply(reply)}
-                    className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full text-sm whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                    disabled={isThinking}
+                    className="px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 rounded-full text-sm whitespace-nowrap hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {reply}
                   </motion.button>
@@ -351,14 +493,16 @@ const ChatBot = () => {
                   type="text"
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Type your message..."
-                  className="flex-1 p-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  placeholder={isThinking ? "Thinking..." : "Type your message..."}
+                  disabled={isThinking}
+                  className="flex-1 p-3 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   type="submit"
-                  className="p-3 rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors"
+                  disabled={isThinking || !inputMessage.trim()}
+                  className="p-3 rounded-lg bg-cyan-500 text-white hover:bg-cyan-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Send size={20} />
                 </motion.button>

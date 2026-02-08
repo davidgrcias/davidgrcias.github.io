@@ -1,16 +1,48 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, Loader, MessageSquare, Trash2, MessageCircle, Download, ThumbsUp, ThumbsDown, Sparkles, Zap, AlertCircle, X, Mic, MicOff, Volume2, VolumeX, Brain, ExternalLink } from 'lucide-react';
+import { Send, Bot, Loader, MessageSquare, Trash2, MessageCircle, Download, ThumbsUp, ThumbsDown, Sparkles, Zap, AlertCircle, X, Mic, MicOff, Volume2, VolumeX, Brain, ExternalLink, ChevronDown, User, Users, Heart, GraduationCap } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useTranslation } from '../../contexts/TranslationContext';
 import { sendAgentMessage, getAgentMemory, resetAgentMemory } from '../../services/aiAgent';
 import { updateChatFeedback } from '../../services/chatAnalytics';
+import ThinkingProcess from '../../components/ThinkingProcess';
+import { generateThinkingSteps } from '../../utils/thinkingSteps';
 
 const MessengerApp = ({ id }) => {
     const { updateWindow } = useOS();
     const { currentLanguage } = useTranslation();
     const agentMemory = useRef(getAgentMemory());
     const abortRef = useRef(null);
+    // ============================================
+    // Persona System
+    // ============================================
+    const PERSONAS = [
+        { id: 'assistant', name: "David's Assistant", icon: <Bot size={12} />, description: 'Professional AI assistant' },
+        { id: 'david', name: 'David', icon: <User size={12} />, description: 'Speaks as David himself' },
+        { id: 'bestfriend', name: 'Best Friend', icon: <Users size={12} />, description: 'Casual bro perspective' },
+        { id: 'girlfriend', name: 'Girlfriend', icon: <Heart size={12} />, description: 'Warm partner perspective' },
+        { id: 'teacher', name: 'Professor', icon: <GraduationCap size={12} />, description: 'Academic mentor perspective' },
+    ];
+
+    const WELCOME_MESSAGES = {
+        assistant: "Hello! \ud83d\udc4b I'm David's AI Assistant.\n\nAsk me about his projects, skills, or just say hi! I can tell you all about his journey.",
+        david: "Hey! \ud83d\udc4b I'm David. Feel free to ask me anything about my projects, skills, or background. I'll answer as myself!",
+        bestfriend: "Yo! \ud83d\udc4b I'm David's best friend. I know this guy inside out \u2014 ask me anything about him!",
+        girlfriend: "\ud83d\udc95 Hi there! I know David pretty well. Ask me anything about him \u2014 I'd love to share!",
+        teacher: "\ud83c\udf93 Hello! I'm David's professor at UMN. I'd be happy to discuss his academic journey and potential.",
+    };
+
+    const [activePersona, setActivePersona] = useState('assistant');
+    const [showPersonaMenu, setShowPersonaMenu] = useState(false);
+    const personaMenuRef = useRef(null);
+
+    // Thinking Process states
+    const [isThinkingProcess, setIsThinkingProcess] = useState(false);
+    const [thinkingSteps, setThinkingSteps] = useState([]);
+    const [thinkingResponseReady, setThinkingResponseReady] = useState(false);
+    const pendingResponseRef = useRef(null);
+    const isThinkingRef = useRef(false);
+    const pendingStreamChunks = useRef('');
     const [messages, setMessages] = useState([
         {
             type: 'bot',
@@ -38,6 +70,64 @@ const MessengerApp = ({ id }) => {
     const recognitionRef = useRef(null);
     const synthRef = useRef(null);
 
+    // Close persona menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (personaMenuRef.current && !personaMenuRef.current.contains(e.target)) {
+                setShowPersonaMenu(false);
+            }
+        };
+        if (showPersonaMenu) {
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }
+    }, [showPersonaMenu]);
+
+    // Safety timeout for thinking process
+    useEffect(() => {
+        if (isThinkingProcess) {
+            const timeout = setTimeout(() => {
+                const result = pendingResponseRef.current;
+                if (result) {
+                    finalizeBotMessage(result);
+                }
+                isThinkingRef.current = false;
+                setIsThinkingProcess(false);
+                setThinkingSteps([]);
+                setThinkingResponseReady(false);
+                pendingResponseRef.current = null;
+                pendingStreamChunks.current = '';
+            }, 30000);
+            return () => clearTimeout(timeout);
+        }
+    }, [isThinkingProcess]);
+
+    // Persona change handler
+    const handlePersonaChange = (newPersona) => {
+        setActivePersona(newPersona);
+        setShowPersonaMenu(false);
+        resetAgentMemory();
+        agentMemory.current = getAgentMemory();
+        setMessages([{
+            type: 'bot',
+            content: WELCOME_MESSAGES[newPersona] || WELCOME_MESSAGES.assistant,
+        }]);
+        setSuggestedQuestions([
+            "What are David's technical skills?",
+            "Tell me about his projects",
+            "What's his experience?",
+            "How can I contact him?"
+        ]);
+        setActionBadges([]);
+        // Clear thinking state
+        isThinkingRef.current = false;
+        setIsThinkingProcess(false);
+        setThinkingSteps([]);
+        setThinkingResponseReady(false);
+        pendingResponseRef.current = null;
+        pendingStreamChunks.current = '';
+    };
+
     // Context Menu
     useEffect(() => {
         if (id) {
@@ -51,7 +141,7 @@ const MessengerApp = ({ id }) => {
                             agentMemory.current = getAgentMemory();
                             setMessages([{
                                 type: 'bot',
-                                content: "Hello! 👋 I'm David's AI Assistant.\n\nAsk me about his projects, skills, or just say hi! I can tell you all about his journey.",
+                                content: WELCOME_MESSAGES[activePersona] || WELCOME_MESSAGES.assistant,
                             }]);
                             setSuggestedQuestions([
                                 "What are David's technical skills?",
@@ -225,18 +315,52 @@ const MessengerApp = ({ id }) => {
         }
     };
 
+    // ============================================
+    // Thinking Process Complete Callback
+    // ============================================
+    const onThinkingComplete = useCallback(() => {
+        isThinkingRef.current = false;
+        setIsThinkingProcess(false);
+        setThinkingSteps([]);
+        setThinkingResponseReady(false);
+
+        const result = pendingResponseRef.current;
+        if (result) {
+            // For non-streaming: add the message
+            if (typeof result === 'object' && result.text) {
+                finalizeBotMessage(result);
+            }
+            pendingResponseRef.current = null;
+        }
+
+        // For streaming mode: flush buffered stream content
+        if (pendingStreamChunks.current) {
+            setStreamingText(pendingStreamChunks.current);
+            setIsTyping(true);
+        }
+    }, []);
+
     const handleSend = async (e, quickQuestion = null) => {
         if (e) e.preventDefault();
         const question = quickQuestion || input;
-        if (!question.trim()) return;
+        if (!question.trim() || isThinkingProcess) return;
 
         const userMsg = { type: 'user', content: question, timestamp: new Date() };
         setMessages(prev => [...prev, userMsg]);
         setInput('');
-        setIsTyping(true);
         setError(null);
         setStreamingText('');
         setActionBadges([]);
+
+        // Start thinking process
+        const steps = generateThinkingSteps(question);
+        setThinkingSteps(steps);
+        setIsThinkingProcess(true);
+        setThinkingResponseReady(false);
+        isThinkingRef.current = true;
+        pendingResponseRef.current = null;
+        pendingStreamChunks.current = '';
+        setIsTyping(false);
 
         // Abort any existing stream
         if (abortRef.current) {
@@ -252,17 +376,38 @@ const MessengerApp = ({ id }) => {
                     useRAG,
                     useHybrid: useHybridSearch,
                     streaming: true,
+                    persona: activePersona,
                     onChunk: (chunk, fullText) => {
-                        setStreamingText(fullText);
+                        pendingStreamChunks.current = fullText;
+                        // If thinking already completed, show stream directly
+                        if (!isThinkingRef.current) {
+                            setStreamingText(fullText);
+                            setIsTyping(true);
+                        } else {
+                            // Signal thinking to fast-forward
+                            setThinkingResponseReady(true);
+                        }
                     },
                     onDone: (result) => {
-                        finalizeBotMessage(result);
+                        pendingStreamChunks.current = '';
+                        if (!isThinkingRef.current) {
+                            // Thinking already done, finalize directly
+                            finalizeBotMessage(result);
+                        } else {
+                            // Store result, thinking will finalize when complete
+                            pendingResponseRef.current = result;
+                            setThinkingResponseReady(true);
+                        }
                     },
                     onError: (error) => {
                         console.error('Stream error:', error);
                         setError(error.message || 'Streaming failed');
+                        isThinkingRef.current = false;
+                        setIsThinkingProcess(false);
                         setIsTyping(false);
                         setStreamingText('');
+                        setThinkingSteps([]);
+                        setThinkingResponseReady(false);
                     },
                     onActionExecuted: (action, result) => {
                         console.log('🤖 Agent Action:', action.label);
@@ -275,11 +420,14 @@ const MessengerApp = ({ id }) => {
                     useRAG,
                     useHybrid: useHybridSearch,
                     streaming: false,
+                    persona: activePersona,
                     onActionExecuted: (action, result) => {
                         console.log('🤖 Agent Action:', action.label);
                     },
                 });
-                finalizeBotMessage(result);
+                pendingResponseRef.current = result;
+                setThinkingResponseReady(true);
+                // ThinkingProcess onComplete will call finalizeBotMessage
             }
         } catch (error) {
             console.error('Chat error:', error);
@@ -301,8 +449,12 @@ const MessengerApp = ({ id }) => {
                 timestamp: new Date(),
                 isError: true
             }]);
+            isThinkingRef.current = false;
+            setIsThinkingProcess(false);
             setIsTyping(false);
             setStreamingText('');
+            setThinkingSteps([]);
+            setThinkingResponseReady(false);
         }
     };
 
@@ -540,8 +692,18 @@ const MessengerApp = ({ id }) => {
                     </div>
                 ))}
 
-                {/* Typing Indicator with Streaming */}
-                {isTyping && (
+                {/* Thinking Process Visualization */}
+                {isThinkingProcess && thinkingSteps.length > 0 && (
+                    <ThinkingProcess
+                        steps={thinkingSteps}
+                        responseReady={thinkingResponseReady}
+                        onComplete={onThinkingComplete}
+                        compact={false}
+                    />
+                )}
+
+                {/* Typing Indicator with Streaming (only when not in thinking process) */}
+                {isTyping && !isThinkingProcess && (
                     <div className="flex justify-start">
                         <div className="bg-zinc-700 px-4 py-3 rounded-2xl rounded-bl-sm border border-zinc-600 shadow-sm">
                             {streamingText ? (
@@ -561,7 +723,7 @@ const MessengerApp = ({ id }) => {
                 )}
 
                 {/* Suggested Questions */}
-                {!isTyping && messages.length > 1 && messages[messages.length - 1]?.type === 'bot' && (
+                {!isTyping && !isThinkingProcess && messages.length > 1 && messages[messages.length - 1]?.type === 'bot' && (
                     <div className="flex flex-wrap gap-2 pt-2">
                         {suggestedQuestions.map((question, i) => (
                             <button
@@ -583,6 +745,43 @@ const MessengerApp = ({ id }) => {
             <div className="p-4 bg-zinc-900 border-t border-zinc-700">
                 {/* RAG Toggle & Mode Controls */}
                 <div className="flex items-center gap-3 mb-2 text-xs text-zinc-400 flex-wrap">
+                    {/* Persona Selector */}
+                    <div className="relative" ref={personaMenuRef}>
+                        <button
+                            onClick={() => setShowPersonaMenu(!showPersonaMenu)}
+                            className="flex items-center gap-1 px-2 py-1 rounded bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500/30 transition-all hover:bg-indigo-500/30"
+                        >
+                            {PERSONAS.find(p => p.id === activePersona)?.icon}
+                            <span>{PERSONAS.find(p => p.id === activePersona)?.name}</span>
+                            <ChevronDown size={10} className={`transition-transform ${showPersonaMenu ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {showPersonaMenu && (
+                            <div className="absolute bottom-full left-0 mb-1 w-56 bg-zinc-800 rounded-lg shadow-xl border border-zinc-700 overflow-hidden z-50">
+                                {PERSONAS.map((persona) => (
+                                    <button
+                                        key={persona.id}
+                                        onClick={() => handlePersonaChange(persona.id)}
+                                        className={`w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors ${
+                                            activePersona === persona.id
+                                                ? 'bg-indigo-500/20 text-indigo-400'
+                                                : 'text-zinc-300 hover:bg-zinc-700'
+                                        }`}
+                                    >
+                                        <span className="flex-shrink-0">{persona.icon}</span>
+                                        <div className="min-w-0">
+                                            <div className="font-medium">{persona.name}</div>
+                                            <div className="text-[10px] text-zinc-500 truncate">{persona.description}</div>
+                                        </div>
+                                        {activePersona === persona.id && (
+                                            <span className="ml-auto text-indigo-400 flex-shrink-0">✓</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                     <span className="flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/30">
                         <Brain size={12} />
                         <span>AI Agent</span>
@@ -644,8 +843,8 @@ const MessengerApp = ({ id }) => {
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        placeholder={isListening ? "Listening..." : "Message..."}
-                        disabled={isTyping || isListening}
+                        placeholder={isListening ? "Listening..." : isThinkingProcess ? "Thinking..." : "Message..."}
+                        disabled={isTyping || isListening || isThinkingProcess}
                         className="flex-1 bg-zinc-800 text-white border-0 rounded-full py-2 px-4 focus:ring-2 focus:ring-blue-500 focus:bg-zinc-700 transition-all outline-none placeholder-zinc-400 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
 
@@ -663,10 +862,10 @@ const MessengerApp = ({ id }) => {
 
                     <button
                         type="submit"
-                        disabled={!input.trim() || isTyping || isListening}
+                        disabled={!input.trim() || isTyping || isListening || isThinkingProcess}
                         className="p-2 rounded-full bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-blue-500 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                     >
-                        {isTyping ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
+                        {(isTyping || isThinkingProcess) ? <Loader size={18} className="animate-spin" /> : <Send size={18} />}
                     </button>
                 </form>
             </div>

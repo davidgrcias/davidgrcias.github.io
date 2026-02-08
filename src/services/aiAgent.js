@@ -297,6 +297,7 @@ export async function sendAgentMessage(userMessage, options = {}) {
     onDone = null,
     onError = null,
     onActionExecuted = null,
+    persona = 'assistant',
   } = options;
 
   const memory = getAgentMemory();
@@ -337,6 +338,7 @@ export async function sendAgentMessage(userMessage, options = {}) {
       conversationHistory: memory.getRecentMessages(10),
       memoryContext,
       currentLanguage: memoryContext.userProfile?.language || language,
+      persona,
     });
 
     // 6. Call the API
@@ -429,13 +431,9 @@ async function finalizeAgentResponse(rawResponse, context) {
     sourceCount: retrievedDocs.length,
   });
 
-  // 3. Execute actions (non-blocking)
-  if (actions.length > 0) {
-    executeAgentActions(actions, {
-      delay: 500,
-      onActionExecuted: onActionExecuted || null,
-    }).catch(err => console.warn('Action execution error:', err));
-  }
+  // 3. Actions are parsed (for clean text) but NOT auto-executed
+  // Users can trigger actions manually via action suggestion badges in the UI
+  // This prevents disruptive auto-tab-opening behavior
 
   // 4. Get smart suggestions (prefer AI-generated, fallback to memory-based)
   const memorySuggestions = memory.getSuggestedQuestions();
@@ -493,6 +491,7 @@ export async function sendWidgetMessage(userMessage, options = {}) {
     language = 'en',
     conversationHistory = [],
     onActionExecuted = null,
+    persona = 'assistant',
   } = options;
 
   const startTime = Date.now();
@@ -501,27 +500,23 @@ export async function sendWidgetMessage(userMessage, options = {}) {
     // 1. Load portfolio data
     const portfolioData = await getPortfolioData(language);
 
-    // 2. Build widget prompt (lighter, no RAG)
+    // 2. Build widget prompt (lighter, no RAG) — with persona support
     const prompt = assembleWidgetPrompt({
       userMessage,
       portfolioData,
       conversationHistory,
       currentLanguage: language,
+      persona,
     });
 
     // 3. Call API
     const rawResponse = await callAgentAPI(prompt, { language });
 
-    // 4. Parse actions
+    // 4. Parse actions (clean text only — no auto-execution)
     const { cleanText, actions } = parseAgentActions(rawResponse);
 
-    // 5. Execute actions
-    if (actions.length > 0) {
-      executeAgentActions(actions, {
-        delay: 500,
-        onActionExecuted,
-      }).catch(err => console.warn('Widget action error:', err));
-    }
+    // Actions are parsed to clean the text but NOT auto-executed
+    // This prevents disruptive auto-tab-opening behavior
 
     return {
       text: cleanText,
