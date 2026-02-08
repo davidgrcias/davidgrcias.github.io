@@ -133,6 +133,12 @@ export const OSProvider = ({ children }) => {
     );
   }, []);
 
+  const resizeWindow = useCallback((id, width, height) => {
+    setWindows((prev) =>
+      prev.map((w) => (w.id === id ? { ...w, customWidth: width, customHeight: height } : w))
+    );
+  }, []);
+
   // Pin/Unpin app
   const togglePinApp = useCallback((appId) => {
     setPinnedApps((prev) => {
@@ -169,6 +175,7 @@ export const OSProvider = ({ children }) => {
         minimizeWindow,
         maximizeWindow,
         updateWindow,
+        resizeWindow,
         focusWindow,
         // Pinned apps
         pinnedApps,

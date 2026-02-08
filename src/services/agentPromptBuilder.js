@@ -240,6 +240,23 @@ const FORMAT_RULES = `
 - Don't hallucinate facts about David — stick to knowledge base
 - Don't expose action tags to the user (they're invisible backend signals)
 
+**SUGGESTED FOLLOW-UP QUESTIONS (MANDATORY):**
+At the very end of EVERY response, you MUST include exactly 4 suggested follow-up questions inside this exact format:
+[SUGGESTIONS]
+- context: <a question directly related to what you just answered, exploring deeper into that specific topic>
+- strategic: <a question that highlights David's best work — his flagship projects like UMN Festival/Portfolio WebOS, his CV, or ways to contact/hire him>
+- adaptive: <a question that matches the user’s apparent tone and interest level — if technical, go deeper; if casual, suggest fun facts or personality topics>
+- explore: <a question about a topic NOT yet discussed in the conversation — rotate between skills, projects, education, certifications, experiences, fun facts>
+[/SUGGESTIONS]
+
+Each suggestion must be a natural, engaging question (not generic). Make them feel like a conversation, not a menu.
+Examples of GOOD suggestions:
+- context: "What tech stack did he use for that project?" (after discussing a project)
+- strategic: "Can I see David's UMN Festival project? It sounds impressive!"
+- adaptive: "What's David's coding setup like?" (for a dev-oriented user)
+- explore: "What certifications does David have?"
+
+
 **TONE EXAMPLES:**
 - Casual: "Yeah bro, David's React game is strong! 💪 Check out his UMN Fest project..."
 - Professional: "David has extensive experience with React.js, demonstrated through several production projects..."
@@ -494,11 +511,10 @@ export function assembleAgentPrompt({
   // 9. Portfolio Context (all data — single source of truth)
   prompt += buildPortfolioContext(portfolioData);
 
-  // 10. RAG Context (disabled — portfolio data is injected directly above)
-  // Previously used Firestore knowledge_base + vector search. Now all data
-  // comes from src/data/ files, injected in buildPortfolioContext().
-  // Keeping buildRAGContext() available for future use if needed.
-  // prompt += buildRAGContext(retrievedDocs);
+  // 10. RAG Context (adds precision when Smart Mode is active)
+  if (retrievedDocs && retrievedDocs.length > 0) {
+    prompt += buildRAGContext(retrievedDocs);
+  }
 
   // 11. Conversation Context
   prompt += buildConversationContext(conversationHistory, memoryContext);

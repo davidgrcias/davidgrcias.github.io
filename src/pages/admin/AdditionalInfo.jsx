@@ -9,6 +9,7 @@ const AdditionalInfo = () => {
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
+  const [showItemForm, setShowItemForm] = useState(false);
   const [formData, setFormData] = useState({
     categoryName: '',
     items: []
@@ -39,6 +40,7 @@ const AdditionalInfo = () => {
   const handleAddCategory = () => {
     setEditingCategory(null);
     setEditingItem(null);
+    setShowItemForm(false);
     setFormData({ categoryName: '', items: [] });
     setShowModal(true);
   };
@@ -46,6 +48,7 @@ const AdditionalInfo = () => {
   const handleEditCategory = (category) => {
     setEditingCategory(category);
     setEditingItem(null);
+    setShowItemForm(false);
     setFormData({
       categoryName: category.category,
       items: category.items || []
@@ -69,11 +72,13 @@ const AdditionalInfo = () => {
   const handleAddItem = () => {
     setEditingItem(null);
     setItemFormData({ label: '', value: '', context: '' });
+    setShowItemForm(true);
   };
 
   const handleEditItem = (index) => {
     setEditingItem(index);
     setItemFormData(formData.items[index]);
+    setShowItemForm(true);
   };
 
   const handleSaveItem = () => {
@@ -86,6 +91,7 @@ const AdditionalInfo = () => {
     setFormData({ ...formData, items: newItems });
     setItemFormData({ label: '', value: '', context: '' });
     setEditingItem(null);
+    setShowItemForm(false);
   };
 
   const handleDeleteItem = (index) => {
@@ -290,7 +296,7 @@ const AdditionalInfo = () => {
                     </div>
 
                     {/* Item Form (when adding/editing) */}
-                    {(editingItem !== null || itemFormData.label || itemFormData.value || itemFormData.context) && (
+                    {showItemForm && (
                       <div className="bg-zinc-900 border border-zinc-600 rounded-lg p-4 mb-3">
                         <div className="space-y-3">
                           <input
@@ -329,6 +335,7 @@ const AdditionalInfo = () => {
                               onClick={() => {
                                 setItemFormData({ label: '', value: '', context: '' });
                                 setEditingItem(null);
+                                setShowItemForm(false);
                               }}
                               className="px-3 py-1.5 bg-zinc-700 hover:bg-zinc-600 text-white text-sm rounded transition-colors"
                             >

@@ -958,14 +958,16 @@ const DesktopContent = () => {
                 onClose={clearAchievement}
             />
 
-            {/* Taskbar */}
-            <Taskbar
-                shortcuts={desktopShortcuts}
-                onOpenSpotlight={(query) => {
-                    setSpotlightOpen(true);
-                    setSpotlightQuery(query || '');
-                }}
-            />
+            {/* Taskbar - Hide when locked/sleeping OR when any window is maximized */}
+            {powerState !== 'locked' && !windows.some(w => w.isMaximized) && (
+                <Taskbar
+                    shortcuts={desktopShortcuts}
+                    onOpenSpotlight={(query) => {
+                        setSpotlightOpen(true);
+                        setSpotlightQuery(query || '');
+                    }}
+                />
+            )}
 
             {/* PDF Viewer - with preloaded URL for instant loading */}
             <PDFViewer

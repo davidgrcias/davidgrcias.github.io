@@ -323,9 +323,13 @@ const MessengerApp = ({ id }) => {
         setStreamingText('');
         setIsTyping(false);
 
-        // Update suggested questions from agent memory
+        // Update suggested questions from agent (AI-generated or memory-based)
         if (result.suggestions && result.suggestions.length > 0) {
             setSuggestedQuestions(result.suggestions.slice(0, 4));
+        } else {
+            // Client-side smart fallback based on conversation context
+            const fallbackSuggestions = generateFallbackSuggestions(result.text, messages);
+            setSuggestedQuestions(fallbackSuggestions);
         }
 
         // Show action badges if any were executed
@@ -355,6 +359,81 @@ const MessengerApp = ({ id }) => {
                 console.error('Failed to update feedback:', error);
             }
         }
+    };
+
+    // Smart fallback suggestions when AI doesn't provide structured ones
+    const generateFallbackSuggestions = (lastBotText, allMessages) => {
+        const text = (lastBotText || '').toLowerCase();
+        const discussed = allMessages.map(m => (m.content || '').toLowerCase()).join(' ');
+
+        const pool = {
+            projects: [
+                "Tell me more about the UMN Festival project",
+                "What's David's most impressive project?",
+                "Show me David's project portfolio",
+            ],
+            skills: [
+                "How proficient is David in React?",
+                "What programming languages does David know?",
+                "What's David's strongest technical skill?",
+            ],
+            experience: [
+                "How much professional experience does he have?",
+                "What companies has David worked at?",
+                "Tell me about his work experience",
+            ],
+            education: [
+                "Tell me about his university",
+                "What did David study?",
+                "What's his educational background?",
+            ],
+            personal: [
+                "What are David's hobbies?",
+                "Tell me a fun fact about David",
+                "What music does David listen to?",
+            ],
+            contact: [
+                "How can I contact David?",
+                "Is David available for hire?",
+                "Can I see David's CV?",
+            ],
+        };
+
+        const suggestions = [];
+
+        // 1. Context-aware: related to last answer
+        if (text.includes('react') || text.includes('project')) {
+            suggestions.push("What tech stack did he use?");
+        } else if (text.includes('skill') || text.includes('proficient')) {
+            suggestions.push("Show me projects using those skills");
+        } else if (text.includes('experience') || text.includes('work')) {
+            suggestions.push("What did he learn from that role?");
+        } else {
+            suggestions.push("Tell me more about that");
+        }
+
+        // 2. Strategic: always highlight best assets
+        if (!discussed.includes('umn festival')) {
+            suggestions.push("Tell me about the UMN Festival project");
+        } else if (!discussed.includes('contact') && !discussed.includes('hire')) {
+            suggestions.push("How can I contact or hire David?");
+        } else {
+            suggestions.push("What's David's most impressive achievement?");
+        }
+
+        // 3. Adaptive: pick undiscussed topic
+        const topics = Object.keys(pool);
+        const undiscussed = topics.filter(t => !discussed.includes(t));
+        const exploreTopic = undiscussed.length > 0 ? undiscussed[0] : topics[Math.floor(Math.random() * topics.length)];
+        const topicQuestions = pool[exploreTopic];
+        suggestions.push(topicQuestions[Math.floor(Math.random() * topicQuestions.length)]);
+
+        // 4. Explore: different undiscussed topic
+        const exploreTopic2 = undiscussed.length > 1 ? undiscussed[1] : topics[Math.floor(Math.random() * topics.length)];
+        const topicQuestions2 = pool[exploreTopic2];
+        suggestions.push(topicQuestions2[Math.floor(Math.random() * topicQuestions2.length)]);
+
+        return suggestions.slice(0, 4);
     };
 
     return (

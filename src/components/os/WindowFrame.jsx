@@ -8,14 +8,20 @@ import { useTouchGestures } from '../../hooks/useTouchGestures';
 import { useSound } from '../../contexts/SoundContext';
 
 const WindowFrame = ({ window, onWindowContextMenu }) => {
-  const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId } = useOS();
+  const { closeWindow, minimizeWindow, maximizeWindow, focusWindow, activeWindowId, resizeWindow } = useOS();
   const { theme } = useTheme();
   const { isMobile, isTablet, width, height } = useDeviceDetection();
   const { playWindowClose, playWindowMinimize, playWindowMaximize } = useSound();
   const dragControls = useDragControls();
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
+  const windowRef = useRef(null);
 
   const isActive = activeWindowId === window.id;
+
+  // Minimum window dimensions
+  const MIN_WIDTH = 400;
+  const MIN_HEIGHT = 300;
 
   // Touch gestures for mobile
   useTouchGestures({
@@ -31,9 +37,10 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
   // Responsive window dimensions
   const getWindowStyle = () => {
     if (window.isMaximized) {
+      // Taskbar auto-hides when maximized, so we can use full height
       return {
         width: '100%',
-        height: 'calc(100% - 48px)',
+        height: '100%',
         top: 0,
         left: 0,
       };
@@ -54,11 +61,14 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
         left: '5vw',
       };
     }
+    // Use custom dimensions if resized, else defaults
+    const w = window.customWidth || 800;
+    const h = window.customHeight || 600;
     return {
-      width: 'min(800px, 90vw)',
-      height: 'min(600px, 75vh)',
-      top: '10vh',
-      left: 'calc(50vw - min(400px, 45vw))',
+      width: `min(${w}px, 90vw)`,
+      height: `min(${h}px, 85vh)`,
+      top: `calc((100vh - 72px) / 2 - min(${h / 2}px, 42.5vh))`, // Centered in available space (excluding taskbar ~72px)
+      left: `calc(50vw - min(${w / 2}px, 45vw))`,  // Horizontally centered
     };
   };
 
@@ -88,10 +98,68 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
     ? React.cloneElement(window.component, { id: window.id })
     : window.component;
 
+  // ===== RESIZE LOGIC =====
+  const handleResizeStart = (e, direction) => {
+    if (isMobile || isTablet || window.isMaximized) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const el = windowRef.current;
+    if (!el) return;
+
+    const startWidth = el.offsetWidth;
+    const startHeight = el.offsetHeight;
+
+    const handleMouseMove = (moveEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const deltaY = moveEvent.clientY - startY;
+
+      let newWidth = startWidth;
+      let newHeight = startHeight;
+
+      // Adjust width based on direction
+      if (direction.includes('e')) newWidth = startWidth + deltaX;
+      if (direction.includes('w')) newWidth = startWidth - deltaX;
+      if (direction.includes('s')) newHeight = startHeight + deltaY;
+      if (direction.includes('n')) newHeight = startHeight - deltaY;
+
+      // Enforce minimums
+      newWidth = Math.max(MIN_WIDTH, Math.min(newWidth, globalThis.innerWidth - 20));
+      newHeight = Math.max(MIN_HEIGHT, Math.min(newHeight, globalThis.innerHeight - 20));
+
+      resizeWindow(window.id, newWidth, newHeight);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  // Resize handle definitions - 8 directions
+  const resizeHandles = !isMobile && !isTablet && !window.isMaximized ? [
+    { dir: 'n',  className: 'absolute -top-1 left-2 right-2 h-2 cursor-n-resize z-20' },
+    { dir: 's',  className: 'absolute -bottom-1 left-2 right-2 h-2 cursor-s-resize z-20' },
+    { dir: 'e',  className: 'absolute top-2 -right-1 w-2 bottom-2 cursor-e-resize z-20' },
+    { dir: 'w',  className: 'absolute top-2 -left-1 w-2 bottom-2 cursor-w-resize z-20' },
+    { dir: 'ne', className: 'absolute -top-1 -right-1 w-4 h-4 cursor-ne-resize z-30' },
+    { dir: 'nw', className: 'absolute -top-1 -left-1 w-4 h-4 cursor-nw-resize z-30' },
+    { dir: 'se', className: 'absolute -bottom-1 -right-1 w-4 h-4 cursor-se-resize z-30' },
+    { dir: 'sw', className: 'absolute -bottom-1 -left-1 w-4 h-4 cursor-sw-resize z-30' },
+  ] : [];
+
   return (
     <motion.div
+      ref={windowRef}
       data-window-id={window.id}
-      drag={!isMobile && !window.isMaximized}
+      drag={!isMobile && !window.isMaximized && !isResizing}
       dragControls={dragControls}
       dragListener={false}
       dragMomentum={false}
@@ -108,7 +176,7 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
       animate={{
         scale: window.isMinimized ? 0 : 1,
         opacity: window.isMinimized ? 0 : 1,
-        y: window.isMinimized ? 200 : (window.isMaximized ? 0 : undefined), // Force reset Y on maximize
+        y: window.isMinimized ? 200 : 0, // Always reset to 0, not undefined - fixes vertical centering!
         x: window.isMaximized ? 0 : undefined, // Force reset X on maximize
         display: window.isMinimized ? 'none' : 'flex',
       }}
@@ -136,6 +204,15 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
       className={`${theme.colors.window} backdrop-blur-xl border ${isActive ? `border-${theme.colors.accent}-500/50 shadow-2xl shadow-${theme.colors.accent}-500/20` : `${theme.colors.border} shadow-xl`
         } rounded-xl flex flex-col overflow-hidden`}
     >
+      {/* Resize Handles */}
+      {resizeHandles.map(({ dir, className }) => (
+        <div
+          key={dir}
+          className={className}
+          onMouseDown={(e) => handleResizeStart(e, dir)}
+        />
+      ))}
+
       {/* Title Bar - Drag Handle */}
       <div
         className={`h-10 flex items-center justify-between px-4 select-none border-b transition-colors ${isActive

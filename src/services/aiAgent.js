@@ -14,9 +14,9 @@
 import { assembleAgentPrompt, assembleWidgetPrompt } from './agentPromptBuilder';
 import { parseAgentActions, executeAgentActions, suggestActions } from './agentActions';
 import { getAgentMemory, resetAgentMemory } from './agentMemory';
-// RAG infrastructure kept but disabled — portfolio data is now injected directly
-// import { searchSimilarKnowledge } from './vectorStore';
-// import { hybridSearch } from './hybridSearch';
+// RAG infrastructure — re-enabled for Smart Mode
+import { searchSimilarKnowledge } from './vectorStore';
+import { hybridSearch } from './hybridSearch';
 import { logChatAnalytics, saveChatSession, updateChatFeedback } from './chatAnalytics';
 
 // ============================================================
@@ -77,25 +77,25 @@ async function getPortfolioData(language = 'en') {
 }
 
 // ============================================================
-// RAG SEARCH — Disabled (portfolio data is injected directly into prompt)
-// Kept for reference / future re-activation if needed.
+// RAG SEARCH — Searches knowledge base for relevant context
+// Falls back to empty array gracefully if knowledge base is empty
 // ============================================================
 
-// async function searchKnowledge(query, options = {}) {
-//   const { language = 'en', useHybrid = true, topK = 5, threshold = 0.2 } = options;
-//   try {
-//     let results;
-//     if (useHybrid) {
-//       results = await hybridSearch(query, { topK, language, threshold, vectorWeight: 0.6, keywordWeight: 0.4 });
-//     } else {
-//       results = await searchSimilarKnowledge(query, { topK, language, threshold });
-//     }
-//     return results;
-//   } catch (error) {
-//     console.error('Knowledge search failed:', error);
-//     return [];
-//   }
-// }
+async function searchKnowledge(query, options = {}) {
+  const { language = 'en', useHybrid = true, topK = 5, threshold = 0.2 } = options;
+  try {
+    let results;
+    if (useHybrid) {
+      results = await hybridSearch(query, { topK, language, threshold, vectorWeight: 0.6, keywordWeight: 0.4 });
+    } else {
+      results = await searchSimilarKnowledge(query, { topK, language, threshold });
+    }
+    return results || [];
+  } catch (error) {
+    console.warn('Knowledge search failed (falling back to basic mode):', error.message);
+    return [];
+  }
+}
 
 // ============================================================
 // API CALLERS — Call Gemini via Vercel serverless functions
@@ -309,10 +309,22 @@ export async function sendAgentMessage(userMessage, options = {}) {
     // 2. Load portfolio data (includes all data sources — single source of truth)
     const portfolioData = await getPortfolioData(language);
 
-    // 3. RAG search disabled — all portfolio data is injected directly into the prompt
-    // via buildPortfolioContext(). This eliminates double work of maintaining
-    // a separate Firestore knowledge_base. The AI gets ALL data every time.
-    const retrievedDocs = [];
+    // 3. RAG search — enhanced context retrieval when Smart Mode is enabled
+    // Portfolio data is ALWAYS injected into the prompt. RAG adds extra precision.
+    let retrievedDocs = [];
+    if (useRAG) {
+      try {
+        retrievedDocs = await searchKnowledge(userMessage, {
+          language,
+          useHybrid: useHybrid,
+          topK: 5,
+          threshold: 0.2,
+        });
+      } catch (ragError) {
+        console.warn('RAG search skipped (graceful fallback):', ragError.message);
+        retrievedDocs = [];
+      }
+    }
 
     // 4. Get memory context
     const memoryContext = memory.getMemoryContext();
@@ -392,10 +404,27 @@ async function finalizeAgentResponse(rawResponse, context) {
   const { memory, retrievedDocs, startTime, language, userMessage, onActionExecuted } = context;
 
   // 1. Parse actions from response
-  const { cleanText, actions } = parseAgentActions(rawResponse);
+  const { cleanText: textWithSuggestions, actions } = parseAgentActions(rawResponse);
+
+  // 1.5. Parse [SUGGESTIONS] block from AI response
+  let displayText = textWithSuggestions;
+  let aiSuggestions = [];
+  const suggestionsMatch = textWithSuggestions.match(/\[SUGGESTIONS\]([\s\S]*?)\[\/SUGGESTIONS\]/i);
+  if (suggestionsMatch) {
+    // Extract suggestions
+    const suggestionsBlock = suggestionsMatch[1];
+    const lines = suggestionsBlock.split('\n').map(l => l.trim()).filter(l => l.startsWith('-'));
+    aiSuggestions = lines.map(line => {
+      // Remove "- context: ", "- strategic: ", "- adaptive: ", "- explore: " prefixes
+      return line.replace(/^-\s*(context|strategic|adaptive|explore)\s*:\s*/i, '').trim();
+    }).filter(q => q.length > 5); // Filter out very short/empty items
+
+    // Remove the suggestions block from displayed text
+    displayText = textWithSuggestions.replace(/\[SUGGESTIONS\][\s\S]*?\[\/SUGGESTIONS\]/i, '').trim();
+  }
 
   // 2. Add bot response to memory
-  memory.addMessage('bot', cleanText, {
+  memory.addMessage('bot', displayText, {
     hasActions: actions.length > 0,
     sourceCount: retrievedDocs.length,
   });
@@ -408,11 +437,12 @@ async function finalizeAgentResponse(rawResponse, context) {
     }).catch(err => console.warn('Action execution error:', err));
   }
 
-  // 4. Get smart suggestions
-  const suggestions = memory.getSuggestedQuestions();
+  // 4. Get smart suggestions (prefer AI-generated, fallback to memory-based)
+  const memorySuggestions = memory.getSuggestedQuestions();
+  const suggestions = aiSuggestions.length >= 3 ? aiSuggestions.slice(0, 4) : memorySuggestions;
 
   // 5. Get action suggestions from context
-  const actionSuggestions = suggestActions(userMessage, cleanText);
+  const actionSuggestions = suggestActions(userMessage, displayText);
 
   // 6. Calculate response time
   const responseTime = Date.now() - startTime;
@@ -421,7 +451,7 @@ async function finalizeAgentResponse(rawResponse, context) {
   logChatAnalytics({
     sessionId: memory.sessionId,
     question: userMessage,
-    answer: cleanText,
+    answer: displayText,
     retrievedDocs: retrievedDocs.map(d => d.id),
     responseTime,
     language: memory.userProfile.language || language,
@@ -434,7 +464,7 @@ async function finalizeAgentResponse(rawResponse, context) {
   }).catch(err => console.warn('Session save error:', err));
 
   return {
-    text: cleanText,
+    text: displayText,
     actions,
     actionSuggestions,
     sources: retrievedDocs.map(d => ({

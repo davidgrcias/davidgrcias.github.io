@@ -296,12 +296,12 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
     }
 
     return (
-      <div className="relative flex items-center justify-center">
-        {/* Fill Level */}
+      <div className="relative flex items-center justify-center overflow-hidden">
+        {/* Fill Level - precisely aligned inside the battery outline */}
         <div
-          className={`absolute left-[2px] top-[6px] h-[8px] bg-current rounded-[1px] transition-all duration-500 ${colorClass}`}
+          className={`absolute left-[3px] top-[5px] h-[10px] bg-current rounded-sm transition-all duration-500 ${colorClass}`}
           style={{
-            width: `${Math.max(2, (level / 100) * 13)}px`,
+            width: `${Math.max(1, (level / 100) * 11)}px`,
             opacity: 1
           }}
         />
