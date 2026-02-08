@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
  */
 const DRAG_THRESHOLD = 10; // pixels - movement less than this is considered a click
 
-const DesktopIcon = ({ icon, label, onClick, onContextMenu, onDragEnd, style, isDragging, dragKey, gridSize = 120 }) => {
+const DesktopIcon = ({ icon, label, badge, onClick, onContextMenu, onDragEnd, style, isDragging, dragKey, gridSize = 120 }) => {
   // Track if a real drag occurred (movement > threshold)
   const hasDragged = useRef(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
@@ -72,8 +72,13 @@ const DesktopIcon = ({ icon, label, onClick, onContextMenu, onDragEnd, style, is
       className={`flex flex-col items-center justify-center gap-1 rounded-xl transition-all duration-300 cursor-pointer select-none group ${isDragging ? 'z-50 cursor-grabbing opacity-80 scale-110' : 'z-10 cursor-pointer'}`}
     >
       {/* Icon - Floating Effect */}
-      <div className="w-16 h-16 flex items-center justify-center text-white transition-all pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
+      <div className="relative w-16 h-16 flex items-center justify-center text-white transition-all pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
         {icon}
+        {badge && (
+          <span className="absolute -top-1 -right-1 px-1.5 py-[1px] text-[8px] font-bold leading-tight rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/40 ring-1 ring-emerald-400/50 animate-pulse pointer-events-none">
+            {badge}
+          </span>
+        )}
       </div>
 
       {/* Label - No box, just strong shadow */}

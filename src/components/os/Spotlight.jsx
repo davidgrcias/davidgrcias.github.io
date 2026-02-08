@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, File, Folder, User, Code, Terminal, MessageSquare, StickyNote, Settings, Clock, Sparkles } from 'lucide-react';
+import { Search, File, Folder, User, Code, Terminal, Bot, StickyNote, Settings, Clock, Sparkles, Mail } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useSound } from '../../contexts/SoundContext';
 import ErrorBoundary from '../ErrorBoundary';
@@ -118,13 +118,13 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
       type: 'app',
       id: 'messenger',
       title: 'Messages',
-      icon: MessageSquare,
+      icon: Bot,
       keywords: ['chat', 'messenger', 'ai'],
       color: 'text-purple-400',
       action: () => openApp({
         id: 'messenger',
         title: 'Messages',
-        icon: <MessageSquare size={24} />,
+        icon: <Bot size={24} />,
         component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense>
       })
     },
@@ -166,7 +166,7 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
     {
       type: 'action',
       title: 'Contact Me',
-      icon: MessageSquare,
+      icon: Mail,
       keywords: ['contact', 'email', 'reach'],
       color: 'text-purple-400',
       action: () => openApp({

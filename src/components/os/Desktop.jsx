@@ -7,7 +7,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useKonamiCode } from '../../hooks/useKonamiCode';
 import { useAchievements } from '../../hooks/useAchievements';
-import { RefreshCw, Settings, Info, Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Camera, FileText, BookOpen, Music, Calendar as CalendarIcon, TrendingUp } from 'lucide-react';
+import { RefreshCw, Settings, Info, Code, Terminal, Bot, FolderOpen, User, StickyNote, Camera, FileText, BookOpen, Music, Calendar as CalendarIcon, TrendingUp } from 'lucide-react';
 import Taskbar from './Taskbar';
 import WindowFrame from './WindowFrame';
 import ContextMenu from './ContextMenu';
@@ -286,7 +286,8 @@ const DesktopContent = () => {
         {
             id: 'messenger',
             label: 'Chat',
-            icon: <MessageSquare size={32} />,
+            icon: <Bot size={32} />,
+            badge: 'AI',
             component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense>,
             title: 'Messages',
             contextMenuOptions: [
@@ -757,6 +758,7 @@ const DesktopContent = () => {
                                     gridSize={GRID_SIZE}
                                     icon={shortcut.icon}
                                     label={shortcut.label}
+                                    badge={shortcut.badge}
                                     onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
                                     onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
                                     onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
@@ -790,6 +792,7 @@ const DesktopContent = () => {
                                     gridSize={GRID_SIZE}
                                     icon={shortcut.icon}
                                     label={shortcut.label}
+                                    badge={shortcut.badge}
                                     onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
                                     onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
                                     onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}

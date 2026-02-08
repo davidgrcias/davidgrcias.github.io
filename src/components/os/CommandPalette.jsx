@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Code, Terminal, MessageSquare, FolderOpen, Settings, X, User, StickyNote, Gamepad2 } from 'lucide-react';
+import { Search, Code, Terminal, Bot, FolderOpen, Settings, X, User, StickyNote, Gamepad2 } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useSound } from '../../contexts/SoundContext';
 import ErrorBoundary from '../ErrorBoundary';
@@ -61,9 +61,9 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
       id: 'messenger',
       title: 'Open Chat',
       description: 'Talk with AI assistant',
-      icon: <MessageSquare size={20} className="text-purple-400" />,
+      icon: <Bot size={20} className="text-purple-400" />,
       keywords: ['chat', 'messenger', 'ai', 'talk'],
-      action: () => openApp({ id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense> }),
+      action: () => openApp({ id: 'messenger', title: 'Messages', icon: <Bot size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense> }),
     },
     {
       id: 'about-me',

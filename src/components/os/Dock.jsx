@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Code, Terminal, MessageSquare, FolderOpen, User, StickyNote, Settings, Plus } from 'lucide-react';
+import { Code, Terminal, Bot, FolderOpen, User, StickyNote, Settings, Plus } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 
@@ -20,7 +20,7 @@ const Dock = ({ apps = [] }) => {
     { id: 'about-me', icon: User, label: 'About Me', color: 'text-cyan-400' },
     { id: 'notes', icon: StickyNote, label: 'Notes', color: 'text-yellow-300' },
     { id: 'terminal', icon: Terminal, label: 'Terminal', color: 'text-green-400' },
-    { id: 'messenger', icon: MessageSquare, label: 'Chat', color: 'text-purple-400' },
+    { id: 'messenger', icon: Bot, label: 'Chat', color: 'text-purple-400' },
     { id: 'settings', icon: Settings, label: 'Settings', color: 'text-gray-400' },
   ];
 

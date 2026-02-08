@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { useVoice } from '../../contexts/VoiceContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, MessageSquare, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf, Power, RotateCcw, Check, Lock, Mic } from 'lucide-react';
+import { Terminal, Code, FolderOpen, Settings, Wifi, WifiOff, Battery, BatteryCharging, BatteryLow, Volume2, VolumeX, Volume1, Bot, User, StickyNote, Music, Search, Sliders, Linkedin, Instagram, Youtube, Globe, Phone, Sun, Moon, Zap, Leaf, Power, RotateCcw, Check, Lock, Mic } from 'lucide-react';
 import SystemClock from './SystemClock';
 import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import ErrorBoundary from '../ErrorBoundary';
@@ -265,7 +265,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
     { id: 'about-me', title: 'About Me', icon: <User size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="About Me"><AboutMeApp /></ErrorBoundary></Suspense> },
     { id: 'notes', title: 'Notes', icon: <StickyNote size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense> },
     { id: 'terminal', title: 'Terminal', icon: <Terminal size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Terminal"><TerminalApp /></ErrorBoundary></Suspense> },
-    { id: 'messenger', title: 'Messages', icon: <MessageSquare size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense> },
+    { id: 'messenger', title: 'Messages', icon: <Bot size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense> },
     { id: 'settings', title: 'Settings', icon: <Settings size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Settings"><SettingsApp /></ErrorBoundary></Suspense> },
   ], []);
 

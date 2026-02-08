@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, Loader, MessageSquare, Trash2, MessageCircle, Download, ThumbsUp, ThumbsDown, Sparkles, Zap, AlertCircle, X, Mic, MicOff, Volume2, VolumeX, Brain, ExternalLink, ChevronDown, User, Users, Heart, GraduationCap } from 'lucide-react';
+import { Send, Bot, Loader, Trash2, MessageCircle, Download, ThumbsUp, ThumbsDown, Sparkles, Zap, AlertCircle, X, Mic, MicOff, Volume2, VolumeX, Brain, ExternalLink, ChevronDown, User, Users, Heart, GraduationCap } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useTranslation } from '../../contexts/TranslationContext';
 import { sendAgentMessage, getAgentMemory, resetAgentMemory } from '../../services/aiAgent';
