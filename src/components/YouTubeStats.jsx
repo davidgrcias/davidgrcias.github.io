@@ -17,7 +17,14 @@ Object.assign(iconMap, {
 
 const YouTubeStats = () => {
   const { currentLanguage } = useTranslation();
-  const userProfile = getUserProfile(currentLanguage);
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    getUserProfile(currentLanguage)
+      .then(setUserProfile)
+      .catch(console.error);
+  }, [currentLanguage]);
+
   const fallbackStats = {
     subscribers: "4.7K+",
     views: "876K+",
@@ -29,7 +36,7 @@ const YouTubeStats = () => {
 
   useEffect(() => {
     const channelID = "UCDRagVrqj_v2Wbf_UFfTluw";
-    
+
     // Use Vercel serverless function to securely fetch YouTube stats
     const getYouTubeApiUrl = () => {
       // In production, call Vercel API
@@ -98,9 +105,9 @@ const YouTubeStats = () => {
         <span className="font-bold text-xl text-slate-800 dark:text-white">
           {isLoading
             ? React.createElement(iconMap.Loader, {
-                size: 20,
-                className: "animate-spin",
-              })
+              size: 20,
+              className: "animate-spin",
+            })
             : value}
         </span>
         <br />
@@ -108,6 +115,8 @@ const YouTubeStats = () => {
       </div>
     </div>
   );
+
+  if (!userProfile) return null;
 
   return (
     <div className="bg-slate-100 dark:bg-slate-800/50 p-8 rounded-xl border border-slate-200 dark:border-gray-700 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/10">

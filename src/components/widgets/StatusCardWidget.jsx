@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Linkedin, Github, Sparkles, Loader2, Youtube } from 'lucide-react';
-import { getUserProfile, getUserProfileSync } from '../../data/userProfile';
+import { MapPin, Linkedin, Github, Sparkles, Youtube, AlertCircle, RefreshCw } from 'lucide-react';
+import { getUserProfile } from '../../data/userProfile';
 import OptimizedImage from '../common/OptimizedImage';
+import StatusCardSkeleton from './StatusCardSkeleton';
 
 /**
  * Professional Status Card Widget
@@ -10,55 +11,41 @@ import OptimizedImage from '../common/OptimizedImage';
  * NOW SYNCS WITH ADMIN PANEL via Firestore
  */
 const StatusCardWidget = ({ className = '' }) => {
-  // 1. Load Initial State INSTANTLY from Sync (Memory/Base)
-  // This ensures the user NEVER sees a spinner, just the content
-  const [profile, setProfile] = useState(() => {
-    const initial = getUserProfileSync('en');
-    return {
-      name: initial.name,
-      role: initial.title,
-      location: initial.location,
-      avatar: initial.avatar || initial.photoUrl || '/profilpict.webp',
-      status: initial.status || 'open',
-      availableFor: initial.availableFor || ['Full-time', 'Freelance'],
-      socials: {
-        youtube: initial.socials?.youtube?.url,
-        linkedin: initial.socials?.linkedin?.url,
-        github: initial.socials?.github?.url,
-      }
-    };
-  });
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [loading, setLoading] = useState(false);
-
-  // 2. Refresh from Firestore in Background
+  // Load profile data on mount
   useEffect(() => {
-    const loadProfile = async () => {
-      setLoading(true);
-      try {
-        const profileData = await getUserProfile('en');
-
-        setProfile({
-          name: profileData.name,
-          role: profileData.title,
-          location: profileData.location,
-          avatar: profileData.avatar || profileData.photoUrl || '/profilpict.webp',
-          status: profileData.status || 'open',
-          availableFor: profileData.availableFor || ['Full-time', 'Freelance'],
-          socials: {
-            youtube: profileData.socials?.youtube?.url,
-            linkedin: profileData.socials?.linkedin?.url,
-            github: profileData.socials?.github?.url,
-          }
-        });
-      } catch (error) {
-        console.error('Background profile refresh failed:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadProfile();
   }, []);
+
+  const loadProfile = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const profileData = await getUserProfile('en');
+
+      setProfile({
+        name: profileData.name,
+        role: profileData.title,
+        location: profileData.location,
+        avatar: profileData.avatar || profileData.photoUrl || '/profilpict.webp',
+        status: profileData.status || 'open',
+        availableFor: profileData.availableFor || ['Full-time', 'Freelance'],
+        socials: {
+          youtube: profileData.socials?.youtube?.url,
+          linkedin: profileData.socials?.linkedin?.url,
+          github: profileData.socials?.github?.url,
+        }
+      });
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const statusConfig = {
     open: {
@@ -86,6 +73,40 @@ const StatusCardWidget = ({ className = '' }) => {
       pulse: false,
     }
   };
+
+  // Show loading skeleton while loading
+  if (loading && !profile) {
+    return <StatusCardSkeleton className={className} />;
+  }
+
+  // Show error state with retry button
+  if (error && !profile) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={`relative overflow-hidden rounded-2xl border border-red-500/30 ${className}`}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-red-400 to-orange-500 opacity-20" />
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" />
+
+        <div className="relative p-6 text-white text-center space-y-3">
+          <AlertCircle className="w-8 h-8 text-red-400 mx-auto" />
+          <h3 className="text-sm font-semibold text-red-300">Failed to Load Profile</h3>
+          <p className="text-xs text-white/60">{error}</p>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={loadProfile}
+            className="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 rounded-lg text-xs font-medium text-red-300 flex items-center gap-2 mx-auto transition-colors"
+          >
+            <RefreshCw size={12} />
+            Retry
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  }
 
   // Removed blocking loader - Content determines visibility
   if (!profile) return null;
@@ -124,7 +145,7 @@ const StatusCardWidget = ({ className = '' }) => {
               quality={90}
               className="w-10 h-10 rounded-full object-cover border-2 border-white/20 shadow-lg cursor-pointer hover:border-cyan-400/50 transition-colors"
               onDoubleClick={() => window.open('/admin', '_blank')}
-        
+
               loading="eager"
               title="Double-click for admin"
             />

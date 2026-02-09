@@ -160,6 +160,24 @@ const withTimeout = (promise, ms) => {
     ]);
 };
 
+// Helper for retry with exponential backoff
+const withRetry = async (fn, maxRetries = 3, baseDelay = 1000) => {
+    let lastError;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            lastError = error;
+            if (attempt < maxRetries - 1) {
+                const delay = baseDelay * Math.pow(2, attempt);
+                console.log(`Retry attempt ${attempt + 1}/${maxRetries} for posts after ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    throw lastError;
+};
+
 // Function to get posts (tries Firestore first, falls back to static)
 export const getPosts = async (currentLanguage = "en") => {
     // Check cache
@@ -176,9 +194,13 @@ export const getPosts = async (currentLanguage = "en") => {
     ];
 
     try {
-        const firestoreData = await withTimeout(
-            getCollection('posts', { orderByField: 'date', orderDirection: 'desc' }),
-            1500
+        const firestoreData = await withRetry(
+            () => withTimeout(
+                getCollection('posts', { orderByField: 'date', orderDirection: 'desc' }),
+                30000 // 30 seconds for slow connections
+            ),
+            3, // 3 retry attempts
+            1000 // Start with 1s delay
         );
 
         if (firestoreData && firestoreData.length > 0) {
@@ -196,22 +218,26 @@ export const getPosts = async (currentLanguage = "en") => {
             return translateData(postsWithImages, currentLanguage);
         }
     } catch (error) {
-        if (error.message !== 'Request timed out') {
-            console.warn('Failed to fetch posts from Firestore, using fallback:', error);
+        console.error('Failed to fetch posts from Firestore after retries:', error);
+
+        // Check if we should use emergency fallback (development mode only)
+        const useEmergencyFallback = import.meta.env.VITE_USE_EMERGENCY_FALLBACK === 'true';
+
+        if (useEmergencyFallback) {
+            console.warn('Using emergency fallback posts (development mode)');
+            return translateData(postsBase, currentLanguage);
         }
+
+        // In production, throw error to force component to handle loading/error states
+        throw new Error(`Failed to load posts: ${error.message}`);
     }
 
-    // Fallback to static data
-    return translateData(postsBase, currentLanguage);
+    // Should never reach here
+    throw new Error('Unexpected error loading posts');
 };
 
-// Synchronous version for components that can't use async
-export const getPostsSync = (currentLanguage = "en") => {
-    if (cachedPosts) {
-        return translateData(cachedPosts, currentLanguage);
-    }
-    return translateData(postsBase, currentLanguage);
-};
+// REMOVED: getPostsSync - Use async getPosts instead
+// Components should handle loading states properly instead of using sync fallback
 
 // Get featured post
 export const getFeaturedPost = async (currentLanguage = "en") => {

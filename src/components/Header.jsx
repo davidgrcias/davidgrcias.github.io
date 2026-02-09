@@ -25,7 +25,13 @@ const Header = () => {
     translatePage,
     translateText,
   } = useTranslation();
-  const userProfile = getUserProfile(currentLanguage);
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    getUserProfile(currentLanguage)
+      .then(setUserProfile)
+      .catch(console.error);
+  }, [currentLanguage]);
 
   const navLinks = [
     { href: "#about", label: translateText("About", currentLanguage) },
@@ -141,11 +147,10 @@ const Header = () => {
                       key={lang.code}
                       onClick={() => handleLanguageChange(lang.code)}
                       disabled={isTranslating}
-                      className={`w-full px-3 py-3 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-md m-1 disabled:opacity-50 ${
-                        currentLanguage === lang.code
-                          ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400"
-                          : "text-slate-700 dark:text-slate-300"
-                      }`}
+                      className={`w-full px-3 py-3 text-left hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors rounded-md m-1 disabled:opacity-50 ${currentLanguage === lang.code
+                        ? "bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400"
+                        : "text-slate-700 dark:text-slate-300"
+                        }`}
                     >
                       <div className="flex items-center gap-3">
                         <span className="text-lg w-6 flex justify-center">
@@ -192,12 +197,14 @@ const Header = () => {
           </button>
 
           {/* Hire Me Button (Desktop only) */}
-          <a
-            href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI\'d%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
-            className="hidden lg:block bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-transform duration-300 hover:scale-105 text-sm"
-          >
-            {translateText("Hire Me", currentLanguage)}
-          </a>
+          {userProfile?.contact?.email && (
+            <a
+              href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI\'d%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
+              className="hidden lg:block bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded-lg transition-transform duration-300 hover:scale-105 text-sm"
+            >
+              {translateText("Hire Me", currentLanguage)}
+            </a>
+          )}
 
           {/* Hamburger (Mobile only) */}
           <button
@@ -212,9 +219,8 @@ const Header = () => {
       </nav>
       {/* Mobile full-screen nav overlay */}
       <div
-        className={`fixed inset-0 z-[999] bg-slate-900/95 dark:bg-[#0f172a]/98 flex min-h-screen w-screen lg:hidden transition-transform duration-500 ${
-          mobileOpen ? "translate-x-0" : "translate-x-full"
-        } ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+        className={`fixed inset-0 z-[999] bg-slate-900/95 dark:bg-[#0f172a]/98 flex min-h-screen w-screen lg:hidden transition-transform duration-500 ${mobileOpen ? "translate-x-0" : "translate-x-full"
+          } ${mobileOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         style={{ transitionProperty: "transform, background-color" }}
       >
         {" "}
@@ -263,12 +269,14 @@ const Header = () => {
             </div>
           </div> */}
 
-          <a
-            href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI'd%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
-            className="mt-10 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 px-12 rounded-xl transition-transform duration-300 hover:scale-105 text-2xl shadow-lg w-fit mx-auto"
-          >
-            {translateText("Hire Me", currentLanguage)}
-          </a>
+          {userProfile?.contact?.email && (
+            <a
+              href={`mailto:${userProfile.contact.email}?subject=Job%20Opportunity%20for%20David%20Garcia%20Saragih&body=Hi%20David%2C%0D%0A%0D%0AI'd%20like%20to%20discuss%20a%20potential%20opportunity%20with%20you.%0D%0A%0D%0ABest%20regards%2C%0D%0A`}
+              className="mt-10 bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-4 px-12 rounded-xl transition-transform duration-300 hover:scale-105 text-2xl shadow-lg w-fit mx-auto"
+            >
+              {translateText("Hire Me", currentLanguage)}
+            </a>
+          )}
         </nav>
       </div>
       {/* CV Preview Modal - REMOVED */}
