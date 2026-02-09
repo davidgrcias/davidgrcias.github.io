@@ -13,11 +13,21 @@ import {
   Users,
   Heart,
   GraduationCap,
+  History,
 } from "lucide-react";
 import { sendWidgetMessage } from "../services/aiAgent";
 import { useTranslation } from "../contexts/TranslationContext";
 import ThinkingProcess from "./ThinkingProcess";
 import { generateThinkingSteps } from "../utils/thinkingSteps";
+import ChatHistorySidebar from "./ChatHistorySidebar";
+import {
+  getConversations,
+  createConversation,
+  updateConversation,
+  deleteConversation,
+  deserializeMessages,
+  generateTitle,
+} from "../services/chatHistoryService";
 
 const ChatBot = () => {
   const { currentLanguage, translateText } = useTranslation();
@@ -82,6 +92,15 @@ const ChatBot = () => {
   const pendingResponseRef = useRef(null);
   const personaMenuRef = useRef(null);
 
+  // ============================================
+  // Chat History State
+  // ============================================
+  const [showHistory, setShowHistory] = useState(false);
+  const [conversations, setConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const saveTimeoutRef = useRef(null);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -89,7 +108,77 @@ const ChatBot = () => {
     scrollToBottom();
   }, [messages, isThinking]);
 
-  // Close persona menu when clicking outside
+  // ============================================
+  // Chat History — Load / Save / Select / Delete
+  // ============================================
+  const loadConversations = async () => {
+    setHistoryLoading(true);
+    try {
+      const convos = await getConversations();
+      setConversations(convos);
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  /**
+   * Debounced save: waits 1.5s after last message before writing to Firestore.
+   * Prevents rapid writes during active conversation.
+   */
+  const debouncedSave = useCallback((msgs, persona, convoId) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(async () => {
+      const hasUserMsg = msgs.some(m => m.type === 'user');
+      if (!hasUserMsg) return;
+
+      try {
+        if (convoId) {
+          const firstUserMsg = msgs.find(m => m.type === 'user');
+          await updateConversation(convoId, {
+            messages: msgs,
+            title: generateTitle(firstUserMsg?.content),
+            persona,
+          });
+        } else {
+          const result = await createConversation({ messages: msgs, persona });
+          if (result?.id) {
+            setActiveConversationId(result.id);
+          }
+        }
+        const convos = await getConversations();
+        setConversations(convos);
+      } catch (error) {
+        console.error('[ChatBot] Failed to save:', error.message);
+      }
+    }, 1500);
+  }, []);
+
+  // Load conversation history when chat opens
+  useEffect(() => {
+    if (isOpen) {
+      loadConversations();
+    }
+  }, [isOpen]);
+
+  // Auto-save conversation after each interaction (debounced)
+  useEffect(() => {
+    // Only trigger if there are user messages (actual conversation)
+    const hasUserMsg = messages.some(m => m.type === 'user');
+    console.log('[ChatBot] Auto-save check:', { 
+      messageCount: messages.length, 
+      hasUserMsg, 
+      isOpen,
+      persona: activePersona,
+      convoId: activeConversationId,
+      willSave: hasUserMsg && messages.length > 1 && isOpen
+    });
+    if (hasUserMsg && messages.length > 1 && isOpen) {
+      debouncedSave(messages, activePersona, activeConversationId);
+    }
+  }, [messages, activePersona, activeConversationId, isOpen, debouncedSave]);
+
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (personaMenuRef.current && !personaMenuRef.current.contains(e.target)) {
@@ -121,6 +210,53 @@ const ChatBot = () => {
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
+  };
+
+  const handleSelectConversation = (conversationId) => {
+    const convo = conversations.find(c => c.id === conversationId);
+    if (!convo) return;
+
+    // Load the conversation messages
+    const loadedMessages = deserializeMessages(convo.messages);
+    setMessages(loadedMessages.length > 0 ? loadedMessages : [{
+      type: 'bot',
+      content: WELCOME_MESSAGES[convo.persona] || WELCOME_MESSAGES.assistant,
+      timestamp: new Date(),
+    }]);
+    setActivePersona(convo.persona || 'assistant');
+    setActiveConversationId(conversationId);
+
+    // Reset thinking state
+    setIsThinking(false);
+    setThinkingSteps([]);
+    setResponseReady(false);
+    pendingResponseRef.current = null;
+    updateSuggestedReplies('welcome');
+  };
+
+  const handleNewChat = () => {
+    setActiveConversationId(null);
+    setMessages([{
+      type: 'bot',
+      content: WELCOME_MESSAGES[activePersona] || WELCOME_MESSAGES.assistant,
+      timestamp: new Date(),
+    }]);
+    setIsThinking(false);
+    setThinkingSteps([]);
+    setResponseReady(false);
+    pendingResponseRef.current = null;
+    updateSuggestedReplies('welcome');
+  };
+
+  const handleDeleteConversation = async (conversationId) => {
+    const success = await deleteConversation(conversationId);
+    if (success) {
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+      // If we deleted the active conversation, start a new chat
+      if (conversationId === activeConversationId) {
+        handleNewChat();
+      }
+    }
   };
 
   // ============================================
@@ -218,7 +354,8 @@ const ChatBot = () => {
   const handlePersonaChange = (newPersona) => {
     setActivePersona(newPersona);
     setShowPersonaMenu(false);
-    // Reset conversation with persona-appropriate welcome
+    // Start fresh conversation with new persona
+    setActiveConversationId(null);
     setMessages([{
       type: 'bot',
       content: WELCOME_MESSAGES[newPersona] || WELCOME_MESSAGES.assistant,
@@ -340,7 +477,7 @@ const ChatBot = () => {
             ? "inset-4 w-auto h-auto"
             : "bottom-2 left-16 right-2 w-auto max-w-full h-[70vh] sm:bottom-6 sm:right-6 sm:left-auto sm:w-96 sm:h-[600px]"
         }
-        bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col`}
+        bg-white dark:bg-slate-800 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col relative`}
           >
             {/* Header */}
             <div className="p-4 bg-cyan-500 text-white">
@@ -350,6 +487,15 @@ const ChatBot = () => {
                   <h3 className="font-semibold text-sm">{HEADER_TITLES[activePersona] || HEADER_TITLES.assistant}</h3>
                 </div>
                 <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className={`p-1 rounded-full transition-colors ${
+                      showHistory ? 'bg-white/30' : 'hover:bg-white/20'
+                    }`}
+                    title="Chat history"
+                  >
+                    <History size={20} />
+                  </button>
                   <button
                     onClick={toggleFullscreen}
                     className="p-1 hover:bg-white/20 rounded-full transition-colors"
@@ -418,6 +564,20 @@ const ChatBot = () => {
                 </AnimatePresence>
               </div>
             </div>
+
+            {/* Chat History Sidebar */}
+            <ChatHistorySidebar
+              isOpen={showHistory}
+              onClose={() => setShowHistory(false)}
+              conversations={conversations}
+              activeConversationId={activeConversationId}
+              onSelectConversation={handleSelectConversation}
+              onNewChat={handleNewChat}
+              onDeleteConversation={handleDeleteConversation}
+              isLoading={historyLoading}
+              isFullscreen={isFullscreen}
+            />
+
             {/* Messages */}
             <div
               ref={chatContainerRef}

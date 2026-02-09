@@ -1,12 +1,21 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Bot, Loader, Trash2, MessageCircle, Download, ThumbsUp, ThumbsDown, Sparkles, Zap, AlertCircle, X, Mic, MicOff, Volume2, VolumeX, Brain, ExternalLink, ChevronDown, User, Users, Heart, GraduationCap } from 'lucide-react';
+import { Send, Bot, Loader, Trash2, MessageCircle, Download, ThumbsUp, ThumbsDown, Sparkles, Zap, AlertCircle, X, Mic, MicOff, Volume2, VolumeX, Brain, ExternalLink, ChevronDown, User, Users, Heart, GraduationCap, History } from 'lucide-react';
 import { useOS } from '../../contexts/OSContext';
 import { useTranslation } from '../../contexts/TranslationContext';
 import { sendAgentMessage, getAgentMemory, resetAgentMemory } from '../../services/aiAgent';
 import { updateChatFeedback } from '../../services/chatAnalytics';
 import ThinkingProcess from '../../components/ThinkingProcess';
 import { generateThinkingSteps } from '../../utils/thinkingSteps';
+import ChatHistorySidebar from '../../components/ChatHistorySidebar';
+import {
+  getConversations,
+  createConversation,
+  updateConversation,
+  deleteConversation,
+  deserializeMessages,
+  generateTitle,
+} from '../../services/chatHistoryService';
 
 const MessengerApp = ({ id }) => {
     const { updateWindow } = useOS();
@@ -70,6 +79,15 @@ const MessengerApp = ({ id }) => {
     const recognitionRef = useRef(null);
     const synthRef = useRef(null);
 
+    // ============================================
+    // Chat History State
+    // ============================================
+    const [showHistory, setShowHistory] = useState(false);
+    const [conversations, setConversations] = useState([]);
+    const [activeConversationId, setActiveConversationId] = useState(null);
+    const [historyLoading, setHistoryLoading] = useState(false);
+    const saveTimeoutRef = useRef(null);
+
     // Close persona menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -106,6 +124,8 @@ const MessengerApp = ({ id }) => {
     const handlePersonaChange = (newPersona) => {
         setActivePersona(newPersona);
         setShowPersonaMenu(false);
+        // Start a fresh new conversation with new persona
+        setActiveConversationId(null);
         resetAgentMemory();
         agentMemory.current = getAgentMemory();
         setMessages([{
@@ -214,6 +234,122 @@ const MessengerApp = ({ id }) => {
     useEffect(() => {
         scrollToBottom();
     }, [messages, streamingText]);
+
+    // ============================================
+    // Chat History — Load / Save / Select / Delete
+    // ============================================
+    const loadConversations = async () => {
+        setHistoryLoading(true);
+        try {
+            const convos = await getConversations();
+            setConversations(convos);
+        } catch (error) {
+            console.error('Failed to load conversations:', error);
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
+
+    const debouncedSave = useCallback((msgs, persona, convoId) => {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = setTimeout(async () => {
+            const hasUserMsg = msgs.some(m => m.type === 'user');
+            if (!hasUserMsg) return;
+
+            try {
+                if (convoId) {
+                    const firstUserMsg = msgs.find(m => m.type === 'user');
+                    await updateConversation(convoId, {
+                        messages: msgs,
+                        title: generateTitle(firstUserMsg?.content),
+                        persona,
+                    });
+                } else {
+                    const result = await createConversation({ messages: msgs, persona });
+                    if (result?.id) {
+                        setActiveConversationId(result.id);
+                    }
+                }
+                const convos = await getConversations();
+                setConversations(convos);
+            } catch (error) {
+                console.error('[ChatHistory] Failed to save:', error.message);
+            }
+        }, 1500);
+    }, []);
+
+    // Load conversation history on mount
+    useEffect(() => {
+        loadConversations();
+    }, []);
+
+    // Auto-save conversation after each interaction (debounced)
+    useEffect(() => {
+        const hasUserMsg = messages.some(m => m.type === 'user');
+        if (hasUserMsg && messages.length > 1) {
+            debouncedSave(messages, activePersona, activeConversationId);
+        }
+    }, [messages, activePersona, activeConversationId, debouncedSave]);
+
+    const handleSelectConversation = (conversationId) => {
+        const convo = conversations.find(c => c.id === conversationId);
+        if (!convo) return;
+
+        const loadedMessages = deserializeMessages(convo.messages);
+        setMessages(loadedMessages.length > 0 ? loadedMessages : [{
+            type: 'bot',
+            content: WELCOME_MESSAGES[convo.persona] || WELCOME_MESSAGES.assistant,
+        }]);
+        setActivePersona(convo.persona || 'assistant');
+        setActiveConversationId(conversationId);
+
+        // Reset state
+        isThinkingRef.current = false;
+        setIsThinkingProcess(false);
+        setThinkingSteps([]);
+        setThinkingResponseReady(false);
+        pendingResponseRef.current = null;
+        pendingStreamChunks.current = '';
+        setSuggestedQuestions([
+            "What are David's technical skills?",
+            "Tell me about his projects",
+            "What's his experience?",
+            "How can I contact him?"
+        ]);
+    };
+
+    const handleNewChat = () => {
+        setActiveConversationId(null);
+        resetAgentMemory();
+        agentMemory.current = getAgentMemory();
+        setMessages([{
+            type: 'bot',
+            content: WELCOME_MESSAGES[activePersona] || WELCOME_MESSAGES.assistant,
+        }]);
+        isThinkingRef.current = false;
+        setIsThinkingProcess(false);
+        setThinkingSteps([]);
+        setThinkingResponseReady(false);
+        pendingResponseRef.current = null;
+        pendingStreamChunks.current = '';
+        setSuggestedQuestions([
+            "What are David's technical skills?",
+            "Tell me about his projects",
+            "What's his experience?",
+            "How can I contact him?"
+        ]);
+        setActionBadges([]);
+    };
+
+    const handleDeleteConversation = async (conversationId) => {
+        const success = await deleteConversation(conversationId);
+        if (success) {
+            setConversations(prev => prev.filter(c => c.id !== conversationId));
+            if (conversationId === activeConversationId) {
+                handleNewChat();
+            }
+        }
+    };
 
     // Cleanup Speech on unmount
     useEffect(() => {
@@ -589,7 +725,20 @@ const MessengerApp = ({ id }) => {
     };
 
     return (
-        <div className="flex flex-col h-full w-full bg-zinc-900 text-white font-sans">
+        <div className="flex flex-col h-full w-full bg-zinc-900 text-white font-sans relative">
+            {/* Chat History Sidebar */}
+            <ChatHistorySidebar
+                isOpen={showHistory}
+                onClose={() => setShowHistory(false)}
+                conversations={conversations}
+                activeConversationId={activeConversationId}
+                onSelectConversation={handleSelectConversation}
+                onNewChat={handleNewChat}
+                onDeleteConversation={handleDeleteConversation}
+                isLoading={historyLoading}
+                isFullscreen={false}
+            />
+
             {/* Error Banner */}
             {error && (
                 <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-2 flex items-center gap-2 text-red-400 text-sm">
@@ -781,6 +930,19 @@ const MessengerApp = ({ id }) => {
                             </div>
                         )}
                     </div>
+
+                    <button
+                        onClick={() => setShowHistory(!showHistory)}
+                        className={`flex items-center gap-1 px-2 py-1 rounded transition-all ${
+                            showHistory
+                                ? 'bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/30'
+                                : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-750'
+                        }`}
+                        title="Chat history"
+                    >
+                        <History size={12} />
+                        <span>History</span>
+                    </button>
 
                     <span className="flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/30">
                         <Brain size={12} />
