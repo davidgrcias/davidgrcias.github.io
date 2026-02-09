@@ -70,7 +70,6 @@ const MessengerApp = ({ id }) => {
     const [error, setError] = useState(null);
     const [streamingText, setStreamingText] = useState('');
     const [enableStreaming, setEnableStreaming] = useState(false);
-    const [useHybridSearch, setUseHybridSearch] = useState(true);
     const [isListening, setIsListening] = useState(false);
     const [isSpeaking, setIsSpeaking] = useState(false);
     const [voiceEnabled, setVoiceEnabled] = useState(false);
@@ -510,7 +509,7 @@ const MessengerApp = ({ id }) => {
                 await sendAgentMessage(question, {
                     language: currentLanguage,
                     useRAG,
-                    useHybrid: useHybridSearch,
+                    useHybrid: true,
                     streaming: true,
                     persona: activePersona,
                     onChunk: (chunk, fullText) => {
@@ -554,7 +553,7 @@ const MessengerApp = ({ id }) => {
                 const result = await sendAgentMessage(question, {
                     language: currentLanguage,
                     useRAG,
-                    useHybrid: useHybridSearch,
+                    useHybrid: true,
                     streaming: false,
                     persona: activePersona,
                     onActionExecuted: (action, result) => {
@@ -967,24 +966,6 @@ const MessengerApp = ({ id }) => {
                         <Zap size={12} />
                         <span>{enableStreaming ? 'Streaming' : 'Instant'}</span>
                     </button>
-
-                    {useRAG && (
-                        <button
-                            onClick={() => setUseHybridSearch(!useHybridSearch)}
-                            className={`flex items-center gap-1 px-2 py-1 rounded transition-all ${useHybridSearch ? 'bg-purple-500/20 text-purple-400 ring-1 ring-purple-500/30' : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-750'
-                                }`}
-                            title={useHybridSearch ? 'Hybrid search (vector + keyword)' : 'Vector search only'}
-                        >
-                            <Sparkles size={12} />
-                            <span>{useHybridSearch ? 'Hybrid' : 'Vector'}</span>
-                        </button>
-                    )}
-
-                    {useRAG && (
-                        <span className="text-[10px] text-zinc-500">
-                            {useHybridSearch ? 'Hybrid search enabled' : 'Vector search enabled'}
-                        </span>
-                    )}
                 </div>
 
                 <form onSubmit={handleSend} className="relative flex items-center gap-2">
