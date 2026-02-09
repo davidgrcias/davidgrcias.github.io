@@ -91,6 +91,24 @@ const withTimeout = (promise, ms) => {
   ]);
 };
 
+// Helper for retry with exponential backoff
+const withRetry = async (fn, maxRetries = 3, baseDelay = 1000) => {
+  let lastError;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+};
+
 const STORAGE_KEY = 'webos-user-profile';
 const STORAGE_TTL = 5 * 60 * 1000; // 5 minutes (reduced from 24h for better sync)
 
@@ -121,11 +139,15 @@ export const getUserProfile = async (currentLanguage = "en", forceRefresh = fals
     }
   } // Close if (!forceRefresh)
 
+  // 3. Fetch from Firestore with retry (Timeout increased to 30s)
   try {
-    // 3. Fetch from Firestore (Timeout increased to 10s)
-    const firestoreData = await withTimeout(
-      getDocument('profile', 'main'),
-      10000
+    const firestoreData = await withRetry(
+      () => withTimeout(
+        getDocument('profile', 'main'),
+        30000 // 30 seconds for slow connections
+      ),
+      3, // 3 retry attempts
+      1000 // Start with 1s delay
     );
 
     if (firestoreData && firestoreData.name) {
@@ -141,24 +163,26 @@ export const getUserProfile = async (currentLanguage = "en", forceRefresh = fals
       return translateData(normalizeProfile(firestoreData), currentLanguage);
     }
   } catch (error) {
-    // Silent fail for timeout or network error, just use fallback
-    if (error.message !== 'Request timed out') {
-      console.warn('Failed to fetch profile from Firestore, using fallback:', error);
+    console.error('Failed to fetch profile from Firestore after retries:', error);
+
+    // Check if we should use emergency fallback (development mode only)
+    const useEmergencyFallback = import.meta.env.VITE_USE_EMERGENCY_FALLBACK === 'true';
+
+    if (useEmergencyFallback) {
+      console.warn('Using emergency fallback data (development mode)');
+      return translateData(normalizeProfile(userProfileBase), currentLanguage);
     }
+
+    // In production, throw error to force component to handle loading/error states
+    throw new Error(`Failed to load profile: ${error.message}`);
   }
 
-  // 4. Fallback to Local Base
-  // If we have stale data in storage, maybe use that instead of base? 
-  // But for now, base is safe default.
-  return translateData(normalizeProfile(userProfileBase), currentLanguage);
+  // Should never reach here, but TypeScript needs a return
+  throw new Error('Unexpected error loading profile');
 };
 
-export const getUserProfileSync = (currentLanguage = "en") => {
-  if (cachedProfile) {
-    return translateData(normalizeProfile(cachedProfile), currentLanguage);
-  }
-  return translateData(normalizeProfile(userProfileBase), currentLanguage);
-};
+// REMOVED: getUserProfileSync - Use async getUserProfile instead
+// Components should handle loading states properly instead of using sync fallback
 
 // Clear cache to force re-fetch
 export const clearProfileCache = () => {

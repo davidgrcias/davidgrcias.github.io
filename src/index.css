@@ -380,3 +380,14 @@ html {
 .spinner-animate {
   animation: spin 1s linear infinite;
 }
+
+/* Shimmer animation for loading skeletons */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}

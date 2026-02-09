@@ -74,6 +74,34 @@ let cachedProjects = null;
 let cacheTimestamp = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
+// Helper for timeout
+const withTimeout = (promise, ms) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), ms)
+    )
+  ]);
+};
+
+// Helper for retry with exponential backoff
+const withRetry = async (fn, maxRetries = 3, baseDelay = 1000) => {
+  let lastError;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < maxRetries - 1) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        console.log(`Retry attempt ${attempt + 1}/${maxRetries} for projects after ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  throw lastError;
+};
+
 // Function to get projects (tries Firestore first, falls back to static)
 export const getProjects = async (currentLanguage = "en") => {
   // Check cache
@@ -82,7 +110,14 @@ export const getProjects = async (currentLanguage = "en") => {
   }
 
   try {
-    const firestoreData = await getCollection('projects', { orderByField: 'order' });
+    const firestoreData = await withRetry(
+      () => withTimeout(
+        getCollection('projects', { orderByField: 'order' }),
+        30000 // 30 seconds for slow connections
+      ),
+      3, // 3 retry attempts
+      1000 // Start with 1s delay
+    );
 
     if (firestoreData && firestoreData.length > 0) {
       cachedProjects = firestoreData;
@@ -90,20 +125,26 @@ export const getProjects = async (currentLanguage = "en") => {
       return translateData(firestoreData, currentLanguage);
     }
   } catch (error) {
-    console.warn('Failed to fetch projects from Firestore, using fallback:', error);
+    console.error('Failed to fetch projects from Firestore after retries:', error);
+
+    // Check if we should use emergency fallback (development mode only)
+    const useEmergencyFallback = import.meta.env.VITE_USE_EMERGENCY_FALLBACK === 'true';
+
+    if (useEmergencyFallback) {
+      console.warn('Using emergency fallback projects (development mode)');
+      return translateData(projectsBase, currentLanguage);
+    }
+
+    // In production, throw error to force component to handle loading/error states
+    throw new Error(`Failed to load projects: ${error.message}`);
   }
 
-  // Fallback to static data
-  return translateData(projectsBase, currentLanguage);
+  // Should never reach here
+  throw new Error('Unexpected error loading projects');
 };
 
-// Synchronous version for components that can't use async
-export const getProjectsSync = (currentLanguage = "en") => {
-  if (cachedProjects) {
-    return translateData(cachedProjects, currentLanguage);
-  }
-  return translateData(projectsBase, currentLanguage);
-};
+// REMOVED: getProjectsSync - Use async getProjects instead
+// Components should handle loading states properly instead of using sync fallback
 
 // Helper to translate data
 const translateData = (data, language) => {

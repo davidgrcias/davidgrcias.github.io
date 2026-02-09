@@ -12,7 +12,16 @@ Object.assign(iconMap, {
 
 const TikTokStats = () => {
   const { currentLanguage } = useTranslation();
-  const userProfile = getUserProfile(currentLanguage);
+  const [userProfile, setUserProfile] = useState(null);
+
+  useEffect(() => {
+    getUserProfile(currentLanguage)
+      .then(setUserProfile)
+      .catch(console.error);
+  }, [currentLanguage]);
+
+  if (!userProfile) return null;
+
   const stats = {
     followers: "17.2K",
     likes: "70K",
