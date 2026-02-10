@@ -17,8 +17,9 @@ export function registerFilesystemCommands(registry, getContext) {
       { flag: 'h', description: 'Human-readable sizes' },
     ],
     examples: ['ls', 'ls -la', 'ls /Projects', 'ls -lh ~/Documents'],
-    async execute(args, flags) {
-      const { fs } = getContext();
+    async execute(args, flags, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0] || '.';
       
       const result = fs.ls(path, flags);
@@ -51,8 +52,9 @@ export function registerFilesystemCommands(registry, getContext) {
     usage: 'cd [path]',
     category: 'filesystem',
     examples: ['cd /Projects', 'cd ..', 'cd ~', 'cd -'],
-    async execute(args) {
-      const { fs } = getContext();
+    async execute(args, flags, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0] || '~';
       
       const result = fs.cd(path);
@@ -71,8 +73,9 @@ export function registerFilesystemCommands(registry, getContext) {
     usage: 'pwd',
     category: 'filesystem',
     examples: ['pwd'],
-    async execute() {
-      const { fs } = getContext();
+    async execute(args, flags, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       return [text(fs.pwd())];
     },
   });
@@ -84,8 +87,9 @@ export function registerFilesystemCommands(registry, getContext) {
     category: 'filesystem',
     requiresArgs: true,
     examples: ['cat README.md', 'cat Skills.json'],
-    async execute(args) {
-      const { fs } = getContext();
+    async execute(args, flags, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0];
       
       if (!path) {
@@ -112,15 +116,16 @@ export function registerFilesystemCommands(registry, getContext) {
     ],
     requiresArgs: true,
     examples: ['mkdir NewFolder', 'mkdir -p path/to/folder'],
-    async execute(args, flags) {
-      const { fs } = getContext();
+    async execute(args, flagsArg, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0];
       
       if (!path) {
         return [error('mkdir: missing operand')];
       }
 
-      const result = fs.mkdir(path, flags);
+      const result = fs.mkdir(path, flagsArg);
       
       if (!result.success) {
         return [error(result.error)];
@@ -137,8 +142,9 @@ export function registerFilesystemCommands(registry, getContext) {
     category: 'filesystem',
     requiresArgs: true,
     examples: ['touch newfile.txt', 'touch test.js'],
-    async execute(args) {
-      const { fs } = getContext();
+    async execute(args, flags, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0];
       
       if (!path) {
@@ -171,13 +177,14 @@ export function registerFilesystemCommands(registry, getContext) {
       { flag: 'type', description: 'Filter by type (f=file, d=directory)' },
     ],
     examples: ['find . -name "*.js"', 'find /Projects -type d', 'find -name README'],
-    async execute(args, flags) {
-      const { fs } = getContext();
+    async execute(args, flagsArg, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       
       let startPath = '.';
       let pattern = '*';
       
-      if (flags.name) {
+      if (flagsArg.name) {
         // find [path] -name pattern
         if (args.length > 0 && !args[0].startsWith('-')) {
           startPath = args[0];
@@ -219,12 +226,13 @@ export function registerFilesystemCommands(registry, getContext) {
       { flag: 'L', description: 'Max display depth' },
     ],
     examples: ['tree', 'tree /Projects', 'tree -L 2'],
-    async execute(args, flags) {
-      const { fs } = getContext();
+    async execute(args, flagsArg, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0] || '.';
       let maxDepth = 10;
       
-      if (flags.L) {
+      if (flagsArg.L) {
         const depthIndex = args.indexOf('-L');
         if (depthIndex !== -1 && args[depthIndex + 1]) {
           maxDepth = parseInt(args[depthIndex + 1], 10) || 10;
@@ -257,8 +265,9 @@ export function registerFilesystemCommands(registry, getContext) {
     category: 'filesystem',
     requiresArgs: true,
     examples: ['file README.md', 'file image.png'],
-    async execute(args) {
-      const { fs } = getContext();
+    async execute(args, flags, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0];
       
       if (!path) {
@@ -290,8 +299,9 @@ export function registerFilesystemCommands(registry, getContext) {
     ],
     requiresArgs: true,
     examples: ['head file.txt', 'head -n 20 log.txt'],
-    async execute(args, flags) {
-      const { fs } = getContext();
+    async execute(args, flagsArg, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0];
       
       if (!path) {
@@ -299,7 +309,7 @@ export function registerFilesystemCommands(registry, getContext) {
       }
 
       let numLines = 10;
-      if (flags.n) {
+      if (flagsArg.n) {
         const nIndex = args.indexOf('-n');
         if (nIndex !== -1 && args[nIndex + 1]) {
           numLines = parseInt(args[nIndex + 1], 10) || 10;
@@ -329,8 +339,9 @@ export function registerFilesystemCommands(registry, getContext) {
     ],
     requiresArgs: true,
     examples: ['tail file.txt', 'tail -n 20 log.txt'],
-    async execute(args, flags) {
-      const { fs } = getContext();
+    async execute(args, flagsArg, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0];
       
       if (!path) {
@@ -338,7 +349,7 @@ export function registerFilesystemCommands(registry, getContext) {
       }
 
       let numLines = 10;
-      if (flags.n) {
+      if (flagsArg.n) {
         const nIndex = args.indexOf('-n');
         if (nIndex !== -1 && args[nIndex + 1]) {
           numLines = parseInt(args[nIndex + 1], 10) || 10;
@@ -370,8 +381,9 @@ export function registerFilesystemCommands(registry, getContext) {
     ],
     requiresArgs: true,
     examples: ['wc file.txt', 'wc -l file.txt', 'wc -w -c file.txt'],
-    async execute(args, flags) {
-      const { fs } = getContext();
+    async execute(args, flagsArg, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0];
       
       if (!path) {
@@ -390,12 +402,12 @@ export function registerFilesystemCommands(registry, getContext) {
       const chars = content.length;
 
       // If no flags, show all
-      const showAll = !flags.l && !flags.w && !flags.c;
+      const showAll = !flagsArg.l && !flagsArg.w && !flagsArg.c;
 
       const counts = [];
-      if (showAll || flags.l) counts.push(lines);
-      if (showAll || flags.w) counts.push(words);
-      if (showAll || flags.c) counts.push(chars);
+      if (showAll || flagsArg.l) counts.push(lines);
+      if (showAll || flagsArg.w) counts.push(words);
+      if (showAll || flagsArg.c) counts.push(chars);
 
       return [text(`${counts.join(' ')} ${path}`)];
     },
@@ -411,8 +423,9 @@ export function registerFilesystemCommands(registry, getContext) {
       { flag: 's', description: 'Display only total' },
     ],
     examples: ['du', 'du -h /Projects', 'du -sh .'],
-    async execute(args, flags) {
-      const { fs } = getContext();
+    async execute(args, flagsArg, context) {
+      const ctx = context ? context() : getContext();
+      const { fs } = ctx;
       const path = args[0] || '.';
 
       const result = fs.stat(path);
@@ -422,7 +435,7 @@ export function registerFilesystemCommands(registry, getContext) {
       }
 
       const size = result.size || 0;
-      const displaySize = flags.h ? fs.humanReadableSize(size) : size.toString();
+      const displaySize = flagsArg.h ? fs.humanReadableSize(size) : size.toString();
 
       return [text(`${displaySize}\t${path}`)];
     },

@@ -170,11 +170,11 @@ const DesktopContent = () => {
         const saved = localStorage.getItem('webos-desktop-grid');
         // Default layout if no saved data matches user request
         const defaultLayout = {
-            'vscode': { row: 0, col: 0 },      // Portfolio
-            'messenger': { row: 0, col: 1 },   // Chat
+            'messenger': { row: 0, col: 0 },   // AI Chatbot
+            'vscode': { row: 0, col: 1 },      // Portfolio
             'terminal': { row: 0, col: 2 },    // Terminal
-            'about-me': { row: 1, col: 0 },    // About Me
-            'cv-download': { row: 1, col: 1 }, // My CV
+            'cv-download': { row: 1, col: 0 }, // My CV
+            'about-me': { row: 1, col: 1 },    // About Me
             'blog': { row: 1, col: 2 },        // Blog
             'file-manager': { row: 2, col: 0 },// Files
             'notes': { row: 3, col: 0 },       // Notes
@@ -235,6 +235,20 @@ const DesktopContent = () => {
     // Desktop shortcuts
     const desktopShortcuts = [
         {
+            id: 'messenger',
+            label: 'AI Chatbot',
+            icon: <Bot size={32} />,
+            badge: 'AI',
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Chatbot"><MessengerApp /></ErrorBoundary></Suspense>,
+            title: 'AI Chatbot',
+            contextMenuOptions: [
+                { label: 'New Conversation', onClick: () => triggerAppAction('messenger', 'new-chat') },
+                { separator: true },
+                { label: 'Status: Online', onClick: () => triggerAppAction('messenger', 'set-status', { status: 'online' }) },
+                { label: 'Status: Busy', onClick: () => triggerAppAction('messenger', 'set-status', { status: 'busy' }) },
+            ]
+        },
+        {
             id: 'vscode',
             label: 'Portfolio',
             icon: <Code size={32} />,
@@ -287,31 +301,6 @@ const DesktopContent = () => {
             ]
         },
         {
-            id: 'messenger',
-            label: 'AI Chatbot',
-            icon: <Bot size={32} />,
-            badge: 'AI',
-            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Chatbot"><MessengerApp /></ErrorBoundary></Suspense>,
-            title: 'AI Chatbot',
-            contextMenuOptions: [
-                { label: 'New Conversation', onClick: () => triggerAppAction('messenger', 'new-chat') },
-                { separator: true },
-                { label: 'Status: Online', onClick: () => triggerAppAction('messenger', 'set-status', { status: 'online' }) },
-                { label: 'Status: Busy', onClick: () => triggerAppAction('messenger', 'set-status', { status: 'busy' }) },
-            ]
-        },
-        {
-            id: 'notes',
-            label: 'Notes',
-            icon: <StickyNote size={32} />,
-            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense>,
-            title: 'Quick Notes',
-            contextMenuOptions: [
-                { label: 'New Note', onClick: () => triggerAppAction('notes', 'new-note') },
-                { label: 'Clear All', onClick: () => triggerAppAction('notes', 'clear-all') },
-            ]
-        },
-        {
             id: 'about-me',
             label: 'About Me',
             icon: <User size={32} />,
@@ -358,6 +347,17 @@ const DesktopContent = () => {
             contextMenuOptions: [
                 { label: 'Refresh Feed', onClick: () => triggerAppAction('blog', 'refresh') },
                 { label: 'Share', onClick: () => triggerAppAction('blog', 'share') },
+            ]
+        },
+        {
+            id: 'notes',
+            label: 'Notes',
+            icon: <StickyNote size={32} />,
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Notes"><NotesApp /></ErrorBoundary></Suspense>,
+            title: 'Quick Notes',
+            contextMenuOptions: [
+                { label: 'New Note', onClick: () => triggerAppAction('notes', 'new-note') },
+                { label: 'Clear All', onClick: () => triggerAppAction('notes', 'clear-all') },
             ]
         },
     ];

@@ -1,5 +1,28 @@
 ﻿import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { useOS } from './OSContext';
+import { useTheme } from './ThemeContext';
+import { useSound } from './SoundContext';
+import { useTranslation } from './TranslationContext';
+import { useNotification } from './NotificationContext';
+import { useMusicPlayer } from './MusicPlayerContext';
+
+// Import voice systems
+import { VoiceCommandRegistry } from '../voice/voiceCommandRegistry';
+import { createIntentMatcher } from '../voice/intentMatcher';
+import { ResponseGenerator } from '../voice/responseGenerator';
+import { createVoiceFeedback } from '../voice/voiceFeedback';
+
+// Import command modules
+import registerSystemVoiceCommands from '../voice/commands/system';
+import registerAppVoiceCommands from '../voice/commands/apps';
+import registerNavigationVoiceCommands from '../voice/commands/navigation';
+import registerInfoVoiceCommands from '../voice/commands/info';
+import registerMediaVoiceCommands from '../voice/commands/media';
+import registerSearchVoiceCommands from '../voice/commands/search';
+import registerFilesystemVoiceCommands from '../voice/commands/filesystem';
+import registerNotificationVoiceCommands from '../voice/commands/notifications';
+import registerSocialVoiceCommands from '../voice/commands/social';
+import registerFunVoiceCommands from '../voice/commands/fun';
 
 const VoiceContext = createContext(null);
 
@@ -112,20 +135,33 @@ function similarity(s1, s2) {
 }
 
 export function VoiceProvider({ children }) {
-  const { closeWindow, minimizeWindow, maximizeWindow, windows } = useOS();
+  const os = useOS();
+  const theme = useTheme();
+  const sound = useSound();
+  const translation = useTranslation();
+  const notification = useNotification();
+  const music = useMusicPlayer();
   
   // State
   const [isSupported, setIsSupported] = useState(false);
   const [voiceState, setVoiceState] = useState('idle');
   const [transcript, setTranscript] = useState('');
   const [response, setResponse] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState(null);
+  const [selectedLanguage, setSelectedLanguage] = useState('en-US');
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [keyboardInput, setKeyboardInput] = useState('');
   const [showKeyboardInput, setShowKeyboardInput] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const [currentCommand, setCurrentCommand] = useState(null);
+  const [confidence, setConfidence] = useState(1.0);
   
+  // Refs
   const recognitionRef = useRef(null);
   const synthRef = useRef(null);
+  const commandRegistryRef = useRef(null);
+  const intentMatcherRef = useRef(null);
+  const responseGeneratorRef = useRef(null);
+  const voiceFeedbackRef = useRef(null);
   const retryCountRef = useRef(0);
   const maxRetries = 3;
 
@@ -135,6 +171,58 @@ export function VoiceProvider({ children }) {
     setIsSupported(!!SpeechRecognition && 'speechSynthesis' in window);
     if (window.speechSynthesis) synthRef.current = window.speechSynthesis;
   }, []);
+  
+  // Initialize voice systems
+  useEffect(() => {
+    // Create command registry
+    const registry = new VoiceCommandRegistry();
+    
+    // Get context provider
+    const getContext = () => ({
+      os,
+      theme,
+      sound,
+      translation,
+      notification,
+      music,
+    });
+    
+    // Register all command modules
+    registerSystemVoiceCommands(registry, getContext);
+    registerAppVoiceCommands(registry, getContext);
+    registerNavigationVoiceCommands(registry, getContext);
+    registerInfoVoiceCommands(registry, getContext);
+    registerMediaVoiceCommands(registry, getContext);
+    registerSearchVoiceCommands(registry, getContext);
+    registerFilesystemVoiceCommands(registry, getContext);
+    registerNotificationVoiceCommands(registry, getContext);
+    registerSocialVoiceCommands(registry, getContext);
+    registerFunVoiceCommands(registry, getContext);
+    
+    commandRegistryRef.current = registry;
+    
+    // Create intent matcher
+    const matcher = createIntentMatcher(registry, {
+      confidenceThreshold: 0.6,
+      language: selectedLanguage.startsWith('id') ? 'id' : 'en',
+    });
+    intentMatcherRef.current = matcher;
+    
+    // Create response generator
+    const generator = new ResponseGenerator({
+      personality: 'casual',
+      language: selectedLanguage.startsWith('id') ? 'id' : 'en',
+    });
+    responseGeneratorRef.current = generator;
+    
+    // Create voice feedback
+    const feedback = createVoiceFeedback({
+      soundEnabled: sound.enabled,
+      visualEnabled: true,
+    });
+    voiceFeedbackRef.current = feedback;
+    
+  }, [os, theme, sound, translation, notification, music, selectedLanguage]);
 
   const getLang = useCallback(() => {
     return VOICE_LANGUAGES[selectedLanguage] || VOICE_LANGUAGES['en-US'];
@@ -146,118 +234,153 @@ export function VoiceProvider({ children }) {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = selectedLanguage || 'en-US';
     utterance.rate = 1.0;
+    
+    if (voiceFeedbackRef.current) {
+      voiceFeedbackRef.current.onSpeaking();
+    }
+    
     synthRef.current.speak(utterance);
   }, [selectedLanguage]);
-
-  const findApp = useCallback((text) => {
-    const lowerText = text.toLowerCase();
-    const words = lowerText.split(/\s+/);
-    
-    for (const [appId, aliases] of Object.entries(APP_ALIASES)) {
-      for (const alias of aliases) {
-        if (lowerText.includes(alias)) return appId;
-      }
-    }
-    
-    for (const word of words) {
-      if (word.length < 3) continue;
-      for (const [appId, aliases] of Object.entries(APP_ALIASES)) {
-        for (const alias of aliases) {
-          if (similarity(word, alias) > 0.7) return appId;
-        }
-      }
-    }
-    return null;
-  }, []);
-
-  const hasCommand = useCallback((text, commandType) => {
-    const lang = getLang();
-    const commands = lang.commands[commandType] || [];
-    const lowerText = text.toLowerCase();
-    const words = lowerText.split(/\s+/);
-    
-    if (commands.some(cmd => lowerText.includes(cmd))) return true;
-    for (const word of words) {
-      for (const cmd of commands) {
-        if (similarity(word, cmd) > 0.75) return true;
-      }
-    }
-    return false;
-  }, [getLang]);
-
+  
   const resetState = useCallback((delay = 2000) => {
     setTimeout(() => {
       setVoiceState('idle');
       setTranscript('');
       setResponse('');
+      setCurrentCommand(null);
+      
+      if (voiceFeedbackRef.current) {
+        voiceFeedbackRef.current.onIdle();
+      }
     }, delay);
   }, []);
-
-  const processCommand = useCallback((text) => {
-    const lang = getLang();
-    
-    if (hasCommand(text, 'open')) {
-      const app = findApp(text);
-      if (app) {
-        window.dispatchEvent(new CustomEvent('VOICE_OPEN_APP', { detail: { appId: app } }));
-        const appName = app.charAt(0).toUpperCase() + app.slice(1).replace('-', ' ');
-        setResponse(lang.responses.opening(appName));
-        speak(lang.responses.opening(appName));
+  
+  // Execute matched command
+  const executeCommand = useCallback(async (matchResult) => {
+    try {
+      const { command, entities, intent } = matchResult;
+      
+      setVoiceState('processing');
+      setCurrentCommand(command);
+      
+      if (voiceFeedbackRef.current) {
+        voiceFeedbackRef.current.onProcessing();
+      }
+      
+      // Execute the command action
+      const result = await command.action(entities);
+      
+      // Generate response
+      const responseText = responseGeneratorRef.current?.generate({
+        intent,
+        entities,
+        success: result.success,
+        command,
+      });
+      
+      if (result.success) {
+        setResponse(responseText.text);
+        speak(responseText.text);
         setVoiceState('success');
+        
+        if (voiceFeedbackRef.current) {
+          voiceFeedbackRef.current.onSuccess(responseText);
+        }
+        
+        // Add to conversation history
+        setConversationHistory(prev => [...prev.slice(-9), {
+          utterance: transcript,
+          intent,
+          entities,
+          success: true,
+          timestamp: Date.now(),
+        }]);
+        
         resetState();
+      } else {
+        throw new Error(result.error || 'Command execution failed');
+      }
+    } catch (error) {
+      console.error('Command execution error:', error);
+      
+      const errorResponse = responseGeneratorRef.current?.error({
+        error: error.message,
+        intent: matchResult.intent,
+      });
+      
+      setResponse(errorResponse.text);
+      setVoiceState('error');
+      
+      if (voiceFeedbackRef.current) {
+        voiceFeedbackRef.current.onError(errorResponse);
+      }
+      
+      resetState(3000);
+    }
+  }, [transcript, speak, resetState]);
+  
+  // Process voice command with NLU
+  const processCommand = useCallback(async (text) => {
+    if (!intentMatcherRef.current) return false;
+    
+    try {
+      // Match intent
+      const matchResult = intentMatcherRef.current.match(text);
+      
+      if (!matchResult.matched) {
+        // No match found - show suggestions
+        const suggestionResponse = responseGeneratorRef.current?.suggest({
+          utterance: text,
+          suggestions: matchResult.suggestions || [],
+        });
+        
+        setResponse(suggestionResponse.text);
+        speak(suggestionResponse.voice);
+        setVoiceState('error');
+        
+        if (voiceFeedbackRef.current) {
+          voiceFeedbackRef.current.onError({ text: suggestionResponse.text });
+        }
+        
+        resetState(3000);
+        return false;
+      }
+      
+      // Check confidence
+      setConfidence(matchResult.confidence);
+      
+      if (matchResult.confidence < 0.7) {
+        // Low confidence - ask for confirmation
+        const confirmResponse = responseGeneratorRef.current?.confirm({
+          intent: matchResult.intent,
+          entities: matchResult.entities,
+          command: matchResult.command,
+          confidence: matchResult.confidence,
+        });
+        
+        setResponse(confirmResponse.text);
+        speak(confirmResponse.voice);
+        setVoiceState('confirming');
+        
+        // For now, proceed anyway (could add confirmation flow)
+        await executeCommand(matchResult);
         return true;
       }
+      
+      // High confidence - execute directly
+      await executeCommand(matchResult);
+      return true;
+      
+    } catch (error) {
+      console.error('Command processing error:', error);
+      
+      const lang = getLang();
+      setResponse(lang.responses.error);
+      setVoiceState('error');
+      resetState(3000);
+      return false;
     }
-    
-    if (hasCommand(text, 'close')) {
-      const app = findApp(text);
-      if (app) {
-        const win = windows.find(w => w.id === app);
-        if (win) {
-          closeWindow(win.id);
-          const appName = app.charAt(0).toUpperCase() + app.slice(1).replace('-', ' ');
-          setResponse(lang.responses.closing(appName));
-          speak(lang.responses.closing(appName));
-          setVoiceState('success');
-          resetState();
-          return true;
-        }
-      }
-    }
-    
-    if (hasCommand(text, 'minimize')) {
-      const app = findApp(text);
-      if (app) {
-        const win = windows.find(w => w.id === app);
-        if (win) {
-          minimizeWindow(win.id);
-          setResponse(`Minimizing ${app}`);
-          setVoiceState('success');
-          resetState();
-          return true;
-        }
-      }
-    }
-    
-    if (hasCommand(text, 'maximize')) {
-      const app = findApp(text);
-      if (app) {
-        const win = windows.find(w => w.id === app);
-        if (win) {
-          maximizeWindow(win.id);
-          setResponse(`Maximizing ${app}`);
-          setVoiceState('success');
-          resetState();
-          return true;
-        }
-      }
-    }
-    
-    setResponse(`"${text}" - ${lang.responses.notUnderstood}`);
-    setVoiceState('error');
-    resetState(3000);
-    return false;
-  }, [getLang, hasCommand, findApp, closeWindow, minimizeWindow, maximizeWindow, windows, speak, resetState]);
+  }, [executeCommand, speak, getLang, resetState]);
 
   const handleKeyboardSubmit = useCallback((text) => {
     if (!text.trim()) return;
@@ -296,6 +419,10 @@ export function VoiceProvider({ children }) {
       setVoiceState('listening');
       setTranscript('');
       setResponse(lang.responses.listening);
+      
+      if (voiceFeedbackRef.current) {
+        voiceFeedbackRef.current.onStart();
+      }
     };
     
     recognition.onresult = (event) => {
@@ -303,23 +430,18 @@ export function VoiceProvider({ children }) {
       const text = results[0].transcript;
       setTranscript(text);
       
+      if (voiceFeedbackRef.current) {
+        voiceFeedbackRef.current.onTranscription(text);
+      }
+      
       if (results.isFinal) {
         retryCountRef.current = 0; // Reset retry on success
         setVoiceState('processing');
         
         console.log('Voice heard:', text);
         
-        let processed = false;
-        for (let i = 0; i < results.length && !processed; i++) {
-          const altText = results[i].transcript;
-          if (findApp(altText) && (hasCommand(altText, 'open') || hasCommand(altText, 'close'))) {
-            processed = true;
-            setTimeout(() => processCommand(altText), 200);
-          }
-        }
-        if (!processed) {
-          setTimeout(() => processCommand(text), 200);
-        }
+        // Process with NLU/Intent Matcher
+        setTimeout(() => processCommand(text), 200);
       }
     };
     
@@ -345,6 +467,10 @@ export function VoiceProvider({ children }) {
           setShowKeyboardInput(true);
           retryCountRef.current = 0;
           
+          if (voiceFeedbackRef.current) {
+            voiceFeedbackRef.current.onError({ text: lang.responses.networkError });
+          }
+          
           setTimeout(() => {
             setVoiceState('idle');
             setResponse('');
@@ -353,12 +479,22 @@ export function VoiceProvider({ children }) {
       } else if (event.error === 'no-speech') {
         setResponse('No speech detected');
         setVoiceState('error');
+        
+        if (voiceFeedbackRef.current) {
+          voiceFeedbackRef.current.onError({ text: 'No speech detected' });
+        }
+        
         resetState(2000);
       } else if (event.error === 'aborted') {
         setVoiceState('idle');
       } else {
         setResponse(lang.responses.error);
         setVoiceState('error');
+        
+        if (voiceFeedbackRef.current) {
+          voiceFeedbackRef.current.onError({ text: lang.responses.error });
+        }
+        
         resetState(2000);
       }
     };
@@ -377,7 +513,7 @@ export function VoiceProvider({ children }) {
       setShowKeyboardInput(true);
       setVoiceState('idle');
     }
-  }, [findApp, hasCommand, processCommand, resetState]);
+  }, [processCommand, resetState]);
 
   // Public startListening - shows language selector if needed
   const startListening = useCallback(() => {
@@ -436,8 +572,15 @@ export function VoiceProvider({ children }) {
     showLanguageSelector,
     keyboardInput,
     showKeyboardInput,
+    conversationHistory,
+    currentCommand,
+    confidence,
     languages: VOICE_LANGUAGES,
     currentLanguage: getLang(),
+    commandRegistry: commandRegistryRef.current,
+    intentMatcher: intentMatcherRef.current,
+    responseGenerator: responseGeneratorRef.current,
+    voiceFeedback: voiceFeedbackRef.current,
     startListening,
     stopListening,
     selectLanguage,
@@ -447,6 +590,13 @@ export function VoiceProvider({ children }) {
     handleKeyboardSubmit,
     switchToKeyboard,
     speak,
+    executeCommand,
+    processCommand,
+    registerCommand: (command) => commandRegistryRef.current?.registerCommand(command),
+    getConversationHistory: () => conversationHistory,
+    getContext: () => intentMatcherRef.current?.getContext(),
+    setContext: (key, value) => intentMatcherRef.current?.setContext(key, value),
+    clearContext: () => intentMatcherRef.current?.clearContext(),
   };
 
   return (

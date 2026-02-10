@@ -220,7 +220,7 @@ const SettingsApp = () => {
       <div className="flex-1 overflow-auto">
         {activeTab === 'general' && (
           <div className="p-4 sm:p-6 max-w-3xl">
-            {/* ... (existing general settings) ... */}}
+            {/* ... (existing general settings) ... */}
             {/* Sound & Effects */}
             <SettingSection icon={Volume2} title="Sound & Effects">
               <Toggle

@@ -60,6 +60,283 @@ const ChatBot = () => {
   };
 
   // ============================================
+  // Persona-Specific Suggested Questions Pool
+  // ============================================
+  const WELCOME_QUESTIONS = {
+    assistant: [
+      "Who is David and what does he do?",
+      "What are David's main technical skills?",
+      "Tell me about David's projects",
+      "What's David's educational background?",
+      "How can I contact David?",
+      "What programming languages does David know?",
+      "Does David have work experience?",
+      "Tell me about David's achievements",
+      "What's David's YouTube channel about?",
+      "Is David available for freelance work?",
+      "What certifications does David have?",
+      "What makes David unique as a developer?",
+      "Show me David's recent work",
+      "What frameworks does David specialize in?",
+      "Tell me about David's journey in tech",
+    ],
+    david: [
+      "Hey David! What are you working on right now?",
+      "What got you into programming?",
+      "What's your favorite project so far?",
+      "Tell me about yourself!",
+      "What tech stack do you enjoy most?",
+      "What's your dream job or company?",
+      "How did you start your YouTube channel?",
+      "What motivates you as a developer?",
+      "What's the hardest challenge you've faced?",
+      "Do you prefer frontend or backend?",
+      "What are your goals for 2026?",
+      "What's something people don't know about you?",
+      "How do you learn new technologies?",
+      "What advice would you give to beginners?",
+      "Tell me about your university life!",
+    ],
+    bestfriend: [
+      "What's David really like as a person?",
+      "Is David actually good at coding? Be honest!",
+      "What's the funniest thing about David?",
+      "What does David do in his free time?",
+      "How did you become friends with David?",
+      "What's David's biggest flex?",
+      "Does David ever take a break from coding?",
+      "What's David's taste in music?",
+      "Is David a night owl or early bird?",
+      "What's David's hidden talent?",
+      "Tell me a fun story about David",
+      "What games does David play?",
+      "How does David handle pressure?",
+      "What's David's most ambitious project?",
+      "Would you recommend David as a teammate?",
+    ],
+    girlfriend: [
+      "What do you love most about David?",
+      "How does David balance work and life?",
+      "What's David's most romantic quality?",
+      "Is David really as nerdy as he seems?",
+      "What's David like behind the scenes?",
+      "Does David talk about coding at dinner?",
+      "What's David's best personality trait?",
+      "How does David treat the people he cares about?",
+      "What's a sweet thing David has done?",
+      "What's David passionate about besides tech?",
+      "How supportive is David?",
+      "What's your favorite memory with David?",
+      "Does David have a good sense of humor?",
+      "What makes David different from others?",
+      "How ambitious is David really?",
+    ],
+    teacher: [
+      "How is David performing academically?",
+      "What are David's strongest subjects?",
+      "Does David show leadership potential?",
+      "How does David compare to other students?",
+      "Is David active in campus activities?",
+      "What's David's approach to problem-solving?",
+      "Would you recommend David for an internship?",
+      "How's David's teamwork and collaboration?",
+      "What areas should David improve on?",
+      "Tell me about David's academic projects",
+      "Does David participate actively in class?",
+      "How creative is David in his assignments?",
+      "What's David's GPA like?",
+      "Is David a quick learner?",
+      "What potential do you see in David's career?",
+    ],
+  };
+
+  const CONTEXT_QUESTIONS = {
+    assistant: {
+      skills: [
+        "What's David currently learning?",
+        "Show me his work experience",
+        "Tell me about his certifications",
+        "How proficient is he in React?",
+        "What about his backend skills?",
+      ],
+      education: [
+        "What's his GPA?",
+        "Tell me about his work experience",
+        "What certifications does he have?",
+        "What did he study at UMN?",
+      ],
+      experience: [
+        "Tell me about his business ventures",
+        "What are his technical strengths?",
+        "How many followers does he have?",
+        "What roles has he held?",
+      ],
+      contact: [
+        "Check out his YouTube channel",
+        "Download his complete CV",
+        "Show me his latest projects",
+        "What's his LinkedIn?",
+      ],
+      youtube: [
+        "What type of content does he create?",
+        "Show me his other social platforms",
+        "Tell me about his technical skills",
+        "How many subscribers does he have?",
+      ],
+      projects: [
+        "What's his role in UMN Festival?",
+        "Show me his technical expertise",
+        "How can I collaborate with him?",
+        "What's his most impressive project?",
+      ],
+    },
+    david: {
+      skills: [
+        "What are you learning right now?",
+        "Which framework is your favorite?",
+        "Do you prefer TypeScript or JavaScript?",
+        "How did you learn React?",
+      ],
+      education: [
+        "How's university going for you?",
+        "What's your favorite course?",
+        "Any plans for further education?",
+      ],
+      experience: [
+        "What was your favorite job so far?",
+        "Tell me about a tough project you handled",
+        "Do you freelance on the side?",
+      ],
+      contact: [
+        "Where can I follow your work?",
+        "Are you open to collaborations?",
+        "What's the best way to reach you?",
+      ],
+      youtube: [
+        "What inspired your YouTube channel?",
+        "How do you come up with video ideas?",
+        "Any plans for new content?",
+      ],
+      projects: [
+        "What project are you most proud of?",
+        "Any open source contributions?",
+        "What's your next big idea?",
+      ],
+    },
+    bestfriend: {
+      skills: [
+        "Is he really that good at coding?",
+        "What does he geek out about the most?",
+        "Has he ever stayed up all night coding?",
+        "What tech does he rant about?",
+      ],
+      education: [
+        "Does he actually study or just code?",
+        "Is he that one smart friend?",
+        "How does he manage school and projects?",
+      ],
+      experience: [
+        "Has he ever had a work disaster?",
+        "What's his wildest career story?",
+        "Does he actually enjoy working?",
+      ],
+      contact: [
+        "Is he easy to get hold of?",
+        "Does he reply fast to messages?",
+        "What's the best way to reach him?",
+      ],
+      youtube: [
+        "Does he obsess over video analytics?",
+        "What's behind the scenes of his channel?",
+        "Is he funnier on or off camera?",
+      ],
+      projects: [
+        "Which project drove him the craziest?",
+        "Does he ever finish side projects?",
+        "What's the most epic thing he's built?",
+      ],
+    },
+    girlfriend: {
+      skills: [
+        "Does he code more than he texts you?",
+        "What skill of his impresses you most?",
+        "Has he ever built something for you?",
+        "How does he explain tech to you?",
+      ],
+      education: [
+        "Does he stress about school?",
+        "Do you help him study?",
+        "How does he balance us and university?",
+      ],
+      experience: [
+        "Is he happier at work or with you?",
+        "How does he handle work stress?",
+        "What does he want for his career?",
+      ],
+      contact: [
+        "Good luck getting his attention while coding!",
+        "He's very responsive actually!",
+        "He loves connecting with new people",
+      ],
+      youtube: [
+        "Do you appear in his videos?",
+        "How much time does he spend editing?",
+        "Is he more fun on camera or off?",
+      ],
+      projects: [
+        "Which project did he put the most love into?",
+        "Does he ever show you his projects?",
+        "What's his most creative work?",
+      ],
+    },
+    teacher: {
+      skills: [
+        "How does he compare technically to peers?",
+        "What's his strongest programming area?",
+        "Does he go beyond the curriculum?",
+        "How quickly does he pick up new concepts?",
+      ],
+      education: [
+        "Is he on track to graduate with honors?",
+        "What courses has he excelled in?",
+        "How is his thesis progressing?",
+      ],
+      experience: [
+        "Has he had any relevant internships?",
+        "How does industry experience help his studies?",
+        "Would he thrive in a corporate environment?",
+      ],
+      contact: [
+        "Is he well-connected in the industry?",
+        "Does he attend conferences or events?",
+        "How can employers reach him?",
+      ],
+      youtube: [
+        "Does his YouTube show academic depth?",
+        "How does content creation help his skills?",
+        "Is this a viable career path for him?",
+      ],
+      projects: [
+        "Which project best shows his capability?",
+        "How does his work compare to other students?",
+        "Has he won any competitions?",
+      ],
+    },
+  };
+
+  // Utility: pick N random items from an array
+  const getRandomQuestions = (pool, count = 4) => {
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  };
+
+  // Utility: get random questions translated to current language
+  const getTranslatedQuestions = useCallback((pool, count = 4) => {
+    const random = getRandomQuestions(pool, count);
+    return random.map(q => translateText(q, currentLanguage));
+  }, [translateText, currentLanguage]);
+
+  // ============================================
   // State
   // ============================================
   const [isOpen, setIsOpen] = useState(false);
@@ -80,13 +357,12 @@ const ChatBot = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingSteps, setThinkingSteps] = useState([]);
   const [responseReady, setResponseReady] = useState(false);
-  const [suggestedReplies, setSuggestedReplies] = useState([
-    translateText("What's David's age and background?", currentLanguage),
-    translateText("Show me his technical skills", currentLanguage),
-    translateText("Tell me about his YouTube journey", currentLanguage),
-    translateText("What projects is he working on?", currentLanguage),
-    translateText("How can I contact him?", currentLanguage),
-  ]);
+  const [suggestedReplies, setSuggestedReplies] = useState(() => {
+    // Initial state - will be updated by useEffect
+    const pool = WELCOME_QUESTIONS.assistant;
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 4).map(q => translateText(q, currentLanguage));
+  });
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const pendingResponseRef = useRef(null);
@@ -208,6 +484,11 @@ const ChatBot = () => {
     }
   }, [isThinking]);
 
+  // Re-translate suggested replies when language changes
+  useEffect(() => {
+    setSuggestedReplies(getTranslatedQuestions(WELCOME_QUESTIONS[activePersona] || WELCOME_QUESTIONS.assistant, 4));
+  }, [currentLanguage, activePersona, getTranslatedQuestions]);
+
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
@@ -231,7 +512,7 @@ const ChatBot = () => {
     setThinkingSteps([]);
     setResponseReady(false);
     pendingResponseRef.current = null;
-    updateSuggestedReplies('welcome');
+    updateSuggestedReplies('welcome', convo.persona || 'assistant');
   };
 
   const handleNewChat = () => {
@@ -245,7 +526,7 @@ const ChatBot = () => {
     setThinkingSteps([]);
     setResponseReady(false);
     pendingResponseRef.current = null;
-    updateSuggestedReplies('welcome');
+    updateSuggestedReplies('welcome', activePersona);
   };
 
   const handleDeleteConversation = async (conversationId) => {
@@ -289,49 +570,23 @@ const ChatBot = () => {
     }
   };
 
-  const updateSuggestedReplies = (context) => {
-    const repliesMap = {
-      welcome: [
-        "What's David's age and background?",
-        "Show me his technical skills",
-        "Tell me about his YouTube journey",
-        "What projects is he working on?",
-        "How can I contact him?",
-      ],
-      skills: [
-        "What's he currently learning?",
-        "Show me his work experience",
-        "Tell me about his certifications",
-        "How proficient is he in React?",
-      ],
-      education: [
-        "What's his GPA?",
-        "Tell me about his work experience",
-        "What certifications does he have?",
-      ],
-      experience: [
-        "Tell me about his business ventures",
-        "What are his technical strengths?",
-        "How many followers does he have?",
-      ],
-      contact: [
-        "Check out his YouTube channel",
-        "Download his complete CV",
-        "Show me his latest projects",
-      ],
-      youtube: [
-        "What type of content does he create?",
-        "Show me his other social platforms",
-        "Tell me about his technical skills",
-      ],
-      projects: [
-        "What's his role in UMN Festival?",
-        "Show me his technical expertise",
-        "How can I collaborate with him?",
-      ],
-    };
+  const updateSuggestedReplies = (context, persona = activePersona) => {
+    if (context === 'welcome') {
+      const pool = WELCOME_QUESTIONS[persona] || WELCOME_QUESTIONS.assistant;
+      setSuggestedReplies(getTranslatedQuestions(pool, 4));
+      return;
+    }
 
-    setSuggestedReplies(repliesMap[context] || repliesMap.welcome);
+    const personaContextMap = CONTEXT_QUESTIONS[persona] || CONTEXT_QUESTIONS.assistant;
+    const contextReplies = personaContextMap[context];
+
+    if (contextReplies && contextReplies.length > 0) {
+      setSuggestedReplies(getTranslatedQuestions(contextReplies, Math.min(4, contextReplies.length)));
+    } else {
+      // Fallback: random welcome questions for this persona
+      const pool = WELCOME_QUESTIONS[persona] || WELCOME_QUESTIONS.assistant;
+      setSuggestedReplies(getTranslatedQuestions(pool, 4));
+    }
   };
 
   // ============================================
@@ -361,7 +616,7 @@ const ChatBot = () => {
       content: WELCOME_MESSAGES[newPersona] || WELCOME_MESSAGES.assistant,
       timestamp: new Date(),
     }]);
-    updateSuggestedReplies('welcome');
+    updateSuggestedReplies('welcome', newPersona);
     // Clear any in-progress thinking
     setIsThinking(false);
     setThinkingSteps([]);

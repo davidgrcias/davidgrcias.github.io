@@ -20,9 +20,9 @@ export function registerFunCommands(registry, getContext) {
         colored('    ▐██████▌       ', 'success') + '  OS: WebOS Portfolio',
         colored('    ▐██████▌       ', 'success') + '  Host: Browser',
         colored('    ▐██████▌       ', 'success') + '  Kernel: React 18.2',
-        colored('     ▀█████▀       ', 'success') + '  Uptime: ${Math.floor(performance.now() / 1000)}s',
+        colored('     ▀█████▀       ', 'success') + `  Uptime: ${Math.floor(performance.now() / 1000)}s`,
         colored('       ▀▀▀▀        ', 'success') + '  Shell: terminal.sh',
-        colored('                   ', 'success') + '  Resolution: ${window.innerWidth}x${window.innerHeight}`,
+        colored('                   ', 'success') + `  Resolution: ${window.innerWidth}x${window.innerHeight}`,
         text(''),
         colored('███', 'error') + colored('███', 'success') + colored('███', 'warning') + colored('███', 'info'),
       ];

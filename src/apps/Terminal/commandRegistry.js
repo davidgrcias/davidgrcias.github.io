@@ -104,6 +104,25 @@ class CommandRegistry {
   getCommandCount() {
     return this.getAllCommands().length;
   }
+
+  /**
+   * Get all commands as plain object (for help command)
+   * @returns {Object} Commands as object
+   */
+  getCommands() {
+    const obj = {};
+    // Only include unique commands (not aliases)
+    const uniqueCommands = new Map();
+    this.commands.forEach((command) => {
+      if (!uniqueCommands.has(command.name)) {
+        uniqueCommands.set(command.name, command);
+      }
+    });
+    uniqueCommands.forEach((command, name) => {
+      obj[name] = command;
+    });
+    return obj;
+  }
 }
 
 // Create singleton instance

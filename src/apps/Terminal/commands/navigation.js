@@ -13,7 +13,7 @@ export function registerNavigationCommands(registry, getContext) {
     category: 'navigation',
     examples: ['help', 'help ls', 'help grep'],
     async execute(args) {
-      const commands = registry.commands || registry.getCommands?.() || {};
+      const commands = registry.getCommands();
 
       // Detailed help for specific command
       if (args.length > 0) {
@@ -126,7 +126,7 @@ export function registerNavigationCommands(registry, getContext) {
       }
 
       const cmdName = args[0];
-      const commands = registry.commands || registry.getCommands?.() || {};
+      const commands = registry.getCommands();
       const cmd = commands[cmdName];
 
       if (!cmd) {
@@ -307,7 +307,7 @@ export function registerNavigationCommands(registry, getContext) {
     examples: ['motd'],
     async execute() {
       // Call welcome command
-      const welcomeCmd = registry.commands?.welcome || registry.getCommands?.()?.welcome;
+      const welcomeCmd = registry.getCommand('welcome');
       if (welcomeCmd) {
         return welcomeCmd.execute([], {});
       }

@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { useOS } from '../../contexts/OSContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useSound } from '../../contexts/SoundContext';
-import { useMusic } from '../../contexts/MusicPlayerContext';
+import { useMusicPlayer } from '../../contexts/MusicPlayerContext';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useTranslation } from '../../contexts/TranslationContext';
 import { Trash2, XCircle, RotateCw, Terminal as TerminalIcon } from 'lucide-react';
@@ -25,7 +25,7 @@ const TerminalApp = ({ id }) => {
     const osContext = useOS();
     const themeContext = useTheme();
     const soundContext = useSound();
-    const musicContext = useMusic();
+    const musicContext = useMusicPlayer();
     const notificationContext = useNotification();
     const translationContext = useTranslation();
 

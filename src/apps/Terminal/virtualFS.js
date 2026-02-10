@@ -492,3 +492,4 @@ class VirtualFS {
 }
 
 export default VirtualFS;
+export { VirtualFS };

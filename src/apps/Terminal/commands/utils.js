@@ -99,7 +99,7 @@ export function registerUtilsCommands(registry, getContext) {
       }
 
       const commandName = args[0];
-      const commands = registry.commands || registry.getCommands?.() || {};
+      const commands = registry.getCommands();
       
       if (commands[commandName]) {
         return [text(`/usr/bin/${commandName}`)];
@@ -122,7 +122,7 @@ export function registerUtilsCommands(registry, getContext) {
       }
 
       const commandName = args[0];
-      const commands = registry.commands || registry.getCommands?.() || {};
+      const commands = registry.getCommands();
       const command = commands[commandName];
       
       if (!command) {

@@ -35,7 +35,7 @@ export function useTerminal(getContext) {
   const [aliases, setAliases] = useState({
     ll: 'ls -la',
     la: 'ls -a',
-    ...: 'cd ../..',
+    '...': 'cd ../..',
   });
 
   const registryRef = useRef(null);
@@ -46,20 +46,34 @@ export function useTerminal(getContext) {
     const registry = new CommandRegistry();
     const fs = new VirtualFS();
 
-    // Register all command modules
-    registerFilesystemCommands(registry, getContext);
-    registerSystemCommands(registry, getContext);
-    registerAppCommands(registry, getContext);
-    registerInfoCommands(registry, getContext);
-    registerSettingsCommands(registry, getContext);
-    registerUtilsCommands(registry, getContext);
-    registerFunCommands(registry, getContext);
-    registerMusicCommands(registry, getContext);
-    registerNavigationCommands(registry, getContext);
-    registerNotificationCommands(registry, getContext);
-
+    // Store refs first so context getter can access them
     registryRef.current = registry;
     fsRef.current = fs;
+
+    // Create context getter that includes filesystem and terminal state
+    const terminalContextGetter = () => ({
+      ...getContext(),
+      fs,
+      registry,
+      currentDirectory,
+      setCurrentDirectory,
+      environment,
+      setEnvironment,
+      aliases,
+      setAliases,
+    });
+
+    // Register all command modules
+    registerFilesystemCommands(registry, terminalContextGetter);
+    registerSystemCommands(registry, terminalContextGetter);
+    registerAppCommands(registry, terminalContextGetter);
+    registerInfoCommands(registry, terminalContextGetter);
+    registerSettingsCommands(registry, terminalContextGetter);
+    registerUtilsCommands(registry, terminalContextGetter);
+    registerFunCommands(registry, terminalContextGetter);
+    registerMusicCommands(registry, terminalContextGetter);
+    registerNavigationCommands(registry, terminalContextGetter);
+    registerNotificationCommands(registry, terminalContextGetter);
 
     // Add welcome message
     setOutput([
@@ -67,7 +81,7 @@ export function useTerminal(getContext) {
       { type: 'text', content: `Type "help" for available commands` },
       { type: 'text', content: '' },
     ]);
-  }, [getContext]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Execute command
   const executeCommand = useCallback(async (input) => {

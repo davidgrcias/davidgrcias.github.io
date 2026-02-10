@@ -189,11 +189,8 @@ export function registerSettingsCommands(registry, getContext) {
       }
 
       try {
-        if (theme.setWallpaper) {
-          theme.setWallpaper(newWallpaper);
-          return [success(`Wallpaper changed to: ${newWallpaper}`)];
-        } else if (theme.setBackground) {
-          theme.setBackground(newWallpaper);
+        if (theme.setWallpaperMode) {
+          theme.setWallpaperMode(newWallpaper);
           return [success(`Wallpaper changed to: ${newWallpaper}`)];
         } else {
           return [error('Wallpaper setter not available')];

@@ -19,7 +19,7 @@ import {
 
 const MessengerApp = ({ id }) => {
     const { updateWindow } = useOS();
-    const { currentLanguage } = useTranslation();
+    const { currentLanguage, translateText } = useTranslation();
     const agentMemory = useRef(getAgentMemory());
     const abortRef = useRef(null);
     // ============================================
@@ -45,6 +45,113 @@ const MessengerApp = ({ id }) => {
     const [showPersonaMenu, setShowPersonaMenu] = useState(false);
     const personaMenuRef = useRef(null);
 
+    // ============================================
+    // Persona-Specific Suggested Questions Pool
+    // ============================================
+    const WELCOME_QUESTIONS = {
+        assistant: [
+            "Who is David and what does he do?",
+            "What are David's main technical skills?",
+            "Tell me about David's projects",
+            "What's David's educational background?",
+            "How can I contact David?",
+            "What programming languages does David know?",
+            "Does David have work experience?",
+            "Tell me about David's achievements",
+            "What's David's YouTube channel about?",
+            "Is David available for freelance work?",
+            "What certifications does David have?",
+            "What makes David unique as a developer?",
+            "Show me David's recent work",
+            "What frameworks does David specialize in?",
+            "Tell me about David's journey in tech",
+        ],
+        david: [
+            "Hey David! What are you working on right now?",
+            "What got you into programming?",
+            "What's your favorite project so far?",
+            "Tell me about yourself!",
+            "What tech stack do you enjoy most?",
+            "What's your dream job or company?",
+            "How did you start your YouTube channel?",
+            "What motivates you as a developer?",
+            "What's the hardest challenge you've faced?",
+            "Do you prefer frontend or backend?",
+            "What are your goals for 2026?",
+            "What's something people don't know about you?",
+            "How do you learn new technologies?",
+            "What advice would you give to beginners?",
+            "Tell me about your university life!",
+        ],
+        bestfriend: [
+            "What's David really like as a person?",
+            "Is David actually good at coding? Be honest!",
+            "What's the funniest thing about David?",
+            "What does David do in his free time?",
+            "How did you become friends with David?",
+            "What's David's biggest flex?",
+            "Does David ever take a break from coding?",
+            "What's David's taste in music?",
+            "Is David a night owl or early bird?",
+            "What's David's hidden talent?",
+            "Tell me a fun story about David",
+            "What games does David play?",
+            "How does David handle pressure?",
+            "What's David's most ambitious project?",
+            "Would you recommend David as a teammate?",
+        ],
+        girlfriend: [
+            "What do you love most about David?",
+            "How does David balance work and life?",
+            "What's David's most romantic quality?",
+            "Is David really as nerdy as he seems?",
+            "What's David like behind the scenes?",
+            "Does David talk about coding at dinner?",
+            "What's David's best personality trait?",
+            "How does David treat the people he cares about?",
+            "What's a sweet thing David has done?",
+            "What's David passionate about besides tech?",
+            "How supportive is David?",
+            "What's your favorite memory with David?",
+            "Does David have a good sense of humor?",
+            "What makes David different from others?",
+            "How ambitious is David really?",
+        ],
+        teacher: [
+            "How is David performing academically?",
+            "What are David's strongest subjects?",
+            "Does David show leadership potential?",
+            "How does David compare to other students?",
+            "Is David active in campus activities?",
+            "What's David's approach to problem-solving?",
+            "Would you recommend David for an internship?",
+            "How's David's teamwork and collaboration?",
+            "What areas should David improve on?",
+            "Tell me about David's academic projects",
+            "Does David participate actively in class?",
+            "How creative is David in his assignments?",
+            "What's David's GPA like?",
+            "Is David a quick learner?",
+            "What potential do you see in David's career?",
+        ],
+    };
+
+    // Utility: pick N random items from an array
+    const getRandomQuestions = useCallback((pool, count = 4) => {
+        const shuffled = [...pool].sort(() => Math.random() - 0.5);
+        return shuffled.slice(0, count);
+    }, []);
+
+    const getPersonaQuestions = useCallback((persona = 'assistant') => {
+        const pool = WELCOME_QUESTIONS[persona] || WELCOME_QUESTIONS.assistant;
+        return getRandomQuestions(pool, 4);
+    }, [getRandomQuestions]);
+
+    const getTranslatedQuestions = useCallback((pool, count = 4) => {
+        const random = getRandomQuestions(pool, count);
+        return random.map(q => translateText(q, currentLanguage));
+    }, [translateText, currentLanguage, getRandomQuestions]);
+
     // Thinking Process states
     const [isThinkingProcess, setIsThinkingProcess] = useState(false);
     const [thinkingSteps, setThinkingSteps] = useState([]);
@@ -61,12 +168,35 @@ const MessengerApp = ({ id }) => {
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [useRAG, setUseRAG] = useState(true);
-    const [suggestedQuestions, setSuggestedQuestions] = useState([
-        "What are David's technical skills?",
-        "Tell me about his projects",
-        "What's his experience?",
-        "How can I contact him?"
-    ]);
+    const [suggestedQuestions, setSuggestedQuestions] = useState(() => {
+        const pool = WELCOME_QUESTIONS.assistant;
+        const shuffled = [...pool].sort(() => Math.random() - 0.5);
+        const random = shuffled.slice(0, 4);
+        return random.map(q => {
+            if (currentLanguage === 'id') {
+                // Inline minimal translation for initial render
+                const translations = {
+                    "Who is David and what does he do?": "Siapa David dan apa yang dia lakukan?",
+                    "What are David's main technical skills?": "Apa saja keterampilan teknis utama David?",
+                    "Tell me about David's projects": "Ceritakan tentang proyek-proyek David",
+                    "What's David's educational background?": "Apa latar belakang pendidikan David?",
+                    "How can I contact David?": "Bagaimana cara menghubungi David?",
+                    "What programming languages does David know?": "Bahasa pemrograman apa yang David kuasai?",
+                    "Does David have work experience?": "Apakah David memiliki pengalaman kerja?",
+                    "Tell me about David's achievements": "Ceritakan tentang pencapaian David",
+                    "What's David's YouTube channel about?": "Apa yang ada di saluran YouTube David?",
+                    "Is David available for freelance work?": "Apakah David tersedia untuk pekerjaan freelance?",
+                    "What certifications does David have?": "Sertifikasi apa yang dimiliki David?",
+                    "What makes David unique as a developer?": "Apa yang membuat David unik sebagai developer?",
+                    "Show me David's recent work": "Tunjukkan pekerjaan terbaru David",
+                    "What frameworks does David specialize in?": "Framework apa yang David kuasai?",
+                    "Tell me about David's journey in tech": "Ceritakan tentang perjalanan David di bidang teknis",
+                };
+                return translations[q] || q;
+            }
+            return q;
+        });
+    });
     const [error, setError] = useState(null);
     const [streamingText, setStreamingText] = useState('');
     const [enableStreaming, setEnableStreaming] = useState(false);
@@ -131,12 +261,7 @@ const MessengerApp = ({ id }) => {
             type: 'bot',
             content: WELCOME_MESSAGES[newPersona] || WELCOME_MESSAGES.assistant,
         }]);
-        setSuggestedQuestions([
-            "What are David's technical skills?",
-            "Tell me about his projects",
-            "What's his experience?",
-            "How can I contact him?"
-        ]);
+        setSuggestedQuestions(getTranslatedQuestions(WELCOME_QUESTIONS[newPersona] || WELCOME_QUESTIONS.assistant, 4));
         setActionBadges([]);
         // Clear thinking state
         isThinkingRef.current = false;
@@ -146,6 +271,13 @@ const MessengerApp = ({ id }) => {
         pendingResponseRef.current = null;
         pendingStreamChunks.current = '';
     };
+
+    // Re-translate suggested questions when language or persona changes
+    useEffect(() => {
+        setSuggestedQuestions(
+            getTranslatedQuestions(WELCOME_QUESTIONS[activePersona] || WELCOME_QUESTIONS.assistant, 4)
+        );
+    }, [currentLanguage, activePersona, getTranslatedQuestions]);
 
     // Context Menu
     useEffect(() => {
@@ -162,12 +294,7 @@ const MessengerApp = ({ id }) => {
                                 type: 'bot',
                                 content: WELCOME_MESSAGES[activePersona] || WELCOME_MESSAGES.assistant,
                             }]);
-                            setSuggestedQuestions([
-                                "What are David's technical skills?",
-                                "Tell me about his projects",
-                                "What's his experience?",
-                                "How can I contact him?"
-                            ]);
+                            setSuggestedQuestions(getTranslatedQuestions(WELCOME_QUESTIONS[activePersona] || WELCOME_QUESTIONS.assistant, 4));
                             setActionBadges([]);
                         },
                         shortcut: 'Ctrl+N',
@@ -309,12 +436,7 @@ const MessengerApp = ({ id }) => {
         setThinkingResponseReady(false);
         pendingResponseRef.current = null;
         pendingStreamChunks.current = '';
-        setSuggestedQuestions([
-            "What are David's technical skills?",
-            "Tell me about his projects",
-            "What's his experience?",
-            "How can I contact him?"
-        ]);
+        setSuggestedQuestions(getTranslatedQuestions(WELCOME_QUESTIONS[convo.persona || 'assistant'] || WELCOME_QUESTIONS.assistant, 4));
     };
 
     const handleNewChat = () => {
@@ -331,12 +453,7 @@ const MessengerApp = ({ id }) => {
         setThinkingResponseReady(false);
         pendingResponseRef.current = null;
         pendingStreamChunks.current = '';
-        setSuggestedQuestions([
-            "What are David's technical skills?",
-            "Tell me about his projects",
-            "What's his experience?",
-            "How can I contact him?"
-        ]);
+        setSuggestedQuestions(getTranslatedQuestions(WELCOME_QUESTIONS[activePersona] || WELCOME_QUESTIONS.assistant, 4));
         setActionBadges([]);
     };
 
@@ -616,7 +733,11 @@ const MessengerApp = ({ id }) => {
         } else {
             // Client-side smart fallback based on conversation context
             const fallbackSuggestions = generateFallbackSuggestions(result.text, messages);
-            setSuggestedQuestions(fallbackSuggestions);
+            if (fallbackSuggestions && fallbackSuggestions.length > 0) {
+                setSuggestedQuestions(fallbackSuggestions);
+            } else {
+                setSuggestedQuestions(getTranslatedQuestions(WELCOME_QUESTIONS[activePersona] || WELCOME_QUESTIONS.assistant, 4));
+            }
         }
 
         // Show action badges if any were executed
@@ -871,7 +992,7 @@ const MessengerApp = ({ id }) => {
                 )}
 
                 {/* Suggested Questions */}
-                {!isTyping && !isThinkingProcess && messages.length > 1 && messages[messages.length - 1]?.type === 'bot' && (
+                {!isTyping && !isThinkingProcess && messages.length >= 1 && messages[messages.length - 1]?.type === 'bot' && (
                     <div className="flex flex-wrap gap-2 pt-2">
                         {suggestedQuestions.map((question, i) => (
                             <button
