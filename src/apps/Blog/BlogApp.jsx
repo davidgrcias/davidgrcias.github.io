@@ -277,7 +277,7 @@ const BlogApp = ({ id }) => {
             // Multi-image Grid
             // Dynamic Grid Configuration
             const isFourOrMore = allImages.length >= 4;
-            const gridColsClass = isFourOrMore ? 'grid-cols-3' : 'grid-cols-2';
+            const gridColsClass = isFourOrMore ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2';
 
             return (
               <div className="p-4 pb-0">

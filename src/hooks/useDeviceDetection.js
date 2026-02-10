@@ -1,42 +1,70 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 /**
- * Custom hook for detecting device type and screen size
- * Centralizes device detection logic across the app
+ * Enhanced device detection hook
+ * Detects device type, touch capability, orientation, and screen category
  */
 export const useDeviceDetection = () => {
-  const [deviceInfo, setDeviceInfo] = useState({
-    isMobile: false,
-    isTablet: false,
-    isDesktop: true,
-    width: typeof window !== 'undefined' ? window.innerWidth : 1920,
-    height: typeof window !== 'undefined' ? window.innerHeight : 1080,
+  const [deviceInfo, setDeviceInfo] = useState(() => {
+    const w = typeof window !== 'undefined' ? window.innerWidth : 1920;
+    const h = typeof window !== 'undefined' ? window.innerHeight : 1080;
+    return getDeviceInfo(w, h);
   });
 
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      
-      setDeviceInfo({
-        isMobile: width < 768,
-        isTablet: width >= 768 && width < 1024,
-        isDesktop: width >= 1024,
-        width,
-        height,
-      });
-    };
+  const rafId = useRef(null);
 
-    // Initial check
-    handleResize();
-
-    // Listen to resize events
-    window.addEventListener('resize', handleResize);
-    
-    return () => window.removeEventListener('resize', handleResize);
+  const handleResize = useCallback(() => {
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      setDeviceInfo(getDeviceInfo(window.innerWidth, window.innerHeight));
+    });
   }, []);
+
+  useEffect(() => {
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+      if (rafId.current) cancelAnimationFrame(rafId.current);
+    };
+  }, [handleResize]);
 
   return deviceInfo;
 };
+
+function getDeviceInfo(width, height) {
+  const isTouchDevice = typeof window !== 'undefined' && (
+    'ontouchstart' in window ||
+    navigator.maxTouchPoints > 0 ||
+    navigator.msMaxTouchPoints > 0
+  );
+
+  const isSmallPhone = width < 480;
+  const isMobile = width < 768;
+  const isTablet = width >= 768 && width < 1024;
+  const isDesktop = width >= 1024;
+  const isPortrait = height > width;
+  const isLandscape = width >= height;
+
+  let screenCategory = 'desktop';
+  if (isSmallPhone) screenCategory = 'phone-small';
+  else if (isMobile) screenCategory = 'phone';
+  else if (isTablet) screenCategory = 'tablet';
+
+  return {
+    isMobile,
+    isTablet,
+    isDesktop,
+    isSmallPhone,
+    isTouchDevice,
+    isPortrait,
+    isLandscape,
+    screenCategory,
+    width,
+    height,
+  };
+}
 
 export default useDeviceDetection;

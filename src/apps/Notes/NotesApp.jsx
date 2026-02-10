@@ -222,7 +222,7 @@ const NotesApp = ({ id }) => {
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 overflow-auto">
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -230,13 +230,13 @@ const NotesApp = ({ id }) => {
           className="mb-6"
         >
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-yellow-600/20 rounded-xl">
-                <StickyNote className="text-yellow-400" size={28} />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-2 sm:p-3 bg-yellow-600/20 rounded-xl">
+                <StickyNote className="text-yellow-400" size={24} />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">Quick Notes</h1>
-                <p className="text-zinc-400 text-sm">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white">Quick Notes</h1>
+                <p className="text-zinc-400 text-xs sm:text-sm">
                   {filteredNotes.length} {filteredNotes.length === 1 ? 'note' : 'notes'}
                 </p>
               </div>

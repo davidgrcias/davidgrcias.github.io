@@ -10,6 +10,14 @@ import { useSound } from '../../contexts/SoundContext';
 const ContextMenu = ({ x, y, onClose, options }) => {
   const { playMenuSelect } = useSound();
 
+  // Calculate safe position to prevent overflow
+  const menuWidth = 220;
+  const menuHeight = Math.min(options.length * 40 + 16, 400);
+  const safeX = Math.min(x, window.innerWidth - menuWidth - 8);
+  const safeY = y + menuHeight > window.innerHeight - 8
+    ? Math.max(8, y - menuHeight)
+    : y;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -17,8 +25,8 @@ const ContextMenu = ({ x, y, onClose, options }) => {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.15 }}
-        className="fixed bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10000] min-w-[200px]"
-        style={{ left: x, top: y }}
+        className="fixed bg-gray-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10000] min-w-[200px] max-w-[calc(100vw-1rem)]"
+        style={{ left: Math.max(8, safeX), top: safeY }}
         onMouseLeave={onClose}
         onClick={(e) => e.stopPropagation()}
         onContextMenu={(e) => e.preventDefault()}

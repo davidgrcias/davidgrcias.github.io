@@ -905,7 +905,7 @@ const MessengerApp = ({ id }) => {
                         </button>
 
                         {showPersonaMenu && (
-                            <div className="absolute bottom-full left-0 mb-1 w-56 bg-zinc-800 rounded-lg shadow-xl border border-zinc-700 overflow-hidden z-50">
+                            <div className="absolute bottom-full left-0 mb-1 w-[calc(100vw-3rem)] sm:w-56 bg-zinc-800 rounded-lg shadow-xl border border-zinc-700 overflow-hidden z-50">
                                 {PERSONAS.map((persona) => (
                                     <button
                                         key={persona.id}
@@ -940,12 +940,12 @@ const MessengerApp = ({ id }) => {
                         title="Chat history"
                     >
                         <History size={12} />
-                        <span>History</span>
+                        <span className="hidden sm:inline">History</span>
                     </button>
 
                     <span className="flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/20 text-cyan-400 ring-1 ring-cyan-500/30">
                         <Brain size={12} />
-                        <span>AI Agent</span>
+                        <span className="hidden sm:inline">AI Agent</span>
                     </span>
 
                     <button
@@ -954,7 +954,7 @@ const MessengerApp = ({ id }) => {
                             }`}
                     >
                         <Sparkles size={12} />
-                        <span>{useRAG ? 'Smart Mode (RAG)' : 'Basic Mode'}</span>
+                        <span className="hidden sm:inline">{useRAG ? 'Smart Mode (RAG)' : 'Basic Mode'}</span>
                     </button>
 
                     <button
@@ -964,7 +964,7 @@ const MessengerApp = ({ id }) => {
                         title={enableStreaming ? 'Streaming enabled (word-by-word)' : 'Streaming disabled (instant reply)'}
                     >
                         <Zap size={12} />
-                        <span>{enableStreaming ? 'Streaming' : 'Instant'}</span>
+                        <span className="hidden sm:inline">{enableStreaming ? 'Streaming' : 'Instant'}</span>
                     </button>
                 </div>
 

@@ -102,16 +102,17 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-zinc-900/95 border border-zinc-700 rounded-2xl p-8 shadow-2xl max-w-5xl w-full mx-4"
+          className="bg-zinc-900/95 border border-zinc-700 rounded-2xl p-4 sm:p-6 md:p-8 shadow-2xl max-w-5xl w-full mx-3 sm:mx-4 max-h-[85vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-2xl font-bold text-white">Window Switcher</h2>
-              <p className="text-sm text-zinc-400 mt-1">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg sm:text-2xl font-bold text-white">Window Switcher</h2>
+              <p className="hidden sm:block text-sm text-zinc-400 mt-1">
                 Use Tab/Shift+Tab or Arrow keys to navigate • Enter to select • Esc to cancel
               </p>
+              <p className="sm:hidden text-xs text-zinc-400 mt-1">Tap a window to switch</p>
             </div>
             <button
               onClick={onClose}
@@ -143,13 +144,13 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
               >
                 {/* Window Preview */}
                 <div className="aspect-video bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center border-b border-zinc-700">
-                  <div className="text-6xl opacity-50">
+                  <div className="text-4xl sm:text-6xl opacity-50">
                     {window.icon || '📱'}
                   </div>
                 </div>
 
                 {/* Window Info */}
-                <div className="bg-zinc-800/90 p-4">
+                <div className="bg-zinc-800/90 p-3 sm:p-4">
                   <h3 className="text-white font-semibold truncate">{window.title}</h3>
                   <p className="text-xs text-zinc-400 mt-1">Window {index + 1} of {openWindows.length}</p>
                 </div>
@@ -166,7 +167,7 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
           </div>
 
           {/* Footer Hint */}
-          <div className="mt-6 text-center text-sm text-zinc-500">
+          <div className="hidden sm:block mt-6 text-center text-sm text-zinc-500">
             Hold <kbd className="px-2 py-1 bg-zinc-800 rounded border border-zinc-700 text-zinc-300 font-mono">Alt</kbd> and press <kbd className="px-2 py-1 bg-zinc-800 rounded border border-zinc-700 text-zinc-300 font-mono">Tab</kbd> to switch windows
           </div>
         </motion.div>

@@ -213,55 +213,64 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
         />
       ))}
 
+      {/* Mobile Swipe-Down Indicator */}
+      {isMobile && !window.isMaximized && (
+        <div className="flex justify-center pt-1.5 pb-0 bg-slate-800/50">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
+      )}
+
       {/* Title Bar - Drag Handle */}
       <div
-        className={`h-10 flex items-center justify-between px-4 select-none border-b transition-colors ${isActive
+        className={`${isMobile ? 'h-9' : 'h-10'} flex items-center justify-between ${isMobile ? 'px-3' : 'px-4'} select-none border-b transition-colors ${isActive
           ? 'bg-gradient-to-r from-slate-800/80 to-slate-700/80 border-blue-500/30'
           : 'bg-slate-800/30 border-white/5'
           } ${!isMobile && !window.isMaximized ? 'cursor-grab active:cursor-grabbing' : ''}`}
         onPointerDown={handleDragStart}
         style={{ touchAction: 'none' }} // Prevent touch scrolling interference
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           {/* Move indicator when dragging is available */}
           {!isMobile && !window.isMaximized && (
-            <Move size={14} className="text-zinc-500" />
+            <Move size={14} className="text-zinc-500 flex-shrink-0" />
           )}
-          {window.icon && <span className="text-blue-400">{window.icon}</span>}
-          <span className="text-sm font-medium text-gray-200">{window.title}</span>
+          {window.icon && <span className="text-blue-400 flex-shrink-0">{React.cloneElement(window.icon, { size: isMobile ? 16 : undefined })}</span>}
+          <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-gray-200 truncate`}>{window.title}</span>
         </div>
 
         {/* Traffic Lights */}
         <div
-          className="flex items-center gap-2"
+          className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'} flex-shrink-0`}
           onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking buttons
         >
           <motion.button
             onClick={(e) => { e.stopPropagation(); playWindowMinimize(); minimizeWindow(window.id); }}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
-            className="p-1.5 hover:bg-yellow-500/20 rounded-full transition-colors group"
+            className={`${isMobile ? 'p-2' : 'p-1.5'} hover:bg-yellow-500/20 rounded-full transition-colors group os-touch-target`}
             title="Minimize (Ctrl+M)"
           >
-            <Minus size={14} className="text-yellow-400" />
+            <Minus size={isMobile ? 16 : 14} className="text-yellow-400" />
           </motion.button>
-          <motion.button
-            onClick={(e) => { e.stopPropagation(); playWindowMaximize(); maximizeWindow(window.id); }}
-            whileHover={{ scale: 1.15 }}
-            whileTap={{ scale: 0.9 }}
-            className="p-1.5 hover:bg-green-500/20 rounded-full transition-colors group"
-            title="Maximize"
-          >
-            <Maximize2 size={13} className="text-green-400" />
-          </motion.button>
+          {!isMobile && (
+            <motion.button
+              onClick={(e) => { e.stopPropagation(); playWindowMaximize(); maximizeWindow(window.id); }}
+              whileHover={{ scale: 1.15 }}
+              whileTap={{ scale: 0.9 }}
+              className="p-1.5 hover:bg-green-500/20 rounded-full transition-colors group"
+              title="Maximize"
+            >
+              <Maximize2 size={13} className="text-green-400" />
+            </motion.button>
+          )}
           <motion.button
             onClick={(e) => { e.stopPropagation(); playWindowClose(); closeWindow(window.id); }}
             whileHover={{ scale: 1.15, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
-            className="p-1.5 hover:bg-red-500/20 rounded-full transition-colors group"
+            className={`${isMobile ? 'p-2' : 'p-1.5'} hover:bg-red-500/20 rounded-full transition-colors group os-touch-target`}
             title="Close (Esc or Ctrl+W)"
           >
-            <X size={14} className="text-red-400" />
+            <X size={isMobile ? 16 : 14} className="text-red-400" />
           </motion.button>
         </div>
       </div>

@@ -170,15 +170,15 @@ const SettingsApp = () => {
   return (
     <div className="w-full h-full bg-slate-950 text-white overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 bg-slate-900/80 backdrop-blur-xl border-b border-white/10 p-6 z-10">
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-white/60 mt-1">Customize your WebOS experience</p>
+      <div className="sticky top-0 bg-slate-900/80 backdrop-blur-xl border-b border-white/10 p-4 sm:p-6 z-10">
+        <h1 className="text-xl sm:text-2xl font-bold">Settings</h1>
+        <p className="text-xs sm:text-sm text-white/60 mt-1">Customize your WebOS experience</p>
 
         {/* Tabs */}
-        <div className="flex gap-2 mt-4">
+        <div className="flex gap-2 mt-4 overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveTab('general')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'general'
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'general'
               ? 'bg-cyan-500/20 text-cyan-400'
               : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
@@ -187,7 +187,7 @@ const SettingsApp = () => {
           </button>
           <button
             onClick={() => setActiveTab('wallpaper')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'wallpaper'
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'wallpaper'
               ? 'bg-cyan-500/20 text-cyan-400'
               : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
@@ -196,7 +196,7 @@ const SettingsApp = () => {
           </button>
           <button
             onClick={() => setActiveTab('themes')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'themes'
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'themes'
               ? 'bg-cyan-500/20 text-cyan-400'
               : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
@@ -205,7 +205,7 @@ const SettingsApp = () => {
           </button>
           <button
             onClick={() => setActiveTab('admin')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === 'admin'
+            className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'admin'
               ? 'bg-amber-500/20 text-amber-400'
               : 'text-white/60 hover:text-white hover:bg-white/5'
               }`}
@@ -219,8 +219,8 @@ const SettingsApp = () => {
       {/* Settings Content */}
       <div className="flex-1 overflow-auto">
         {activeTab === 'general' && (
-          <div className="p-6 max-w-3xl">
-            {/* ... (existing general settings) ... */}
+          <div className="p-4 sm:p-6 max-w-3xl">
+            {/* ... (existing general settings) ... */}}
             {/* Sound & Effects */}
             <SettingSection icon={Volume2} title="Sound & Effects">
               <Toggle
@@ -300,7 +300,7 @@ const SettingsApp = () => {
         )}
 
         {activeTab === 'wallpaper' && (
-          <div className="p-6 max-w-3xl">
+          <div className="p-4 sm:p-6 max-w-3xl">
             <h2 className="text-xl font-semibold mb-6">Wallpaper</h2>
             <WallpaperPicker />
           </div>

@@ -27,14 +27,14 @@ const AppLoadingFallback = () => (
 );
 
 const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
-  const { windows, activeWindowId, openApp, minimizeWindow, closeWindow, focusWindow, toggleSounds, isSoundEnabled, pinnedApps, togglePinApp, isPinned, reorderPinnedApps, sleep, restart, shutdown } = useOS();
-  const { voiceState, startListening, stopListening, isSupported, selectedLanguage } = useVoice();
+  const { windows, activeWindowId, openApp, minimizeWindow, closeWindow, focusWindow, pinnedApps, togglePinApp, isPinned, reorderPinnedApps, sleep, restart, shutdown } = useOS();
+  const { voiceState, startListening, stopListening, isSupported } = useVoice();
   const isListening = voiceState === 'listening';
   const serviceAvailable = true; // Always available now (no API dependency)
   const { theme, batterySaver, setBatterySaver } = useTheme();
   const { isMobile } = useDeviceDetection();
   const { isPlaying, track, setPlayerOpen, volume, setVolume, isMuted, setMuted } = useMusicPlayer();
-  const { playMenuOpen, playMenuClose, playSliderTick, playToggleOn, playToggleOff, playClick } = useSound();
+  const { playMenuOpen, playMenuClose, playSliderTick, playToggleOn, playToggleOff } = useSound();
 
   // ============================================
   // BATTERY SIMULATION - Realistic Laptop Style
@@ -154,7 +154,6 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
   // Wifi: Random fluctuation 1-3 bars (simulated)
   const [wifiSignal, setWifiSignal] = useState(3); // 0-3 scale
   const [isOnline, setIsOnline] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(true);
 
   // ... (other states remain the same)
 
@@ -318,11 +317,6 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
     );
   };
 
-  const handleSoundToggle = () => {
-    const newState = toggleSounds();
-    setSoundEnabled(newState);
-  };
-
   // Drag & drop handlers
   const handleDragStart = (e, index) => {
     setDraggedIndex(index);
@@ -468,7 +462,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
 
   const handleNetworkClick = (url) => {
     window.open(url, '_blank', 'noopener,noreferrer');
-    setNetworksOpen(false);
+    setActivePopup(null);
   };
 
   const getSignalBars = (strength) => {
@@ -515,9 +509,9 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
       )}
 
       <div
-        className={`taskbar-container absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none' : 'bottom-2 left-2 right-2 rounded-2xl'
-          } h-14 ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${isMobile ? 'px-2' : 'px-4'
-          } z-[2147483647] shadow-2xl transition-all duration-300 hover:opacity-95 pointer-events-auto
+        className={`taskbar-container absolute ${isMobile ? 'bottom-0 left-0 right-0 rounded-none os-safe-bottom' : 'bottom-2 left-2 right-2 rounded-2xl'
+          } ${isMobile ? 'h-12' : 'h-14'} ${theme.colors.taskbar} backdrop-blur-2xl border ${theme.colors.border} flex items-center justify-between ${isMobile ? 'px-1.5' : 'px-4'
+          } z-[2147483647] shadow-2xl transition-all duration-300 hover:opacity-95 pointer-events-auto os-touch-action
           ${taskbarSettings.autoHide && !isHovered && !contextMenu && !taskbarContextMenu && !activePopup ? 'translate-y-[85%]' : 'translate-y-0'}
         `}
         onContextMenu={handleTaskbarContextMenu}
@@ -636,7 +630,7 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
         </div>
 
         {/* Dock Area */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center gap-1.5 h-full px-2">
+        <div className={`absolute left-1/2 transform -translate-x-1/2 flex items-center ${isMobile ? 'gap-0.5 max-w-[55vw] overflow-x-auto scrollbar-hide' : 'gap-1.5'} h-full px-2`}>
           {orderedApps.map((app, index) => {
             const isOpen = windows.find(w => w.id === app.id);
             const isActive = activeWindowId === app.id && !isOpen?.isMinimized;
@@ -737,10 +731,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
               {/* Network Popup */}
               {activePopup === 'wifi' && (
                 <div
-                  className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-64 z-[10000]"
+                  className={`fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 ${isMobile ? 'w-[calc(100vw-1.5rem)]' : 'w-64'} z-[10000]`}
                   style={{
-                    right: isMobile ? '10px' : '100px',
-                    bottom: isMobile ? '70px' : '80px',
+                    right: isMobile ? '12px' : '100px',
+                    bottom: isMobile ? '58px' : '80px',
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -839,10 +833,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
               {/* Volume Popup */}
               {activePopup === 'volume' && (
                 <div
-                  className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-64 z-[10000]"
+                  className={`fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 ${isMobile ? 'w-[calc(100vw-1.5rem)]' : 'w-64'} z-[10000]`}
                   style={{
-                    right: isMobile ? '10px' : '80px',
-                    bottom: isMobile ? '70px' : '80px',
+                    right: isMobile ? '12px' : '80px',
+                    bottom: isMobile ? '58px' : '80px',
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -931,16 +925,16 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
                 aria-label={`Battery ${Math.round(battery.level)}%`}
               >
                 {getBatteryIcon()}
-                <span className="text-xs font-medium w-6 text-right">{Math.round(battery.level)}%</span>
+                <span className="text-xs font-medium w-6 text-right hidden xs:inline">{Math.round(battery.level)}%</span>
               </div>
 
               {/* Battery Popup */}
               {activePopup === 'battery' && (
                 <div
-                  className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 w-72 z-[10000]"
+                  className={`fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-4 ${isMobile ? 'w-[calc(100vw-1.5rem)]' : 'w-72'} z-[10000]`}
                   style={{
-                    right: isMobile ? '10px' : '60px',
-                    bottom: isMobile ? '70px' : '80px',
+                    right: isMobile ? '12px' : '60px',
+                    bottom: isMobile ? '58px' : '80px',
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1069,10 +1063,10 @@ const Taskbar = ({ onOpenSpotlight, shortcuts = [] }) => {
 
             {activePopup === 'power' && (
               <div
-                className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 w-48 z-[10000]"
+                className={`fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl p-2 ${isMobile ? 'w-[calc(100vw-1.5rem)]' : 'w-48'} z-[10000]`}
                 style={{
-                  right: isMobile ? '10px' : '10px',
-                  bottom: isMobile ? '70px' : '80px',
+                  right: isMobile ? '12px' : '10px',
+                  bottom: isMobile ? '58px' : '80px',
                 }}
                 onClick={(e) => e.stopPropagation()}
               >

@@ -38,6 +38,8 @@ import AchievementToast from '../achievements/AchievementToast';
 import PDFViewer from '../tools/PDFViewer';
 import { getUserProfile } from '../../data/userProfile';
 import CustomScrollbar from '../common/CustomScrollbar';
+import MobileExperienceBanner from './MobileExperienceBanner';
+import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 
 // Lazy load apps for better performance
 const VSCodeApp = lazy(() => import('../../apps/VSCode/VSCodeApp'));
@@ -64,6 +66,7 @@ const DesktopContent = () => {
     const { showNotification } = useNotification();
     const { unlockAchievement, trackMetric, currentAchievement, clearAchievement } = useAchievements();
     const { theme } = useTheme();
+    const device = useDeviceDetection();
     const { playUnlock, playRightClick, playScreenshot, playMenuSelect, playEasterEgg } = useSound();
     const [contextMenu, setContextMenu] = useState(null);
     const [shortcutContextMenu, setShortcutContextMenu] = useState(null);
@@ -145,9 +148,9 @@ const DesktopContent = () => {
 
     // Grid configuration constants - CENTERED with equal margins
     const { width, height } = useWindowSize();
-    const GRID_SIZE = 120; // pixels per cell (bigger for more visible icons)
-    const TASKBAR_HEIGHT = 48;
-    const MIN_MARGIN = 24; // minimum margin on all sides
+    const GRID_SIZE = device.isMobile ? 90 : device.isTablet ? 105 : 120;
+    const TASKBAR_HEIGHT = device.isMobile ? 48 : 56;
+    const MIN_MARGIN = device.isMobile ? 16 : 24;
 
     // Reserve space for widgets if they are visible (approx 320px + margins)
     const WIDGET_SIDEBAR_WIDTH = (showWidgets && powerState === 'active' && width > 768) ? 320 : 0;
@@ -1003,6 +1006,9 @@ const DesktopContent = () => {
                     <SystemMonitorWidget className="w-56 sm:w-64 md:w-72" />
                 </div>
             )}
+
+            {/* Mobile Experience Banner */}
+            <MobileExperienceBanner show={!device.isDesktop && powerState === 'active'} />
 
             {/* Lock Screen - Show only when locked */}
             {powerState === 'locked' && (

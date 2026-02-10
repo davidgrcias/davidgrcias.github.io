@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RotateCcw, Trophy, Gamepad2 } from 'lucide-react';
+import { X, RotateCcw, Trophy, Gamepad2, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAchievements } from '../../hooks/useAchievements';
 import { useSound } from '../../contexts/SoundContext';
 
@@ -161,6 +161,50 @@ const SnakeGame = ({ isOpen, onClose }) => {
     setIsPaused(false);
   };
 
+  // Touch swipe controls
+  const touchStartRef = useRef(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleTouchStart = (e) => {
+      const touch = e.touches[0];
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    };
+    const handleTouchEnd = (e) => {
+      if (!touchStartRef.current) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+      const absDx = Math.abs(dx);
+      const absDy = Math.abs(dy);
+      const minSwipe = 30;
+      if (Math.max(absDx, absDy) < minSwipe) return;
+      const currentDir = directionRef.current;
+      if (absDx > absDy) {
+        if (dx > 0 && currentDir !== 'LEFT') { directionRef.current = 'RIGHT'; setDirection('RIGHT'); }
+        else if (dx < 0 && currentDir !== 'RIGHT') { directionRef.current = 'LEFT'; setDirection('LEFT'); }
+      } else {
+        if (dy > 0 && currentDir !== 'UP') { directionRef.current = 'DOWN'; setDirection('DOWN'); }
+        else if (dy < 0 && currentDir !== 'DOWN') { directionRef.current = 'UP'; setDirection('UP'); }
+      }
+      touchStartRef.current = null;
+    };
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isOpen]);
+
+  // D-pad button handler
+  const handleDPad = (dir) => {
+    const currentDir = directionRef.current;
+    if (dir === 'UP' && currentDir !== 'DOWN') { directionRef.current = 'UP'; setDirection('UP'); }
+    else if (dir === 'DOWN' && currentDir !== 'UP') { directionRef.current = 'DOWN'; setDirection('DOWN'); }
+    else if (dir === 'LEFT' && currentDir !== 'RIGHT') { directionRef.current = 'LEFT'; setDirection('LEFT'); }
+    else if (dir === 'RIGHT' && currentDir !== 'LEFT') { directionRef.current = 'RIGHT'; setDirection('RIGHT'); }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -213,7 +257,7 @@ const SnakeGame = ({ isOpen, onClose }) => {
           </div>
 
           {/* Game Board */}
-          <div className="relative bg-zinc-950 rounded-lg p-2 mb-4 border-2 border-zinc-800">
+          <div className="relative bg-zinc-950 rounded-lg p-1 sm:p-2 mb-4 border-2 border-zinc-800">
             <div
               className="relative mx-auto bg-black aspect-square"
               style={{
@@ -221,24 +265,6 @@ const SnakeGame = ({ isOpen, onClose }) => {
                 maxWidth: '100%',
               }}
             >
-              {/* Grid lines */}
-              <div className="absolute inset-0 opacity-10">
-                {Array.from({ length: GRID_SIZE }).map((_, i) => (
-                  <div
-                    key={`h-${i}`}
-                    className="absolute border-t border-zinc-700"
-                    style={{ top: i * CELL_SIZE, width: '100%' }}
-                  />
-                ))}
-                {Array.from({ length: GRID_SIZE }).map((_, i) => (
-                  <div
-                    key={`v-${i}`}
-                    className="absolute border-l border-zinc-700"
-                    style={{ left: i * CELL_SIZE, height: '100%' }}
-                  />
-                ))}
-              </div>
-
               {/* Snake */}
               {snake.map(([x, y], index) => (
                 <motion.div
@@ -248,10 +274,12 @@ const SnakeGame = ({ isOpen, onClose }) => {
                   className={`absolute rounded-sm ${index === 0 ? 'bg-green-400' : 'bg-green-500'
                     }`}
                   style={{
-                    left: x * CELL_SIZE,
-                    top: y * CELL_SIZE,
-                    width: CELL_SIZE - 2,
-                    height: CELL_SIZE - 2,
+                    left: `${(x / GRID_SIZE) * 100}%`,
+                    top: `${(y / GRID_SIZE) * 100}%`,
+                    width: `${(1 / GRID_SIZE) * 100}%`,
+                    height: `${(1 / GRID_SIZE) * 100}%`,
+                    padding: '1px',
+                    backgroundClip: 'content-box',
                   }}
                 />
               ))}
@@ -262,10 +290,12 @@ const SnakeGame = ({ isOpen, onClose }) => {
                 transition={{ duration: 0.5, repeat: Infinity }}
                 className="absolute bg-red-500 rounded-full"
                 style={{
-                  left: food[0] * CELL_SIZE,
-                  top: food[1] * CELL_SIZE,
-                  width: CELL_SIZE - 2,
-                  height: CELL_SIZE - 2,
+                  left: `${(food[0] / GRID_SIZE) * 100}%`,
+                  top: `${(food[1] / GRID_SIZE) * 100}%`,
+                  width: `${(1 / GRID_SIZE) * 100}%`,
+                  height: `${(1 / GRID_SIZE) * 100}%`,
+                  padding: '1px',
+                  backgroundClip: 'content-box',
                 }}
               />
 
@@ -303,6 +333,43 @@ const SnakeGame = ({ isOpen, onClose }) => {
 
           {/* Controls */}
           <div className="space-y-3">
+            {/* D-Pad for touch devices */}
+            <div className="sm:hidden flex flex-col items-center gap-1">
+              <button
+                onTouchStart={(e) => { e.preventDefault(); handleDPad('UP'); }}
+                onClick={() => handleDPad('UP')}
+                className="w-14 h-14 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-xl flex items-center justify-center text-white transition-colors os-touch-target"
+              >
+                <ChevronUp size={28} />
+              </button>
+              <div className="flex gap-1">
+                <button
+                  onTouchStart={(e) => { e.preventDefault(); handleDPad('LEFT'); }}
+                  onClick={() => handleDPad('LEFT')}
+                  className="w-14 h-14 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-xl flex items-center justify-center text-white transition-colors os-touch-target"
+                >
+                  <ChevronLeft size={28} />
+                </button>
+                <div className="w-14 h-14 bg-zinc-900 rounded-xl flex items-center justify-center">
+                  <Gamepad2 size={20} className="text-zinc-600" />
+                </div>
+                <button
+                  onTouchStart={(e) => { e.preventDefault(); handleDPad('RIGHT'); }}
+                  onClick={() => handleDPad('RIGHT')}
+                  className="w-14 h-14 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-xl flex items-center justify-center text-white transition-colors os-touch-target"
+                >
+                  <ChevronRight size={28} />
+                </button>
+              </div>
+              <button
+                onTouchStart={(e) => { e.preventDefault(); handleDPad('DOWN'); }}
+                onClick={() => handleDPad('DOWN')}
+                className="w-14 h-14 bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 rounded-xl flex items-center justify-center text-white transition-colors os-touch-target"
+              >
+                <ChevronDown size={28} />
+              </button>
+            </div>
+
             <div className="flex gap-2">
               <button
                 onClick={resetGame}
@@ -321,8 +388,9 @@ const SnakeGame = ({ isOpen, onClose }) => {
             </div>
 
             <div className="text-xs text-zinc-400 text-center space-y-1">
-              <div>Use Arrow Keys to control</div>
-              <div>Space to pause • R to restart</div>
+              <div className="hidden sm:block">Use Arrow Keys to control</div>
+              <div className="sm:hidden">Swipe or use D-pad to control</div>
+              <div className="hidden sm:block">Space to pause • R to restart</div>
             </div>
           </div>
         </motion.div>

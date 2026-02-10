@@ -188,14 +188,14 @@ const AboutMeApp = ({ id }) => {
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 overflow-auto">
-      <div className="max-w-4xl mx-auto p-8">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 md:p-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <div className="w-32 h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl ring-4 ring-blue-500/20">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 mx-auto mb-4 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 shadow-xl ring-4 ring-blue-500/20">
             <OptimizedImage
               src={profile.avatar || "/profilpict.webp"}
               alt={profile.name}
@@ -206,8 +206,8 @@ const AboutMeApp = ({ id }) => {
               className="w-full h-full object-cover"
             />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">{profile.name}</h1>
-          <p className="text-lg text-zinc-400">{profile.title}</p>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">{profile.name}</h1>
+          <p className="text-base sm:text-lg text-zinc-400">{profile.title}</p>
           <div className="flex items-center justify-center gap-2 mt-2 text-zinc-500">
             <MapPin size={16} />
             <span>{profile.location}</span>
@@ -215,13 +215,13 @@ const AboutMeApp = ({ id }) => {
         </motion.div>
 
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 p-1 bg-zinc-800/50 rounded-xl overflow-x-auto">
+        <div className="flex gap-1 mb-6 p-1 bg-zinc-800/50 rounded-xl overflow-x-auto scrollbar-hide">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg font-medium transition-all duration-200 text-sm whitespace-nowrap min-w-0
+                flex-1 flex items-center justify-center gap-1.5 px-2 sm:px-3 py-2.5 rounded-lg font-medium transition-all duration-200 text-xs sm:text-sm whitespace-nowrap min-w-0
                 ${activeTab === tab.id
                   ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                   : 'text-zinc-400 hover:text-white hover:bg-zinc-700/50'
@@ -229,7 +229,7 @@ const AboutMeApp = ({ id }) => {
               `}
             >
               {tab.icon}
-              <span>{tab.label}</span>
+              <span className="hidden xs:inline">{tab.label}</span>
             </button>
           ))}
         </div>

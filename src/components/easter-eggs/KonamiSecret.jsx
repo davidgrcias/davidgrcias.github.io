@@ -73,7 +73,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
           {/* Glowing background effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-3xl blur-3xl opacity-50 animate-pulse"></div>
           
-          <div className="relative bg-gradient-to-br from-zinc-900 via-purple-900/50 to-zinc-900 border-2 border-purple-500/50 rounded-3xl p-12 shadow-2xl overflow-hidden">
+          <div className="relative bg-gradient-to-br from-zinc-900 via-purple-900/50 to-zinc-900 border-2 border-purple-500/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 shadow-2xl overflow-hidden max-h-[85vh] overflow-y-auto">
             {/* Animated background pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute inset-0" style={{
@@ -107,8 +107,8 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                 }}
                 className="inline-block"
               >
-                <div className="w-32 h-32 mx-auto bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-2xl">
-                  <Trophy size={64} className="text-white" />
+                <div className="w-20 h-20 sm:w-28 sm:h-28 md:w-32 md:h-32 mx-auto bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-2xl">
+                  <Trophy className="text-white w-8 h-8 sm:w-12 sm:h-12 md:w-16 md:h-16" />
                 </div>
               </motion.div>
 
@@ -118,7 +118,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="text-6xl font-bold mb-4 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 bg-clip-text text-transparent"
+                  className="text-3xl sm:text-4xl md:text-6xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 bg-clip-text text-transparent"
                 >
                   🎮 KONAMI CODE!
                 </motion.h1>
@@ -127,7 +127,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-2xl text-white font-semibold mb-2"
+                  className="text-lg sm:text-xl md:text-2xl text-white font-semibold mb-2"
                 >
                   You Found The Secret!
                 </motion.p>
@@ -136,7 +136,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-lg text-purple-200"
+                  className="text-sm sm:text-base md:text-lg text-purple-200"
                 >
                   ↑ ↑ ↓ ↓ ← → ← → B A
                 </motion.p>
@@ -147,19 +147,19 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 rounded-2xl p-6"
+                className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border-2 border-yellow-500/50 rounded-xl sm:rounded-2xl p-4 sm:p-6"
               >
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <Star className="text-yellow-400" size={32} />
-                  <h3 className="text-2xl font-bold text-white">Achievement Unlocked!</h3>
-                  <Star className="text-yellow-400" size={32} />
+                <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                  <Star className="text-yellow-400 w-5 h-5 sm:w-8 sm:h-8" />
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-white">Achievement Unlocked!</h3>
+                  <Star className="text-yellow-400 w-5 h-5 sm:w-8 sm:h-8" />
                 </div>
-                <p className="text-yellow-200 text-lg mb-2">🎮 Konami Master</p>
-                <p className="text-white text-sm mb-4">You entered the legendary Konami Code!</p>
+                <p className="text-yellow-200 text-base sm:text-lg mb-2">🎮 Konami Master</p>
+                <p className="text-white text-xs sm:text-sm mb-3 sm:mb-4">You entered the legendary Konami Code!</p>
                 <div className="flex items-center justify-center gap-2">
-                  <Zap className="text-yellow-400" size={20} />
-                  <span className="text-2xl font-bold text-yellow-400">+100 Points</span>
-                  <Zap className="text-yellow-400" size={20} />
+                  <Zap className="text-yellow-400" size={18} />
+                  <span className="text-xl sm:text-2xl font-bold text-yellow-400">+100 Points</span>
+                  <Zap className="text-yellow-400" size={18} />
                 </div>
               </motion.div>
 
@@ -170,10 +170,10 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                 transition={{ delay: 0.6 }}
                 className="space-y-3"
               >
-                <p className="text-purple-200 text-lg">
+                <p className="text-purple-200 text-sm sm:text-base md:text-lg">
                   "The secret to getting ahead is getting started... with cheat codes!"
                 </p>
-                <p className="text-sm text-zinc-400">
+                <p className="text-xs sm:text-sm text-zinc-400">
                   You're a true gamer at heart. Respect! 🎮
                 </p>
               </motion.div>
@@ -183,18 +183,18 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.7 }}
-                className="grid grid-cols-3 gap-4 pt-6 border-t border-white/10"
+                className="grid grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6 border-t border-white/10"
               >
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-blue-400">30</p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-400">30</p>
                   <p className="text-xs text-zinc-400">Lives Added</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-green-400">∞</p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-400">∞</p>
                   <p className="text-xs text-zinc-400">Ammo</p>
                 </div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold text-purple-400">MAX</p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-purple-400">MAX</p>
                   <p className="text-xs text-zinc-400">Power</p>
                 </div>
               </motion.div>
@@ -207,7 +207,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onClose}
-                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-2xl"
+                className="px-6 py-3 sm:px-8 sm:py-4 text-sm sm:text-base bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-2xl"
               >
                 Continue Your Journey
               </motion.button>

@@ -72,8 +72,8 @@ const DesktopIcon = ({ icon, label, badge, onClick, onContextMenu, onDragEnd, st
       className={`flex flex-col items-center justify-center gap-1 rounded-xl transition-all duration-300 cursor-pointer select-none group ${isDragging ? 'z-50 cursor-grabbing opacity-80 scale-110' : 'z-10 cursor-pointer'}`}
     >
       {/* Icon - Floating Effect */}
-      <div className="relative w-16 h-16 flex items-center justify-center text-white transition-all pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]">
-        {icon}
+      <div className={`relative ${gridSize < 100 ? 'w-12 h-12' : 'w-16 h-16'} flex items-center justify-center text-white transition-all pointer-events-none drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)]`}>
+        {gridSize < 100 ? React.cloneElement(icon, { size: 26 }) : icon}
         {badge && (
           <span className="absolute -top-1 -right-1 px-1.5 py-[1px] text-[8px] font-bold leading-tight rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/40 ring-1 ring-emerald-400/50 animate-pulse pointer-events-none">
             {badge}
@@ -82,7 +82,7 @@ const DesktopIcon = ({ icon, label, badge, onClick, onContextMenu, onDragEnd, st
       </div>
 
       {/* Label - No box, just strong shadow */}
-      <span className="text-[13px] text-white text-center font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] px-1 rounded transition-all pointer-events-none line-clamp-2 leading-tight max-w-[100%] group-hover:text-white">
+      <span className={`${gridSize < 100 ? 'text-[11px]' : 'text-[13px]'} text-white text-center font-medium drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] px-1 rounded transition-all pointer-events-none line-clamp-2 leading-tight max-w-[100%] group-hover:text-white`}>
         {label}
       </span>
     </motion.button>

@@ -17,6 +17,14 @@ module.exports = {
     "text-orange-500",
   ],
   theme: {
+    screens: {
+      'xs': '480px',
+      'sm': '640px',
+      'md': '768px',
+      'lg': '1024px',
+      'xl': '1280px',
+      '2xl': '1536px',
+    },
     extend: {
       perspective: {
         '1000': '1000px',

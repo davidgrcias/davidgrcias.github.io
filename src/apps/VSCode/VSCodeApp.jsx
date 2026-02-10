@@ -8,10 +8,12 @@ import TabManager from './components/TabManager';
 import EditorArea from './components/EditorArea';
 import CopilotSidebar from './components/CopilotSidebar';
 import { useOS } from '../../contexts/OSContext';
+import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import { Save, Clipboard, Scissors, ClipboardCopy, Terminal as TerminalIcon } from 'lucide-react';
 
 const VSCodeApp = ({ id }) => {
     const { updateWindow, activeWindowId } = useOS();
+    const { isMobile, isTablet } = useDeviceDetection();
     const [activeTab, setActiveTab] = useState('files'); // ActivityBar Tab
     const [openFiles, setOpenFiles] = useState([]);
     const [activeFileId, setActiveFileId] = useState(null);
@@ -99,9 +101,12 @@ const VSCodeApp = ({ id }) => {
 
 
     // Sidebar Resizing
-    const [sidebarWidth, setSidebarWidth] = useState(250);
+    const [sidebarWidth, setSidebarWidth] = useState(() => isMobile ? 0 : isTablet ? 200 : 250);
     const [isResizing, setIsResizing] = useState(false);
     const appRef = React.useRef(null);
+    
+    // On mobile, clicking activity bar toggles sidebar as overlay
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     const startResizing = React.useCallback(() => {
         setIsResizing(true);
@@ -169,15 +174,22 @@ const VSCodeApp = ({ id }) => {
     const activeFile = openFiles.find(f => f.id === activeFileId);
 
     return (
-        <div ref={appRef} className="flex h-full w-full bg-[#1e1e1e] text-white overflow-hidden font-sans">
+        <div ref={appRef} className="flex h-full w-full bg-[#1e1e1e] text-white overflow-hidden font-sans relative">
             {/* Left Side: Activity Bar */}
-            <ActivityBar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <ActivityBar activeTab={activeTab} setActiveTab={(tab) => {
+                if (isMobile) {
+                    setActiveTab(tab === activeTab && mobileSidebarOpen ? tab : tab);
+                    setMobileSidebarOpen(tab === activeTab ? !mobileSidebarOpen : true);
+                } else {
+                    setActiveTab(tab === activeTab ? null : tab);
+                }
+            }} />
 
-            {/* Sidebar Area */}
-            {activeTab && (
+            {/* Sidebar Area - Overlay on mobile */}
+            {(isMobile ? mobileSidebarOpen : activeTab) && (
                 <div
-                    className="flex h-full relative"
-                    style={{ width: sidebarWidth }}
+                    className={`flex h-full relative ${isMobile ? 'absolute left-12 top-0 bottom-6 z-30 shadow-2xl' : ''}`}
+                    style={{ width: isMobile ? Math.min(260, window.innerWidth - 60) : sidebarWidth }}
                 >
                     {activeTab === 'files' && (
                         <Explorer
@@ -196,12 +208,18 @@ const VSCodeApp = ({ id }) => {
                         <ExtensionsPanel />
                     )}
 
-                    {/* Resize Handle */}
-                    <div
-                        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 active:bg-blue-500 z-10"
-                        onMouseDown={startResizing}
-                    />
+                    {/* Resize Handle - desktop only */}
+                    {!isMobile && (
+                      <div
+                          className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 active:bg-blue-500 z-10"
+                          onMouseDown={startResizing}
+                      />
+                    )}
                 </div>
+            )}
+            {/* Mobile sidebar backdrop */}
+            {isMobile && mobileSidebarOpen && (
+                <div className="absolute inset-0 z-20" onClick={() => setMobileSidebarOpen(false)} />
             )}
 
             {/* Main Content Area */}
@@ -224,15 +242,15 @@ const VSCodeApp = ({ id }) => {
                 </div>
 
                 {/* Status Bar - Simple */}
-                <div className="h-6 bg-[#007acc] flex items-center px-4 text-xs text-white select-none justify-between">
-                    <div className="flex gap-4">
-                        <span>main*</span>
-                        <span>0 errors, 0 warnings</span>
+                <div className="h-6 bg-[#007acc] flex items-center px-2 sm:px-4 text-[10px] sm:text-xs text-white select-none justify-between">
+                    <div className="flex gap-2 sm:gap-4 min-w-0">
+                        <span className="truncate">main*</span>
+                        <span className="hidden xs:inline">0 errors, 0 warnings</span>
                     </div>
-                    <div className="flex gap-4">
-                        <span>Ln {activeFile ? '1' : '-'}, Col {activeFile ? '1' : '-'}</span>
-                        <span>UTF-8</span>
-                        <span>
+                    <div className="flex gap-2 sm:gap-4 min-w-0">
+                        <span className="hidden sm:inline">Ln {activeFile ? '1' : '-'}, Col {activeFile ? '1' : '-'}</span>
+                        <span className="hidden md:inline">UTF-8</span>
+                        <span className="truncate">
                             {activeFile?.name?.endsWith('.js') || activeFile?.name?.endsWith('.jsx')
                                 ? 'JavaScript React'
                                 : activeFile?.name?.endsWith('.json')

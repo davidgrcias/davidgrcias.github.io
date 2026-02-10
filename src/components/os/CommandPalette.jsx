@@ -175,7 +175,7 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[10003] flex items-start justify-center pt-[20vh] px-4">
+      <div className="fixed inset-0 z-[10003] flex items-start justify-center pt-[12vh] sm:pt-[16vh] md:pt-[20vh] px-3 sm:px-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -213,7 +213,7 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
           </div>
 
           {/* Commands List */}
-          <div className="max-h-[400px] overflow-y-auto">
+          <div className="max-h-[50vh] sm:max-h-[400px] overflow-y-auto">
             {filteredCommands.length === 0 ? (
               <div className="p-8 text-center text-white/40">
                 No commands found
@@ -252,7 +252,7 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
 
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2 border-t border-white/10 bg-slate-950/50 text-xs text-white/40">
-            <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-4">
               <span className="flex items-center gap-1">
                 <kbd className="px-1.5 py-0.5 bg-white/10 rounded">↑</kbd>
                 <kbd className="px-1.5 py-0.5 bg-white/10 rounded">↓</kbd>
@@ -263,6 +263,7 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
                 Select
               </span>
             </div>
+            <span className="sm:hidden text-white/40">Tap to select</span>
             <span>
               {filteredCommands.length} command{filteredCommands.length !== 1 ? 's' : ''}
             </span>

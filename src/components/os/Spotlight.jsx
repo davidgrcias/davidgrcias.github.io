@@ -273,7 +273,7 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[10000] flex items-start justify-center pt-32 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[10000] flex items-start justify-center pt-16 sm:pt-24 md:pt-32 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
       >
         <motion.div
@@ -286,18 +286,18 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
         >
           {/* Search Input */}
           <div className="bg-zinc-900/95 border border-zinc-700 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-zinc-800">
-              <Search className="text-zinc-400" size={24} />
+            <div className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-4 sm:py-5 border-b border-zinc-800">
+              <Search className="text-zinc-400" size={20} />
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search apps, skills, actions..."
                 autoFocus
-                className="flex-1 bg-transparent text-white text-lg placeholder-zinc-500 focus:outline-none"
+                className="flex-1 bg-transparent text-white text-base sm:text-lg placeholder-zinc-500 focus:outline-none"
               />
               {query && (
-                <kbd className="px-2 py-1 text-xs bg-zinc-800 rounded border border-zinc-700 text-zinc-400">
+                <kbd className="hidden sm:inline-block px-2 py-1 text-xs bg-zinc-800 rounded border border-zinc-700 text-zinc-400">
                   ESC to close
                 </kbd>
               )}
@@ -316,7 +316,7 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
                       transition={{ delay: index * 0.03 }}
                       onClick={() => { playMenuSelect(); executeAction(item); }}
                       className={`
-                        flex items-center gap-4 px-6 py-4 cursor-pointer transition-all
+                        flex items-center gap-3 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 cursor-pointer transition-all
                         ${selectedIndex === index
                           ? 'bg-blue-600/20 border-l-4 border-blue-500'
                           : 'hover:bg-zinc-800/50 border-l-4 border-transparent'
@@ -333,11 +333,11 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
                         )}
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-1 bg-zinc-800 rounded text-zinc-400 capitalize">
+                        <span className="hidden xs:inline text-xs px-2 py-1 bg-zinc-800 rounded text-zinc-400 capitalize">
                           {item.type}
                         </span>
                         {selectedIndex === index && (
-                          <kbd className="text-xs px-2 py-1 bg-zinc-800 rounded border border-zinc-700 text-zinc-400">
+                          <kbd className="hidden sm:inline-block text-xs px-2 py-1 bg-zinc-800 rounded border border-zinc-700 text-zinc-400">
                             ↵
                           </kbd>
                         )}
@@ -350,8 +350,8 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
 
             {/* No Results */}
             {query && results.length === 0 && (
-              <div className="px-6 py-12 text-center">
-                <div className="text-5xl mb-3">🔍</div>
+              <div className="px-4 sm:px-6 py-8 sm:py-12 text-center">
+                <div className="text-4xl sm:text-5xl mb-3">🔍</div>
                 <h3 className="text-white font-semibold mb-1">No results found</h3>
                 <p className="text-sm text-zinc-400">Try searching for apps, skills, or actions</p>
               </div>
@@ -359,9 +359,9 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
 
             {/* Tips */}
             {!query && (
-              <div className="px-6 py-8">
+              <div className="px-4 sm:px-6 py-6 sm:py-8">
                 <h3 className="text-white font-semibold mb-4">Quick Tips</h3>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-3">
                   <div className="text-sm text-zinc-400">
                     <span className="text-zinc-300">Type app names</span> to open them
                   </div>
@@ -380,7 +380,7 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
           </div>
 
           {/* Keyboard Shortcut Hint */}
-          <div className="mt-3 text-center text-sm text-zinc-500">
+          <div className="hidden sm:block mt-3 text-center text-sm text-zinc-500">
             Press <kbd className="px-2 py-1 bg-zinc-800/50 rounded border border-zinc-700 text-zinc-400 mx-1">Ctrl</kbd>
             <span className="mx-1">+</span>
             <kbd className="px-2 py-1 bg-zinc-800/50 rounded border border-zinc-700 text-zinc-400 mx-1">Space</kbd> anytime to search

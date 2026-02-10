@@ -193,7 +193,7 @@ const FileManagerApp = () => {
   return (
     <div className="w-full h-full flex flex-col bg-slate-950 text-white">
       {/* Toolbar */}
-      <div className="h-12 bg-slate-900/50 border-b border-white/10 flex items-center px-4 gap-3">
+      <div className="h-auto sm:h-12 bg-slate-900/50 border-b border-white/10 flex flex-wrap sm:flex-nowrap items-center px-2 sm:px-4 gap-2 sm:gap-3 py-2 sm:py-0">
         {/* Navigation */}
         <button
           onClick={goBack}
@@ -228,7 +228,7 @@ const FileManagerApp = () => {
         </div>
 
         {/* Search */}
-        <div className="relative w-48">
+        <div className="relative w-full sm:w-48 order-last sm:order-none">
           <Search size={16} className="absolute left-2 top-1/2 -translate-y-1/2 text-white/40" />
           <input
             type="text"
