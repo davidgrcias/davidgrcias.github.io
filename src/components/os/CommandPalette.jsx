@@ -59,11 +59,11 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
     },
     {
       id: 'messenger',
-      title: 'Open Chat',
+      title: 'AI Chatbot',
       description: 'Talk with AI assistant',
       icon: <Bot size={20} className="text-purple-400" />,
-      keywords: ['chat', 'messenger', 'ai', 'talk'],
-      action: () => openApp({ id: 'messenger', title: 'Messages', icon: <Bot size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense> }),
+      keywords: ['chat', 'chatbot', 'ai', 'talk', 'assistant'],
+      action: () => openApp({ id: 'messenger', title: 'AI Chatbot', icon: <Bot size={24} />, component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Chatbot"><MessengerApp /></ErrorBoundary></Suspense> }),
     },
     {
       id: 'about-me',

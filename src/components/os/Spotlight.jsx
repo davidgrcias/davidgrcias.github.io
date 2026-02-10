@@ -117,15 +117,15 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
     {
       type: 'app',
       id: 'messenger',
-      title: 'Messages',
+      title: 'AI Chatbot',
       icon: Bot,
-      keywords: ['chat', 'messenger', 'ai'],
+      keywords: ['chat', 'chatbot', 'ai', 'assistant'],
       color: 'text-purple-400',
       action: () => openApp({
         id: 'messenger',
-        title: 'Messages',
+        title: 'AI Chatbot',
         icon: <Bot size={24} />,
-        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense>
+        component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Chatbot"><MessengerApp /></ErrorBoundary></Suspense>
       })
     },
     {

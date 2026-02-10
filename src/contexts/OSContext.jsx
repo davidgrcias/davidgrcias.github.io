@@ -9,8 +9,8 @@ export const OSProvider = ({ children }) => {
   const [windows, setWindows] = useState([]);
   const [activeWindowId, setActiveWindowId] = useState(null);
   const [maxZIndex, setMaxZIndex] = useState(100);
-  
-  
+
+
   // Power State: 'booting' | 'active' | 'locked' | 'off'
   const [powerState, setPowerState] = useState(() => {
     // Check if we just rebooted or it's a fresh load
@@ -37,7 +37,7 @@ export const OSProvider = ({ children }) => {
   const restart = useCallback(() => {
     playRestartSound();
     setPowerState('restarting');
-    
+
     setTimeout(() => {
       localStorage.clear();
       sessionStorage.clear();
@@ -64,17 +64,17 @@ export const OSProvider = ({ children }) => {
         console.error('Failed to parse pinned apps:', e);
       }
     }
-    return ['vscode', 'file-manager', 'about-me', 'terminal'];
+    return ['vscode', 'file-manager', 'about-me', 'messenger'];
   });
-  
+
   // Sound effects adapter (backward compatibility)
   const playSound = (type) => {
-    switch(type) {
-        case 'open': playWindowOpen(); break;
-        case 'close': playWindowClose(); break;
-        case 'click': playClick(); break;
-        case 'minimize': playWindowMinimize(); break;
-        default: break;
+    switch (type) {
+      case 'open': playWindowOpen(); break;
+      case 'close': playWindowClose(); break;
+      case 'click': playClick(); break;
+      case 'minimize': playWindowMinimize(); break;
+      default: break;
     }
   };
 
@@ -83,8 +83,8 @@ export const OSProvider = ({ children }) => {
     setWindows((prev) => {
       const existing = prev.find((w) => w.id === app.id);
       if (existing) {
-        return prev.map(w => 
-            w.id === app.id ? { ...w, isMinimized: false, isMaximized: false, zIndex: maxZIndex + 1 } : w
+        return prev.map(w =>
+          w.id === app.id ? { ...w, isMinimized: false, isMaximized: false, zIndex: maxZIndex + 1 } : w
         );
       }
       return [...prev, { ...app, isMinimized: false, isMaximized: false, zIndex: maxZIndex + 1 }];

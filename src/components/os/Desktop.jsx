@@ -288,11 +288,11 @@ const DesktopContent = () => {
         },
         {
             id: 'messenger',
-            label: 'Chat',
+            label: 'AI Chatbot',
             icon: <Bot size={32} />,
             badge: 'AI',
-            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Messenger"><MessengerApp /></ErrorBoundary></Suspense>,
-            title: 'Messages',
+            component: <Suspense fallback={<AppLoadingFallback />}><ErrorBoundary componentName="Chatbot"><MessengerApp /></ErrorBoundary></Suspense>,
+            title: 'AI Chatbot',
             contextMenuOptions: [
                 { label: 'New Conversation', onClick: () => triggerAppAction('messenger', 'new-chat') },
                 { separator: true },

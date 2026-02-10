@@ -20,7 +20,7 @@ const Dock = ({ apps = [] }) => {
     { id: 'about-me', icon: User, label: 'About Me', color: 'text-cyan-400' },
     { id: 'notes', icon: StickyNote, label: 'Notes', color: 'text-yellow-300' },
     { id: 'terminal', icon: Terminal, label: 'Terminal', color: 'text-green-400' },
-    { id: 'messenger', icon: Bot, label: 'Chat', color: 'text-purple-400' },
+    { id: 'messenger', icon: Bot, label: 'AI Chatbot', color: 'text-purple-400' },
     { id: 'settings', icon: Settings, label: 'Settings', color: 'text-gray-400' },
   ];
 
@@ -60,14 +60,14 @@ const Dock = ({ apps = [] }) => {
           boxShadow: '0 10px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
         }}
       >
-        <div 
+        <div
           className="flex items-end gap-2"
           onMouseLeave={() => setHoveredIndex(null)}
         >
           {dockApps.map((app, index) => {
             const Icon = app.icon;
             const isRunning = isAppRunning(app.id);
-            
+
             return (
               <motion.div
                 key={app.id}
@@ -99,8 +99,8 @@ const Dock = ({ apps = [] }) => {
                 <motion.button
                   onClick={() => {
                     // Get the app component from Desktop or create minimal version
-                    openApp({ 
-                      id: app.id, 
+                    openApp({
+                      id: app.id,
                       title: app.label,
                       icon: <Icon size={24} />
                     });
@@ -115,7 +115,7 @@ const Dock = ({ apps = [] }) => {
                   whileTap={{ scale: 0.9 }}
                 >
                   <Icon size={28} className={app.color} />
-                  
+
                   {/* Running indicator */}
                   {isRunning && (
                     <motion.div
