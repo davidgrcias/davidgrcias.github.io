@@ -29,8 +29,6 @@ const PortfolioStats = ({ isOpen, onClose }) => {
     appsOpened: 0,
     timeSpent: 0,
     clicks: 0,
-    achievementsUnlocked: 0,
-    totalPoints: 0,
   });
   const [sessionStart] = useState(Date.now());
   const isOpenRef = useRef(isOpen);
@@ -41,7 +39,7 @@ const PortfolioStats = ({ isOpen, onClose }) => {
     if (savedStats) {
       return JSON.parse(savedStats);
     }
-    return { visits: 0, appsOpened: 0, timeSpent: 0, clicks: 0, achievementsUnlocked: 0, totalPoints: 0 };
+    return { visits: 0, appsOpened: 0, timeSpent: 0, clicks: 0 };
   };
 
   const writeStoredStats = (updated) => {
@@ -117,16 +115,6 @@ const PortfolioStats = ({ isOpen, onClose }) => {
 
     return () => clearInterval(interval);
   }, [sessionStart]);
-
-  // Get achievements data
-  useEffect(() => {
-    if (!isOpen) return;
-    const achievementsData = localStorage.getItem('webos-achievements');
-    if (achievementsData) {
-      const unlocked = JSON.parse(achievementsData);
-      setStats(prev => ({ ...prev, achievementsUnlocked: unlocked.length }));
-    }
-  }, [isOpen]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -207,36 +195,16 @@ const PortfolioStats = ({ isOpen, onClose }) => {
               color="green"
             />
 
-            <StatCard
-              icon={Award}
-              label="Achievements Unlocked"
-              value={stats.achievementsUnlocked || 0}
-              color="orange"
-            />
-
             {/* Real-time indicator */}
             <div className="mt-4 pt-4 border-t border-zinc-700">
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500/80 rounded-full"></div>
+                  <div className="w-2 h-2 bg-green-500/80 rounded-full animate-pulse"></div>
                   <span className="text-zinc-400">Live</span>
                 </div>
                 <span className="text-zinc-500 font-mono">
                   {new Date().toLocaleTimeString()}
                 </span>
-              </div>
-            </div>
-
-            {/* Milestones */}
-            <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
-              <h3 className="text-xs font-semibold text-blue-400 mb-2">🎯 Next Milestone</h3>
-              <div className="space-y-1 text-xs text-zinc-300">
-                {stats.appsOpened < 5 && <div>• Open 5 different apps</div>}
-                {stats.achievementsUnlocked < 5 && <div>• Unlock 5 achievements</div>}
-                {stats.visits < 10 && <div>• Make 10 visits</div>}
-                {stats.appsOpened >= 5 && stats.achievementsUnlocked >= 5 && stats.visits >= 10 && (
-                  <div className="text-green-400">✅ All milestones completed!</div>
-                )}
               </div>
             </div>
           </div>
