@@ -32,12 +32,12 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
         playTabSwitch();
         if (e.shiftKey) {
           // Shift+Tab - go backwards
-          setSelectedIndex(prev => 
+          setSelectedIndex(prev =>
             prev <= 0 ? openWindows.length - 1 : prev - 1
           );
         } else {
           // Tab - go forwards
-          setSelectedIndex(prev => 
+          setSelectedIndex(prev =>
             prev >= openWindows.length - 1 ? 0 : prev + 1
           );
         }
@@ -54,13 +54,13 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
       } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         playTabSwitch();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev >= openWindows.length - 1 ? 0 : prev + 1
         );
       } else if (e.key === 'ArrowLeft') {
         e.preventDefault();
         playTabSwitch();
-        setSelectedIndex(prev => 
+        setSelectedIndex(prev =>
           prev <= 0 ? openWindows.length - 1 : prev - 1
         );
       }
@@ -95,7 +95,7 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[2147483648] flex items-center justify-center bg-black/60 backdrop-blur-sm pb-16"
         onClick={onClose}
       >
         <motion.div
@@ -136,8 +136,8 @@ const WindowSwitcher = ({ isOpen, onClose, onSelectWindow }) => {
                 }}
                 className={`
                   relative rounded-xl overflow-hidden cursor-pointer transition-all duration-200
-                  ${selectedIndex === index 
-                    ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/50 scale-105' 
+                  ${selectedIndex === index
+                    ? 'ring-2 ring-blue-500 shadow-lg shadow-blue-500/50 scale-105'
                     : 'hover:ring-2 hover:ring-zinc-600 hover:scale-102'
                   }
                 `}

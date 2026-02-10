@@ -22,18 +22,18 @@ const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document', preloadedUrl =
     // Detect URL type and use FASTEST embed format
     const isGoogleDocsViewer = pdfUrl?.includes('docs.google.com/viewer');
     const isGoogleDrive = pdfUrl?.includes('drive.google.com');
-    
+
     // Determine the embed URL - FASTEST METHOD
     let embedUrl = pdfUrl;
     let fileId = null;
-    
+
     // Extract Google Drive file ID
     if (isGoogleDrive || isGoogleDocsViewer) {
         const match1 = pdfUrl.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
         const match2 = pdfUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
         fileId = match1?.[1] || match2?.[1];
     }
-    
+
     if (fileId) {
         // FASTEST: Direct Google Drive preview embed (no redirect, instant load)
         embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
@@ -73,7 +73,7 @@ const PDFViewer = ({ isOpen, onClose, pdfUrl, title = 'Document', preloadedUrl =
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+                    className="fixed inset-0 z-[2147483648] flex items-center justify-center p-4 pb-16 bg-black/70 backdrop-blur-sm"
                     onClick={onClose}
                 >
                     <motion.div

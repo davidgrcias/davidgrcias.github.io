@@ -175,7 +175,7 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[10003] flex items-start justify-center pt-[12vh] sm:pt-[16vh] md:pt-[20vh] px-3 sm:px-4">
+      <div className="fixed inset-0 z-[2147483648] flex items-center justify-center px-3 sm:px-4 pb-16">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -230,8 +230,8 @@ const CommandPalette = ({ isOpen, onClose, onOpenSnake }) => {
                     }}
                     onMouseEnter={() => setSelectedIndex(index)}
                     className={`w-full flex items-center gap-4 px-4 py-3 transition-colors ${selectedIndex === index
-                        ? 'bg-cyan-500/20 text-white'
-                        : 'text-white/80 hover:bg-white/5'
+                      ? 'bg-cyan-500/20 text-white'
+                      : 'text-white/80 hover:bg-white/5'
                       }`}
                   >
                     <div className="flex-shrink-0">{command.icon}</div>

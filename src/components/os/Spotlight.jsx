@@ -273,7 +273,7 @@ const Spotlight = ({ isOpen, onClose, initialQuery = '' }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[10000] flex items-start justify-center pt-16 sm:pt-24 md:pt-32 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[2147483648] flex items-center justify-center px-4 pb-16 bg-black/50 backdrop-blur-sm"
         onClick={handleClose}
       >
         <motion.div

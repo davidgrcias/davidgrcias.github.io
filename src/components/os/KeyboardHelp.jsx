@@ -14,8 +14,9 @@ const KeyboardHelp = ({ isOpen, onClose }) => {
       icon: <Zap className="w-5 h-5 text-yellow-400" />,
       items: [
         { keys: ['Ctrl', 'K'], description: 'Open Command Palette' },
+        { keys: ['Ctrl', 'K'], description: 'Open Command Palette' },
         { keys: ['Ctrl', 'Space'], description: 'Open Spotlight Search' },
-        { keys: ['Alt', 'Tab'], description: 'Window Switcher' },
+        // { keys: ['Alt', 'Tab'], description: 'Window Switcher' }, // Browser reserved
         { keys: ['Ctrl', 'Shift', 'S'], description: 'Take Screenshot' },
         { keys: ['Ctrl', '/'], description: 'Show Keyboard Shortcuts (this)' },
         { keys: ['F5'], description: 'Refresh Desktop' },
@@ -26,7 +27,7 @@ const KeyboardHelp = ({ isOpen, onClose }) => {
       category: 'Window Management',
       icon: <Command className="w-5 h-5 text-blue-400" />,
       items: [
-        { keys: ['Ctrl', 'W'], description: 'Close active window' },
+        { keys: ['Ctrl', 'Shift', 'W'], description: 'Close active window' },
         { keys: ['Ctrl', 'M'], description: 'Minimize active window' },
         { keys: ['Ctrl', 'Shift', 'M'], description: 'Maximize/restore window' },
         { keys: ['Click'], description: 'Focus window' },
@@ -62,7 +63,7 @@ const KeyboardHelp = ({ isOpen, onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[2147483648] flex items-center justify-center p-4 pb-16 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div

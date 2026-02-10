@@ -55,7 +55,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[10001] flex items-center justify-center bg-black/80 backdrop-blur-lg"
+        className="fixed inset-0 z-[2147483648] flex items-center justify-center bg-black/80 backdrop-blur-lg pb-16"
         onClick={onClose}
       >
         <motion.div
@@ -72,7 +72,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
         >
           {/* Glowing background effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 rounded-3xl blur-3xl opacity-50 animate-pulse"></div>
-          
+
           <div className="relative bg-gradient-to-br from-zinc-900 via-purple-900/50 to-zinc-900 border-2 border-purple-500/50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-12 shadow-2xl overflow-hidden max-h-[85vh] overflow-y-auto">
             {/* Animated background pattern */}
             <div className="absolute inset-0 opacity-10">
@@ -122,7 +122,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                 >
                   🎮 KONAMI CODE!
                 </motion.h1>
-                
+
                 <motion.p
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
@@ -131,7 +131,7 @@ const KonamiSecret = ({ isOpen, onClose }) => {
                 >
                   You Found The Secret!
                 </motion.p>
-                
+
                 <motion.p
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}

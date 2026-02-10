@@ -213,7 +213,7 @@ const SnakeGame = ({ isOpen, onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[2147483648] flex items-center justify-center bg-black/50 backdrop-blur-sm pb-16"
         onClick={onClose}
       >
         <motion.div
@@ -221,7 +221,7 @@ const SnakeGame = ({ isOpen, onClose }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-zinc-900 rounded-xl border border-zinc-700 shadow-2xl p-4 sm:p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto"
+          className="bg-zinc-900 rounded-xl border border-zinc-700 shadow-2xl p-4 sm:p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto"
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-4">

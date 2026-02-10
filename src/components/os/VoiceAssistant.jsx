@@ -4,9 +4,9 @@ import { Mic, X, CheckCircle, AlertCircle, Globe, Keyboard, Send } from 'lucide-
 import { useVoice, VOICE_LANGUAGES } from '../../contexts/VoiceContext';
 
 const VoiceAssistant = () => {
-    const { 
-        voiceState, 
-        transcript, 
+    const {
+        voiceState,
+        transcript,
         response,
         showLanguageSelector,
         setShowLanguageSelector,
@@ -21,7 +21,7 @@ const VoiceAssistant = () => {
         setShowKeyboardInput,
         switchToKeyboard,
     } = useVoice();
-    
+
     const [isVisible, setIsVisible] = useState(false);
     const inputRef = useRef(null);
 
@@ -63,7 +63,7 @@ const VoiceAssistant = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[10003] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+                    className="fixed inset-0 z-[2147483648] flex items-center justify-center bg-black/50 backdrop-blur-sm pb-16"
                     onClick={() => setShowLanguageSelector(false)}
                 >
                     <motion.div
@@ -82,7 +82,7 @@ const VoiceAssistant = () => {
                                 <p className="text-white/50 text-sm">Pilih bahasa / Select language</p>
                             </div>
                         </div>
-                        
+
                         <div className="space-y-2">
                             {Object.values(VOICE_LANGUAGES).map((lang) => (
                                 <button
@@ -94,8 +94,8 @@ const VoiceAssistant = () => {
                                     <div className="text-left flex-1">
                                         <div className="font-medium">{lang.name}</div>
                                         <div className="text-xs text-white/50">
-                                            {lang.code === 'id-ID' 
-                                                ? '"Buka Terminal", "Tutup VSCode"' 
+                                            {lang.code === 'id-ID'
+                                                ? '"Buka Terminal", "Tutup VSCode"'
                                                 : '"Open Terminal", "Close VSCode"'}
                                         </div>
                                     </div>
@@ -103,7 +103,7 @@ const VoiceAssistant = () => {
                                 </button>
                             ))}
                         </div>
-                        
+
                         <p className="text-white/40 text-xs text-center mt-4">
                             ⚡ Works best in Chrome/Edge
                         </p>
@@ -120,15 +120,14 @@ const VoiceAssistant = () => {
                         animate={{ y: 0, opacity: 1, scale: 1 }}
                         exit={{ y: -60, opacity: 0, scale: 0.8 }}
                         transition={{ type: 'spring', damping: 25, stiffness: 400 }}
-                        className={`bg-black/95 text-white flex items-center gap-3 overflow-hidden shadow-2xl border border-white/20 backdrop-blur-3xl px-4 py-3 min-w-[200px] ${
-                            showKeyboardInput ? 'rounded-2xl w-[90vw] max-w-[400px]' : 'rounded-full max-w-[400px]'
-                        }`}
+                        className={`bg-black/95 text-white flex items-center gap-3 overflow-hidden shadow-2xl border border-white/20 backdrop-blur-3xl px-4 py-3 min-w-[200px] ${showKeyboardInput ? 'rounded-2xl w-[90vw] max-w-[400px]' : 'rounded-full max-w-[400px]'
+                            }`}
                     >
                         {/* Listening State */}
                         {voiceState === 'listening' && !showKeyboardInput && (
                             <>
                                 <div className="flex gap-1 h-5 items-center flex-shrink-0">
-                                    {[1,2,3,4,5].map(i => (
+                                    {[1, 2, 3, 4, 5].map(i => (
                                         <motion.div
                                             key={i}
                                             className="w-1 bg-gradient-to-t from-cyan-400 to-blue-500 rounded-full"
@@ -140,14 +139,14 @@ const VoiceAssistant = () => {
                                 <span className="text-sm font-medium text-white/90 truncate flex-1 min-w-0">
                                     {transcript || response || currentLanguage.responses.listening}
                                 </span>
-                                <button 
+                                <button
                                     onClick={switchToKeyboard}
                                     className="p-1.5 hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
                                     title="Switch to keyboard"
                                 >
                                     <Keyboard size={14} className="text-white/60" />
                                 </button>
-                                <button 
+                                <button
                                     onClick={handleClose}
                                     className="p-1.5 hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
                                 >
@@ -175,7 +174,7 @@ const VoiceAssistant = () => {
                                 </span>
                             </div>
                         )}
-                        
+
                         {/* Error State */}
                         {voiceState === 'error' && !showKeyboardInput && (
                             <div className="flex items-center gap-3 w-full">
@@ -183,7 +182,7 @@ const VoiceAssistant = () => {
                                 <span className="text-sm text-red-300 truncate flex-1">
                                     {response || 'Error'}
                                 </span>
-                                <button 
+                                <button
                                     onClick={switchToKeyboard}
                                     className="p-1.5 hover:bg-white/10 rounded transition-colors flex-shrink-0 text-xs text-yellow-400"
                                     title="Use keyboard instead"
@@ -201,7 +200,7 @@ const VoiceAssistant = () => {
                                     <span className="text-xs text-white/70 flex-1">
                                         {selectedLanguage === 'id-ID' ? 'Ketik perintah:' : 'Type command:'}
                                     </span>
-                                    <button 
+                                    <button
                                         onClick={handleClose}
                                         className="p-1 hover:bg-white/10 rounded transition-colors"
                                     >

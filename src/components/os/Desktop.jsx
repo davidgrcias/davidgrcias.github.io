@@ -247,8 +247,8 @@ const DesktopContent = () => {
             ),
             title: 'VS Code',
             contextMenuOptions: [
-                { 
-                    label: 'New Window', 
+                {
+                    label: 'New Window',
                     onClick: () => {
                         // Create a new VS Code window instance
                         openApp({
@@ -330,8 +330,8 @@ const DesktopContent = () => {
             title: 'File Manager',
             contextMenuOptions: [
                 { label: 'New Folder', onClick: () => alert('Feature coming soon') },
-                { 
-                    label: 'Open Terminal Here', 
+                {
+                    label: 'Open Terminal Here',
                     onClick: () => {
                         openApp({
                             id: `terminal-${Date.now()}`,
@@ -432,6 +432,7 @@ const DesktopContent = () => {
     }, [powerState, showNotification]);
 
     // Keyboard shortcuts
+    // Keyboard shortcuts
     useKeyboardShortcuts({
         'Escape': () => {
             if (spotlightOpen) {
@@ -450,26 +451,26 @@ const DesktopContent = () => {
                 closeWindow(activeWindowId);
             }
         },
-        'Ctrl+Space': () => {
+        'ctrl+space': () => {
             setSpotlightOpen(true);
         },
-        'Ctrl+k': () => {
+        'ctrl+k': () => {
             setCommandPaletteOpen(true);
         },
-        'Alt+Tab': () => {
-            setWindowSwitcherOpen(true);
-        },
-        'Ctrl+w': () => {
+        // Alt+Tab cannot be intercepted by JS in browser
+        // 'alt+tab': () => setWindowSwitcherOpen(true),
+
+        'ctrl+shift+w': () => {
             if (activeWindowId) {
                 closeWindow(activeWindowId);
             }
         },
-        'Ctrl+m': () => {
+        'ctrl+m': () => {
             if (activeWindowId) {
                 minimizeWindow(activeWindowId);
             }
         },
-        'Ctrl+/': () => {
+        'ctrl+/': () => {
             setKeyboardHelpOpen(true);
         },
         '?': () => {
@@ -481,13 +482,13 @@ const DesktopContent = () => {
     useEffect(() => {
         const handleVoiceOpenApp = (event) => {
             const { appId } = event.detail;
-            
+
             // Find the app from shortcuts or settingsApp
             let targetApp = allShortcuts.find(app => app.id === appId);
             if (!targetApp && appId === 'settings') {
                 targetApp = settingsApp;
             }
-            
+
             if (targetApp) {
                 if (targetApp.onClick) {
                     targetApp.onClick();
@@ -955,6 +956,7 @@ const DesktopContent = () => {
                     // Force save just in case
                     localStorage.setItem('webos-has-seen-welcome', 'true');
                 }}
+                onOpenShortcuts={() => setKeyboardHelpOpen(true)}
             />
 
             {/* Achievement Toast */}

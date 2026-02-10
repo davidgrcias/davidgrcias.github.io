@@ -240,17 +240,17 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
 
         {/* Traffic Lights */}
         <div
-          className={`flex items-center ${isMobile ? 'gap-1' : 'gap-2'} flex-shrink-0`}
+          className={`flex items-center gap-2 flex-shrink-0`}
           onPointerDown={(e) => e.stopPropagation()} // Prevent drag when clicking buttons
         >
           <motion.button
             onClick={(e) => { e.stopPropagation(); playWindowMinimize(); minimizeWindow(window.id); }}
             whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
-            className={`${isMobile ? 'p-2' : 'p-1.5'} hover:bg-yellow-500/20 rounded-full transition-colors group os-touch-target`}
+            className={`${isMobile ? 'p-2' : 'p-1.5'} hover:bg-yellow-500/20 rounded-full transition-colors group`}
             title="Minimize (Ctrl+M)"
           >
-            <Minus size={isMobile ? 16 : 14} className="text-yellow-400" />
+            <Minus size={14} className="text-yellow-400" />
           </motion.button>
           {!isMobile && (
             <motion.button
@@ -267,10 +267,10 @@ const WindowFrame = ({ window, onWindowContextMenu }) => {
             onClick={(e) => { e.stopPropagation(); playWindowClose(); closeWindow(window.id); }}
             whileHover={{ scale: 1.15, rotate: 90 }}
             whileTap={{ scale: 0.9 }}
-            className={`${isMobile ? 'p-2' : 'p-1.5'} hover:bg-red-500/20 rounded-full transition-colors group os-touch-target`}
+            className={`${isMobile ? 'p-2' : 'p-1.5'} hover:bg-red-500/20 rounded-full transition-colors group`}
             title="Close (Esc or Ctrl+W)"
           >
-            <X size={isMobile ? 16 : 14} className="text-red-400" />
+            <X size={14} className="text-red-400" />
           </motion.button>
         </div>
       </div>

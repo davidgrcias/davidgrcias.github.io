@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronRight, ChevronDown, FileCode, FileJson, FileType, Folder, FolderOpen } from 'lucide-react';
 import { getFirestore, collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { getProjects } from '../../../data/projects';
 
 const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
+  const [loading, setLoading] = useState(true);
   const [isProjectsOpen, setIsProjectsOpen] = useState(true);
   const [projects, setProjects] = useState([]);
   const [staticFiles, setStaticFiles] = useState([]);
@@ -14,7 +16,7 @@ const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
       try {
         const docRef = doc(db, 'vscodeFiles', 'main');
         const docSnap = await getDoc(docRef);
-        
+
         if (docSnap.exists() && docSnap.data().staticFiles) {
           setStaticFiles(docSnap.data().staticFiles);
         } else {
@@ -38,37 +40,37 @@ const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
     fetchStaticFiles();
   }, [db]);
 
-  // Fetch projects from Firestore
+  // Fetch projects from centralized data source
+
+  // Fetch projects from centralized data source
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "projects"));
-        const list = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          name: `${doc.data().title.replace(/\s+/g, '_')}.md`,
+        setLoading(true);
+        const projectData = await getProjects();
+
+        const list = projectData.map((project, index) => ({
+          id: project.id || `proj-${index}`,
+          name: `${project.name.replace(/[^a-zA-Z0-9]/g, '_')}.md`,
           type: 'md',
-          data: doc.data()
+          data: {
+            ...project,
+            title: project.name // Ensure title maps correctly for EditorArea
+          }
         }));
 
         if (list.length > 0) {
           setProjects(list);
-        } else {
-          // Mock data if empty
-          setProjects([
-            { id: 'p1', name: 'Portfolio_WebOS.md', type: 'md', data: { title: 'WebOS Portfolio', description: 'This project.' } },
-            { id: 'p2', name: 'E-Commerce_App.md', type: 'md', data: { title: 'E-Commerce App', description: 'Shopping app.' } },
-          ]);
         }
       } catch (e) {
-        // Mock fallback
-        setProjects([
-          { id: 'p1', name: 'Portfolio_WebOS.md', type: 'md', data: { title: 'WebOS Portfolio', description: 'This project.' } },
-          { id: 'p2', name: 'E-Commerce_App.md', type: 'md', data: { title: 'E-Commerce App', description: 'Shopping app.' } },
-        ]);
+        console.error("Failed to load projects in VS Code app:", e);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchProjects();
-  }, [db]);
+  }, []);
 
   useEffect(() => {
     if (onFilesChange && staticFiles.length > 0) {
@@ -123,16 +125,26 @@ const Explorer = ({ onOpenFile, activeFileId, onFilesChange }) => {
 
           {isProjectsOpen && (
             <div className="pl-4 border-l border-[#404040] ml-3 transition-all">
-              {projects.map(proj => (
-                <div
-                  key={proj.id}
-                  onClick={() => onOpenFile(proj)}
-                  className={`flex items-center gap-2 px-4 py-1 hover:bg-[#37373d] cursor-pointer ${activeFileId === proj.id ? 'bg-[#37373d] text-white' : ''}`}
-                >
-                  {getIcon(proj.name)}
-                  <span className="truncate">{proj.name}</span>
-                </div>
-              ))}
+              {loading ? (
+                // Skeleton Loading
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-2 px-4 py-1 animate-pulse">
+                    <div className="w-4 h-4 bg-[#37373d] rounded opacity-50"></div>
+                    <div className="h-4 bg-[#37373d] rounded w-24 opacity-50"></div>
+                  </div>
+                ))
+              ) : (
+                projects.map(proj => (
+                  <div
+                    key={proj.id}
+                    onClick={() => onOpenFile(proj)}
+                    className={`flex items-center gap-2 px-4 py-1 hover:bg-[#37373d] cursor-pointer ${activeFileId === proj.id ? 'bg-[#37373d] text-white' : ''}`}
+                  >
+                    {getIcon(proj.name)}
+                    <span className="truncate">{proj.name}</span>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
