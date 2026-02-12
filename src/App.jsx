@@ -119,8 +119,18 @@ GARCIA SARAGIH | Full-Stack Engineer
         <MusicPlayerProvider>
           <BrowserRouter>
             <Routes>
-              {/* Public Route: The WebOS Portfolio Experience */}
+              {/* Public Routes: The WebOS Portfolio Experience */}
               <Route path="/" element={<Desktop />} />
+              <Route path="/blog" element={<Desktop defaultApp="blog" />} />
+              <Route path="/blog/:slug" element={<Desktop defaultApp="blog" />} />
+              <Route path="/portfolio" element={<Desktop defaultApp="vscode" />} />
+              <Route path="/about" element={<Desktop defaultApp="about-me" />} />
+              <Route path="/projects" element={<Desktop defaultApp="vscode" />} />
+              <Route path="/terminal" element={<Desktop defaultApp="terminal" />} />
+              <Route path="/files" element={<Desktop defaultApp="file-manager" />} />
+              <Route path="/notes" element={<Desktop defaultApp="notes" />} />
+              <Route path="/chat" element={<Desktop defaultApp="messenger" />} />
+
 
               {/* Admin Routes: The Content Management System */}
               <Route path="/admin" element={<AdminLayout />}>

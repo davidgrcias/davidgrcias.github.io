@@ -1,21 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="refresh" content="0; url=/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Redirecting...</title>
-  </head>
-  <body>
-    <script>
-      (function () {
-        var l = window.location;
-        var path = l.pathname.replace(/^\//, "");
-        var search = l.search || "";
-        var hash = l.hash || "";
-        var redirect = l.origin + "/?/" + path + search + hash;
-        window.location.replace(redirect);
-      })();
-    </script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    // Redirect to Vercel domain preserving path
+    var path = window.location.pathname + window.location.search + window.location.hash;
+    window.location.href = "https://davidgrcias-github-io.vercel.app" + path;
+  </script>
+  <meta http-equiv="refresh" content="0; url=https://davidgrcias-github-io.vercel.app/">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting...</title>
+</head>
+
+<body>
+  <script>
+    (function () {
+      var l = window.location;
+      var path = l.pathname.replace(/^\//, "");
+      var search = l.search || "";
+      var hash = l.hash || "";
+      var redirect = l.origin + "/?/" + path + search + hash;
+      window.location.replace(redirect);
+    })();
+  </script>
+</body>
+
 </html>

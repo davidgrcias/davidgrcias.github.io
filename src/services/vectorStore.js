@@ -114,7 +114,7 @@ export const storeKnowledge = async (knowledgeData) => {
       metadata: {
         tags: cleanTags,
         language: language || 'en',
-        author: 'David Gracia'
+        author: 'David Garcia Saragih'
       },
       embedding: embedding || [], // Ensure embedding is not undefined
       isActive: true,

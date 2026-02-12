@@ -44,8 +44,8 @@ export default async function handler(req, res) {
 
     // System instructions - STRICT PERSONA
     const systemPrompt = language === "id"
-      ? `Kamu adalah asisten AI profesional untuk David Gracia. Jawab hanya berdasarkan fakta yang ada di Knowledge Base. Jangan mengarang bebas (hallucinate). Gaya bicara: Profesional namun tetap ramah.`
-      : `You are David Gracia's professional AI assistant. Answer STRICTLY based on the provided Knowledge Base. Do NOT hallucinate or invent facts. Tone: Professional yet approachable.`;
+      ? `Kamu adalah asisten AI profesional untuk David. Jawab hanya berdasarkan fakta yang ada di Knowledge Base. Jangan mengarang bebas (hallucinate). Gaya bicara: Profesional namun tetap ramah.`
+      : `You are David's professional AI assistant. Answer STRICTLY based on the provided Knowledge Base. Do NOT hallucinate or invent facts. Tone: Professional yet approachable.`;
 
     // Add retrieved documents as context (if RAG enabled)
     if (useRAG && retrievedDocs.length > 0) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import ReactMarkdown from 'react-markdown';
@@ -111,6 +112,18 @@ const BlogApp = ({ id }) => {
     loadData();
   }, []);
 
+  // Deep linking: Open post from URL slug
+  const { slug } = useParams();
+
+  useEffect(() => {
+    if (!loading && slug && posts.length > 0) {
+      const targetPost = posts.find(p => p.slug === slug || p.id === slug);
+      if (targetPost) {
+        setSelectedPost(targetPost);
+      }
+    }
+  }, [slug, posts, loading]);
+
   const filteredPosts = posts.filter(post => {
     const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
     const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -186,12 +199,46 @@ const BlogApp = ({ id }) => {
     return (
       <div className="h-full flex flex-col bg-zinc-900 text-white overflow-hidden">
         <Helmet>
-          <title>{selectedPost.title} | David Garcia</title>
+          <title>{selectedPost.title} — David Garcia Saragih</title>
           <meta name="description" content={selectedPost.excerpt} />
-          <meta property="og:title" content={selectedPost.title} />
+          <meta name="author" content="David Garcia Saragih" />
+          <link rel="canonical" href={`https://davidgrcias-github-io.vercel.app/blog/${selectedPost.slug || selectedPost.id}`} />
+          {/* Open Graph */}
+          <meta property="og:type" content="article" />
+          <meta property="og:url" content={`https://davidgrcias-github-io.vercel.app/blog/${selectedPost.slug || selectedPost.id}`} />
+          <meta property="og:title" content={`${selectedPost.title} — David Garcia Saragih`} />
           <meta property="og:description" content={selectedPost.excerpt} />
           {selectedPost.image && <meta property="og:image" content={selectedPost.image} />}
-          <meta property="og:type" content="article" />
+          {/* Twitter */}
+          <meta property="twitter:card" content="summary_large_image" />
+          <meta property="twitter:url" content={`https://davidgrcias-github-io.vercel.app/blog/${selectedPost.slug || selectedPost.id}`} />
+          <meta property="twitter:title" content={`${selectedPost.title} — David Garcia Saragih`} />
+          <meta property="twitter:description" content={selectedPost.excerpt} />
+          {selectedPost.image && <meta property="twitter:image" content={selectedPost.image} />}
+          {/* BlogPosting JSON-LD */}
+          <script type="application/ld+json">
+            {JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "headline": selectedPost.title,
+              "description": selectedPost.excerpt,
+              "image": selectedPost.image || "",
+              "datePublished": selectedPost.date,
+              "dateModified": selectedPost.date,
+              "author": {
+                "@type": "Person",
+                "name": "David Garcia Saragih",
+                "url": "https://davidgrcias-github-io.vercel.app/"
+              },
+              "publisher": {
+                "@type": "Person",
+                "name": "David Garcia Saragih"
+              },
+              "mainEntityOfPage": `https://davidgrcias-github-io.vercel.app/blog/${selectedPost.slug || selectedPost.id}`,
+              "wordCount": selectedPost.content ? selectedPost.content.split(/\s+/).length : 0,
+              "timeRequired": `PT${selectedPost.readTime || 5}M`
+            })}
+          </script>
         </Helmet>
 
         {/* Header */}
@@ -421,8 +468,8 @@ const BlogApp = ({ id }) => {
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${selectedCategory === cat
-                  ? 'bg-cyan-500 text-white'
-                  : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
+                ? 'bg-cyan-500 text-white'
+                : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
                 }`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}

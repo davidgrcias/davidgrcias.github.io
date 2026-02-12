@@ -2,7 +2,7 @@
   "name": "myporto",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://davidgrcias.github.io",
+  "homepage": "https://davidgrcias-github-io.vercel.app",
   "type": "module",
   "scripts": {
     "predeploy": "npm run build",
@@ -18,6 +18,7 @@
     "@tiptap/react": "^3.18.0",
     "@tiptap/starter-kit": "^3.18.0",
     "firebase": "^12.8.0",
+    "firebase-admin": "^13.6.1",
     "framer-motion": "^12.18.1",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.515.0",

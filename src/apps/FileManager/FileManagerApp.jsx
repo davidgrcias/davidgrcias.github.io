@@ -17,7 +17,7 @@ const defaultFileSystem = {
       'About': {
         type: 'folder',
         children: {
-          'Bio.md': { type: 'file', icon: 'text', content: '# David Gracias\n\nFull-stack developer passionate about creating innovative web experiences...', size: '2 KB' },
+          'Bio.md': { type: 'file', icon: 'text', content: '# David\n\nFull-stack developer passionate about creating innovative web experiences...', size: '2 KB' },
           'Resume.pdf': { type: 'file', icon: 'document', size: '145 KB', downloadUrl: '#' },
           'Skills.json': { type: 'file', icon: 'code', size: '3 KB' },
         }

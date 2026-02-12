@@ -1,4 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { OSProvider, useOS } from '../../contexts/OSContext';
 import { NotificationProvider, useNotification } from '../../contexts/NotificationContext';
 import { VoiceProvider } from '../../contexts/VoiceContext';
@@ -61,13 +63,16 @@ const AppLoadingFallback = () => (
     </div>
 );
 
-const DesktopContent = () => {
+const DesktopContent = ({ defaultApp }) => {
     const { windows, activeWindowId, closeWindow, minimizeWindow, openApp, pinnedApps, togglePinApp, isPinned, powerState, setPowerState, wake } = useOS();
     const { showNotification } = useNotification();
     const { unlockAchievement, trackMetric, currentAchievement, clearAchievement } = useAchievements();
     const { theme } = useTheme();
     const device = useDeviceDetection();
     const { playUnlock, playRightClick, playScreenshot, playMenuSelect, playEasterEgg } = useSound();
+    const navigate = useNavigate();
+    const { slug } = useParams();
+    const location = useLocation();
     const [contextMenu, setContextMenu] = useState(null);
     const [shortcutContextMenu, setShortcutContextMenu] = useState(null);
     const [windowContextMenu, setWindowContextMenu] = useState(null);
@@ -431,6 +436,31 @@ const DesktopContent = () => {
         return () => clearTimeout(timer);
     }, [powerState, showNotification]);
 
+    // Auto-open window based on URL route
+    useEffect(() => {
+        if (powerState !== 'active' || !defaultApp) return;
+
+        // Find the app to open
+        const targetApp = allShortcuts.find(app => app.id === defaultApp);
+        if (!targetApp) return;
+
+        // Check if app is already open
+        const isAlreadyOpen = windows.some(w => w.id === defaultApp);
+        if (isAlreadyOpen) return;
+
+        // Open the app
+        openApp(targetApp);
+
+        // If it's a blog post with slug, dispatch event to open that post
+        if (defaultApp === 'blog' && slug) {
+            setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('WEBOS_APP_ACTION', {
+                    detail: { appId: 'blog', action: 'open-post', payload: { slug } }
+                }));
+            }, 300);
+        }
+    }, [powerState, defaultApp, slug, allShortcuts, windows, openApp]);
+
     // Keyboard shortcuts
     // Keyboard shortcuts
     useKeyboardShortcuts({
@@ -708,329 +738,379 @@ const DesktopContent = () => {
         }} />;
     }
 
-    return (
-        <Wallpaper
-            onContextMenu={handleContextMenu}
-            onClick={() => {
-                setContextMenu(null);
-                setShortcutContextMenu(null);
-                setWindowContextMenu(null);
-                setCommandPaletteOpen(false);
-                setWindowSwitcherOpen(false);
-                setSpotlightOpen(false);
-                setCalendarOpen(false);
-                setPlayerOpen(false);
-                setStatsOpen(false);
-                setKeyboardHelpOpen(false);
-                // Close other widgets if needed
-            }}
-        >
-            {/* Overlay for depth */}
-            <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+    // Dynamic meta tags based on active route
+    const metaConfig = {
+        'blog': {
+            title: 'Blog — David Garcia Saragih',
+            description: 'Insights on AI, web development, and tech from David Garcia Saragih, AI-Powered Full Stack Developer.'
+        },
+        'vscode': {
+            title: 'Portfolio — David Garcia Saragih',
+            description: 'Projects and code by David Garcia Saragih, AI-Powered Full Stack Developer specializing in React, Node.js, and AI integration.'
+        },
+        'about-me': {
+            title: 'About — David Garcia Saragih',
+            description: 'Learn about David Garcia Saragih, an AI-Powered Full Stack Developer with expertise in React, Node.js, and modern web technologies.'
+        },
+        'messenger': {
+            title: 'AI Chat — David Garcia Saragih',
+            description: 'Chat with my AI assistant to learn more about my skills, projects, and experience.'
+        },
+        'terminal': {
+            title: 'Terminal — David Garcia Saragih',
+            description: 'Interactive terminal experience showcasing command-line expertise.'
+        },
+        'file-manager': {
+            title: 'Files — David Garcia Saragih',
+            description: 'Browse my project files and code samples.'
+        },
+        'notes': {
+            title: 'Notes — David Garcia Saragih',
+            description: 'Quick notes and thoughts from David Garcia Saragih.'
+        }
+    };
 
-            {/* Desktop Icons Area - Custom Scrollbar for cross-browser consistency */}
-            {needsScroll ? (
-                <CustomScrollbar
-                    className="relative z-10 w-full h-full"
-                    thumbColor="rgba(96, 165, 250, 0.35)"
-                    thumbHoverColor="rgba(147, 197, 253, 0.6)"
-                    trackColor="rgba(255, 255, 255, 0.05)"
-                    thumbWidth={2}
-                    autoHide={true}
-                    autoHideDelay={800}
-                    scrollThreshold={10}
-                >
+    const currentMeta = metaConfig[defaultApp] || {
+        title: 'David Garcia Saragih — AI-Powered Full Stack Developer',
+        description: 'Explore the interactive OS-style portfolio of David Garcia Saragih. AI-Powered Full Stack Developer & Software Engineer specializing in React, Node.js, AI integration, and creative web experiences.'
+    };
+
+    return (
+        <>
+            <Helmet>
+                <title>{currentMeta.title}</title>
+                <meta name="description" content={currentMeta.description} />
+                <link rel="canonical" href={`https://davidgrcias-github-io.vercel.app${location.pathname}`} />
+                <meta property="og:url" content={`https://davidgrcias-github-io.vercel.app${location.pathname}`} />
+                <meta property="og:title" content={currentMeta.title} />
+                <meta property="og:description" content={currentMeta.description} />
+                <meta property="twitter:url" content={`https://davidgrcias-github-io.vercel.app${location.pathname}`} />
+                <meta property="twitter:title" content={currentMeta.title} />
+                <meta property="twitter:description" content={currentMeta.description} />
+            </Helmet>
+            <Wallpaper
+                onContextMenu={handleContextMenu}
+                onClick={() => {
+                    setContextMenu(null);
+                    setShortcutContextMenu(null);
+                    setWindowContextMenu(null);
+                    setCommandPaletteOpen(false);
+                    setWindowSwitcherOpen(false);
+                    setSpotlightOpen(false);
+                    setCalendarOpen(false);
+                    setPlayerOpen(false);
+                    setStatsOpen(false);
+                    setKeyboardHelpOpen(false);
+                    // Close other widgets if needed
+                }}
+            >
+                {/* Overlay for depth */}
+                <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+
+                {/* Desktop Icons Area - Custom Scrollbar for cross-browser consistency */}
+                {needsScroll ? (
+                    <CustomScrollbar
+                        className="relative z-10 w-full h-full"
+                        thumbColor="rgba(96, 165, 250, 0.35)"
+                        thumbHoverColor="rgba(147, 197, 253, 0.6)"
+                        trackColor="rgba(255, 255, 255, 0.05)"
+                        thumbWidth={2}
+                        autoHide={true}
+                        autoHideDelay={800}
+                        scrollThreshold={10}
+                    >
+                        <div
+                            ref={desktopScrollRef}
+                            className="relative w-full"
+                            style={{ height: gridContentHeight }}
+                        >
+                            {allShortcuts.map((shortcut, index) => {
+                                const gridPos = iconGridPositions[shortcut.id] || {
+                                    row: Math.floor(index / GRID_COLS),
+                                    col: index % GRID_COLS
+                                };
+                                const validCol = Math.min(gridPos.col, GRID_COLS - 1);
+                                const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
+                                const x = MARGIN_X + validCol * GRID_SIZE;
+                                const y = MARGIN_Y + validRow * GRID_SIZE;
+
+                                return (
+                                    <DesktopIcon
+                                        key={`${shortcut.id}-${dragKeyCounter}`}
+                                        dragKey={`${shortcut.id}-${dragKeyCounter}`}
+                                        gridSize={GRID_SIZE}
+                                        icon={shortcut.icon}
+                                        label={shortcut.label}
+                                        badge={shortcut.badge}
+                                        onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
+                                        onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
+                                        onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
+                                        isDragging={draggingId === shortcut.id}
+                                        style={{ left: x, top: y }}
+                                    />
+                                );
+                            })}
+                        </div>
+                    </CustomScrollbar>
+                ) : (
                     <div
                         ref={desktopScrollRef}
-                        className="relative w-full"
-                        style={{ height: gridContentHeight }}
+                        className="relative z-10 w-full h-full"
                     >
-                        {allShortcuts.map((shortcut, index) => {
-                            const gridPos = iconGridPositions[shortcut.id] || {
-                                row: Math.floor(index / GRID_COLS),
-                                col: index % GRID_COLS
-                            };
-                            const validCol = Math.min(gridPos.col, GRID_COLS - 1);
-                            const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
-                            const x = MARGIN_X + validCol * GRID_SIZE;
-                            const y = MARGIN_Y + validRow * GRID_SIZE;
+                        <div className="relative w-full h-full">
+                            {allShortcuts.map((shortcut, index) => {
+                                const gridPos = iconGridPositions[shortcut.id] || {
+                                    row: Math.floor(index / GRID_COLS),
+                                    col: index % GRID_COLS
+                                };
+                                const validCol = Math.min(gridPos.col, GRID_COLS - 1);
+                                const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
+                                const x = MARGIN_X + validCol * GRID_SIZE;
+                                const y = MARGIN_Y + validRow * GRID_SIZE;
 
-                            return (
-                                <DesktopIcon
-                                    key={`${shortcut.id}-${dragKeyCounter}`}
-                                    dragKey={`${shortcut.id}-${dragKeyCounter}`}
-                                    gridSize={GRID_SIZE}
-                                    icon={shortcut.icon}
-                                    label={shortcut.label}
-                                    badge={shortcut.badge}
-                                    onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
-                                    onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
-                                    onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
-                                    isDragging={draggingId === shortcut.id}
-                                    style={{ left: x, top: y }}
-                                />
-                            );
-                        })}
+                                return (
+                                    <DesktopIcon
+                                        key={`${shortcut.id}-${dragKeyCounter}`}
+                                        dragKey={`${shortcut.id}-${dragKeyCounter}`}
+                                        gridSize={GRID_SIZE}
+                                        icon={shortcut.icon}
+                                        label={shortcut.label}
+                                        badge={shortcut.badge}
+                                        onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
+                                        onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
+                                        onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
+                                        isDragging={draggingId === shortcut.id}
+                                        style={{ left: x, top: y }}
+                                    />
+                                );
+                            })}
+                        </div>
                     </div>
-                </CustomScrollbar>
-            ) : (
-                <div
-                    ref={desktopScrollRef}
-                    className="relative z-10 w-full h-full"
-                >
-                    <div className="relative w-full h-full">
-                        {allShortcuts.map((shortcut, index) => {
-                            const gridPos = iconGridPositions[shortcut.id] || {
-                                row: Math.floor(index / GRID_COLS),
-                                col: index % GRID_COLS
-                            };
-                            const validCol = Math.min(gridPos.col, GRID_COLS - 1);
-                            const validRow = Math.min(gridPos.row, GRID_ROWS - 1);
-                            const x = MARGIN_X + validCol * GRID_SIZE;
-                            const y = MARGIN_Y + validRow * GRID_SIZE;
+                )}
 
-                            return (
-                                <DesktopIcon
-                                    key={`${shortcut.id}-${dragKeyCounter}`}
-                                    dragKey={`${shortcut.id}-${dragKeyCounter}`}
-                                    gridSize={GRID_SIZE}
-                                    icon={shortcut.icon}
-                                    label={shortcut.label}
-                                    badge={shortcut.badge}
-                                    onClick={() => shortcut.onClick ? shortcut.onClick() : openApp(shortcut)}
-                                    onContextMenu={(e) => handleShortcutContextMenu(e, shortcut)}
-                                    onDragEnd={(e, info) => handleDragEnd(shortcut.id, info, index)}
-                                    isDragging={draggingId === shortcut.id}
-                                    style={{ left: x, top: y }}
-                                />
-                            );
-                        })}
-                    </div>
-                </div>
-            )}
+                {/* Windows Layer */}
+                {windows.map((window) => (
+                    <WindowFrame
+                        key={window.id}
+                        window={window}
+                        onWindowContextMenu={handleWindowContextMenu}
+                    />
+                ))}
 
-            {/* Windows Layer */}
-            {windows.map((window) => (
-                <WindowFrame
-                    key={window.id}
-                    window={window}
-                    onWindowContextMenu={handleWindowContextMenu}
-                />
-            ))}
+                {/* Desktop Background Context Menu */}
+                {contextMenu && (
+                    <ContextMenu
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        options={contextMenuOptions}
+                        onClose={() => setContextMenu(null)}
+                    />
+                )}
 
-            {/* Desktop Background Context Menu */}
-            {contextMenu && (
-                <ContextMenu
-                    x={contextMenu.x}
-                    y={contextMenu.y}
-                    options={contextMenuOptions}
-                    onClose={() => setContextMenu(null)}
-                />
-            )}
+                {/* Window Context Menu */}
+                {windowContextMenu && (
+                    <ContextMenu
+                        x={windowContextMenu.x}
+                        y={windowContextMenu.y}
+                        options={windowContextMenu.options}
+                        onClose={() => setWindowContextMenu(null)}
+                    />
+                )}
 
-            {/* Window Context Menu */}
-            {windowContextMenu && (
-                <ContextMenu
-                    x={windowContextMenu.x}
-                    y={windowContextMenu.y}
-                    options={windowContextMenu.options}
-                    onClose={() => setWindowContextMenu(null)}
-                />
-            )}
-
-            {/* Shortcut Context Menu */}
-            {shortcutContextMenu && (
-                <div
-                    className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[180px] z-[10005]"
-                    style={{
-                        left: Math.min(shortcutContextMenu.x, window.innerWidth - 180),
-                        top: Math.min(shortcutContextMenu.y, window.innerHeight - 150),
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    onContextMenu={(e) => e.preventDefault()}
-                >
-                    <div className="px-4 py-2 border-b border-white/10 mb-1">
-                        <span className="text-xs text-white/50 font-semibold uppercase tracking-wider">{shortcutContextMenu.shortcut.label}</span>
-                    </div>
-
-                    <button
-                        onClick={() => {
-                            shortcutContextMenu.shortcut.onClick ? shortcutContextMenu.shortcut.onClick() : openApp(shortcutContextMenu.shortcut);
-                            setShortcutContextMenu(null);
+                {/* Shortcut Context Menu */}
+                {shortcutContextMenu && (
+                    <div
+                        className="fixed bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl py-2 min-w-[180px] z-[10005]"
+                        style={{
+                            left: Math.min(shortcutContextMenu.x, window.innerWidth - 180),
+                            top: Math.min(shortcutContextMenu.y, window.innerHeight - 150),
                         }}
-                        className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                        onClick={(e) => e.stopPropagation()}
+                        onContextMenu={(e) => e.preventDefault()}
                     >
-                        <FolderOpen size={16} />
-                        Open
-                    </button>
+                        <div className="px-4 py-2 border-b border-white/10 mb-1">
+                            <span className="text-xs text-white/50 font-semibold uppercase tracking-wider">{shortcutContextMenu.shortcut.label}</span>
+                        </div>
 
-                    {/* Only show Pin option if it's an app (has id that's not special like 'cv-download') */}
-                    {!['cv-download'].includes(shortcutContextMenu.shortcut.id) && (
                         <button
                             onClick={() => {
-                                togglePinApp(shortcutContextMenu.shortcut.id);
+                                shortcutContextMenu.shortcut.onClick ? shortcutContextMenu.shortcut.onClick() : openApp(shortcutContextMenu.shortcut);
                                 setShortcutContextMenu(null);
                             }}
                             className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
                         >
-                            {isPinned(shortcutContextMenu.shortcut.id) ? (
-                                <>
-                                    <span className="text-red-400 flex items-center gap-2">
-                                        <div className="rotate-45">📌</div> Unpin from Taskbar
-                                    </span>
-                                </>
-                            ) : (
-                                <>
-                                    <span>📌</span> Pin to Taskbar
-                                </>
-                            )}
+                            <FolderOpen size={16} />
+                            Open
                         </button>
-                    )}
-                </div>
-            )}
 
-            {/* Command Palette */}
-            <VoiceAssistant />
-            <CommandPalette
-                isOpen={commandPaletteOpen}
-                onClose={() => setCommandPaletteOpen(false)}
-                onOpenSnake={() => setSnakeGameOpen(true)}
-            />
+                        {/* Only show Pin option if it's an app (has id that's not special like 'cv-download') */}
+                        {!['cv-download'].includes(shortcutContextMenu.shortcut.id) && (
+                            <button
+                                onClick={() => {
+                                    togglePinApp(shortcutContextMenu.shortcut.id);
+                                    setShortcutContextMenu(null);
+                                }}
+                                className="w-full px-4 py-2 text-left text-sm text-white hover:bg-white/10 transition-colors flex items-center gap-2"
+                            >
+                                {isPinned(shortcutContextMenu.shortcut.id) ? (
+                                    <>
+                                        <span className="text-red-400 flex items-center gap-2">
+                                            <div className="rotate-45">📌</div> Unpin from Taskbar
+                                        </span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <span>📌</span> Pin to Taskbar
+                                    </>
+                                )}
+                            </button>
+                        )}
+                    </div>
+                )}
 
-            {/* Window Switcher */}
-            <WindowSwitcher
-                isOpen={windowSwitcherOpen}
-                onClose={() => setWindowSwitcherOpen(false)}
-            />
-
-            {/* Spotlight Search */}
-            <Spotlight
-                isOpen={spotlightOpen}
-                onClose={() => {
-                    setSpotlightOpen(false);
-                    setSpotlightQuery('');
-                }}
-                initialQuery={spotlightQuery}
-            />
-
-            {/* Widgets */}
-            <MusicPlayer />
-            <Calendar
-                isOpen={calendarOpen}
-                onClose={() => setCalendarOpen(false)}
-            />
-            <PortfolioStats
-                isOpen={statsOpen}
-                onClose={() => setStatsOpen(false)}
-            />
-
-            {/* Easter Eggs */}
-            <KonamiSecret
-                isOpen={konamiSecretOpen}
-                onClose={() => setKonamiSecretOpen(false)}
-            />
-
-            {/* Tools */}
-            {screenshotToolOpen && (
-                <ScreenshotTool onClose={() => setScreenshotToolOpen(false)} />
-            )}
-
-            {/* Easter Eggs & Games */}
-            <SnakeGame
-                isOpen={snakeGameOpen}
-                onClose={() => setSnakeGameOpen(false)}
-            />
-
-            {/* Keyboard Help */}
-            <KeyboardHelp
-                isOpen={keyboardHelpOpen}
-                onClose={() => setKeyboardHelpOpen(false)}
-            />
-
-            {/* Welcome Tutorial */}
-            <WelcomeTutorial
-                isOpen={welcomeTutorialOpen}
-                onClose={(reason) => {
-                    setWelcomeTutorialOpen(false);
-                    unlockAchievement('firstBoot');
-                    // Force save just in case
-                    localStorage.setItem('webos-has-seen-welcome', 'true');
-                }}
-                onOpenShortcuts={() => setKeyboardHelpOpen(true)}
-            />
-
-            {/* Achievement Toast */}
-            <AchievementToast
-                achievement={currentAchievement}
-                isVisible={!!currentAchievement}
-                onClose={clearAchievement}
-            />
-
-            {/* Taskbar - Hide when locked/sleeping OR when any window is maximized */}
-            {powerState !== 'locked' && !windows.some(w => w.isMaximized) && (
-                <Taskbar
-                    shortcuts={desktopShortcuts}
-                    onOpenSpotlight={(query) => {
-                        setSpotlightOpen(true);
-                        setSpotlightQuery(query || '');
-                    }}
+                {/* Command Palette */}
+                <VoiceAssistant />
+                <CommandPalette
+                    isOpen={commandPaletteOpen}
+                    onClose={() => setCommandPaletteOpen(false)}
+                    onOpenSnake={() => setSnakeGameOpen(true)}
                 />
-            )}
 
-            {/* PDF Viewer - with preloaded URL for instant loading */}
-            <PDFViewer
-                isOpen={pdfViewerOpen}
-                onClose={() => setPdfViewerOpen(false)}
-                pdfUrl={cvUrl}
-                title="CV - David Garcia Saragih"
-                preloadedUrl={preloadedPdfUrl}
-            />
+                {/* Window Switcher */}
+                <WindowSwitcher
+                    isOpen={windowSwitcherOpen}
+                    onClose={() => setWindowSwitcherOpen(false)}
+                />
 
-            {/* Desktop Widgets - Status Card, System Monitor & Featured Post */}
-            {showWidgets && powerState === 'active' && (
-                <div className="absolute right-4 sm:right-6 top-4 sm:top-6 z-20 flex flex-col gap-4 pointer-events-auto">
-                    <StatusCardWidget className="w-56 sm:w-64 md:w-72" />
-                    <FeaturedPostWidget
-                        className="w-56 sm:w-64 md:w-72"
-                        onOpenBlog={() => {
-                            // Find the blog shortcut and open it
-                            const blogShortcut = desktopShortcuts.find(s => s.id === 'blog');
-                            if (blogShortcut) {
-                                openApp({
-                                    id: blogShortcut.id,
-                                    title: blogShortcut.title,
-                                    icon: blogShortcut.icon,
-                                    component: blogShortcut.component
-                                });
-                            }
+                {/* Spotlight Search */}
+                <Spotlight
+                    isOpen={spotlightOpen}
+                    onClose={() => {
+                        setSpotlightOpen(false);
+                        setSpotlightQuery('');
+                    }}
+                    initialQuery={spotlightQuery}
+                />
+
+                {/* Widgets */}
+                <MusicPlayer />
+                <Calendar
+                    isOpen={calendarOpen}
+                    onClose={() => setCalendarOpen(false)}
+                />
+                <PortfolioStats
+                    isOpen={statsOpen}
+                    onClose={() => setStatsOpen(false)}
+                />
+
+                {/* Easter Eggs */}
+                <KonamiSecret
+                    isOpen={konamiSecretOpen}
+                    onClose={() => setKonamiSecretOpen(false)}
+                />
+
+                {/* Tools */}
+                {screenshotToolOpen && (
+                    <ScreenshotTool onClose={() => setScreenshotToolOpen(false)} />
+                )}
+
+                {/* Easter Eggs & Games */}
+                <SnakeGame
+                    isOpen={snakeGameOpen}
+                    onClose={() => setSnakeGameOpen(false)}
+                />
+
+                {/* Keyboard Help */}
+                <KeyboardHelp
+                    isOpen={keyboardHelpOpen}
+                    onClose={() => setKeyboardHelpOpen(false)}
+                />
+
+                {/* Welcome Tutorial */}
+                <WelcomeTutorial
+                    isOpen={welcomeTutorialOpen}
+                    onClose={(reason) => {
+                        setWelcomeTutorialOpen(false);
+                        unlockAchievement('firstBoot');
+                        // Force save just in case
+                        localStorage.setItem('webos-has-seen-welcome', 'true');
+                    }}
+                    onOpenShortcuts={() => setKeyboardHelpOpen(true)}
+                />
+
+                {/* Achievement Toast */}
+                <AchievementToast
+                    achievement={currentAchievement}
+                    isVisible={!!currentAchievement}
+                    onClose={clearAchievement}
+                />
+
+                {/* Taskbar - Hide when locked/sleeping OR when any window is maximized */}
+                {powerState !== 'locked' && !windows.some(w => w.isMaximized) && (
+                    <Taskbar
+                        shortcuts={desktopShortcuts}
+                        onOpenSpotlight={(query) => {
+                            setSpotlightOpen(true);
+                            setSpotlightQuery(query || '');
                         }}
                     />
-                    <SystemMonitorWidget className="w-56 sm:w-64 md:w-72" />
-                </div>
-            )}
+                )}
 
-            {/* Mobile Experience Banner */}
-            <MobileExperienceBanner show={!device.isDesktop && powerState === 'active'} />
-
-            {/* Lock Screen - Show only when locked */}
-            {powerState === 'locked' && (
-                <LockScreen
-                    onUnlock={() => {
-                        playUnlock();
-                        wake();
-                    }}
+                {/* PDF Viewer - with preloaded URL for instant loading */}
+                <PDFViewer
+                    isOpen={pdfViewerOpen}
+                    onClose={() => setPdfViewerOpen(false)}
+                    pdfUrl={cvUrl}
+                    title="CV - David Garcia Saragih"
+                    preloadedUrl={preloadedPdfUrl}
                 />
-            )}
-        </Wallpaper>
+
+                {/* Desktop Widgets - Status Card, System Monitor & Featured Post */}
+                {showWidgets && powerState === 'active' && (
+                    <div className="absolute right-4 sm:right-6 top-4 sm:top-6 z-20 flex flex-col gap-4 pointer-events-auto">
+                        <StatusCardWidget className="w-56 sm:w-64 md:w-72" />
+                        <FeaturedPostWidget
+                            className="w-56 sm:w-64 md:w-72"
+                            onOpenBlog={() => {
+                                // Find the blog shortcut and open it
+                                const blogShortcut = desktopShortcuts.find(s => s.id === 'blog');
+                                if (blogShortcut) {
+                                    openApp({
+                                        id: blogShortcut.id,
+                                        title: blogShortcut.title,
+                                        icon: blogShortcut.icon,
+                                        component: blogShortcut.component
+                                    });
+                                }
+                            }}
+                        />
+                        <SystemMonitorWidget className="w-56 sm:w-64 md:w-72" />
+                    </div>
+                )}
+
+                {/* Mobile Experience Banner */}
+                <MobileExperienceBanner show={!device.isDesktop && powerState === 'active'} />
+
+                {/* Lock Screen - Show only when locked */}
+                {powerState === 'locked' && (
+                    <LockScreen
+                        onUnlock={() => {
+                            playUnlock();
+                            wake();
+                        }}
+                    />
+                )}
+            </Wallpaper>
+        </>
     );
 };
 
-const Desktop = () => {
+const Desktop = ({ defaultApp }) => {
     return (
         <OSProvider>
             <NotificationProvider>
                 <VoiceProvider>
-                    <DesktopContent />
+                    <DesktopContent defaultApp={defaultApp} />
                 </VoiceProvider>
             </NotificationProvider>
         </OSProvider>
