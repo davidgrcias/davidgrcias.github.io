@@ -5,6 +5,10 @@
             "destination": "/api/sitemap.xml"
         },
         {
+            "source": "/blog/:slug*",
+            "destination": "/api/social-proxy?slug=:slug"
+        },
+        {
             "source": "/api/(.*)",
             "destination": "/api/$1"
         },
