@@ -273,7 +273,7 @@ const SettingsApp = () => {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/60">Developer</span>
-                  <span>David Gracias</span>
+                  <span>David Garcia Saragih</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-white/60">Current Theme</span>
