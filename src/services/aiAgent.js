@@ -214,8 +214,10 @@ function callAgentStreamAPI(prompt, options = {}) {
               onChunk?.(data.chunk, fullText);
             } else if (data.type === 'done') {
               onDone?.(data.fullText || fullText, data.sources || []);
+              return; // Stop processing further events
             } else if (data.type === 'error') {
               onError?.(new Error(data.error));
+              return; // Stop processing on error
             }
           } catch (e) {
             // Skip malformed JSON
@@ -264,10 +266,10 @@ async function callGeminiFallback(prompt) {
       console.warn(`❌ Model ${modelName} failed:`, error.message);
       lastError = error;
       // If it's not a model/key issue, don't try other models
-      if (!error.message?.includes('not found') && 
-          !error.message?.includes('not supported') &&
-          !error.message?.includes('API key') &&
-          !error.message?.includes('expired')) {
+      if (!error.message?.includes('not found') &&
+        !error.message?.includes('not supported') &&
+        !error.message?.includes('API key') &&
+        !error.message?.includes('expired')) {
         throw error;
       }
     }

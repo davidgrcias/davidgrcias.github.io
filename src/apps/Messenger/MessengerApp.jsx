@@ -623,6 +623,8 @@ const MessengerApp = ({ id }) => {
         try {
             if (enableStreaming) {
                 // Streaming mode via AI Agent
+                let isStreamCompleted = false;
+
                 await sendAgentMessage(question, {
                     language: currentLanguage,
                     useRAG,
@@ -630,6 +632,8 @@ const MessengerApp = ({ id }) => {
                     streaming: true,
                     persona: activePersona,
                     onChunk: (chunk, fullText) => {
+                        if (isStreamCompleted) return;
+                        
                         pendingStreamChunks.current = fullText;
                         // If thinking already completed, show stream directly
                         if (!isThinkingRef.current) {
@@ -641,6 +645,7 @@ const MessengerApp = ({ id }) => {
                         }
                     },
                     onDone: (result) => {
+                        isStreamCompleted = true;
                         pendingStreamChunks.current = '';
                         if (!isThinkingRef.current) {
                             // Thinking already done, finalize directly
@@ -652,6 +657,7 @@ const MessengerApp = ({ id }) => {
                         }
                     },
                     onError: (error) => {
+                        isStreamCompleted = true;
                         console.error('Stream error:', error);
                         setError(error.message || 'Streaming failed');
                         isThinkingRef.current = false;
